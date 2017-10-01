@@ -2,9 +2,10 @@ package socialite.async.dist.ds;
 
 public enum MsgType {
     INIT_DATA,
-    FEED_MY_IDX,
     FETCH_MY_IDX_WORKER_ID_MAP,
     TEST,
+    REPORT_IDX_RANK,
+    FEEDBACK_IDX_RANK,
     REQUIRE_INIT_DATA,
     INIT_DATA_FEEDBACK,
     MESSAGE_TABLE, //发送buffer table给worker

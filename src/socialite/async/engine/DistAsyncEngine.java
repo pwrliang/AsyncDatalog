@@ -7,7 +7,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import socialite.async.analysis.AsyncAnalysis;
 import socialite.async.dist.ds.MsgType;
-import socialite.async.dist.master.InitCarrier;
+import socialite.async.dist.master.AsyncMaster;
 import socialite.async.util.SerializeTool;
 import socialite.codegen.Analysis;
 import socialite.engine.ClientEngine;
@@ -15,12 +15,11 @@ import socialite.parser.DeltaRule;
 import socialite.parser.Parser;
 import socialite.parser.Rule;
 import socialite.parser.antlr.TableDecl;
-import socialite.tables.QueryVisitor;
-import socialite.tables.Tuple;
+import socialite.resource.SRuntimeWorker;
 
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -76,62 +75,20 @@ public class DistAsyncEngine implements Runnable {
 
 
     private void loadData() {
-        LinkedBlockingQueue<InitCarrier> initCarrierQueue = new LinkedBlockingQueue<>();
-        InitCarrier[] initCarriers = IntStream.range(0, workerNum).
-                mapToObj(workerId -> new InitCarrier(INIT_CARRIER_INIT_SIZE, workerId)).toArray(InitCarrier[]::new);
-
-        Thread initThread = new Thread(() -> {
-            InitCarrier carrier;
-            SerializeTool serializeTool = new SerializeTool.Builder().build();
-            try {
-                while (true) {
-                    carrier = initCarrierQueue.take();
-                    if (carrier.getSize() == 0)//i got the marker element
-                        break;
-                    byte[] data = serializeTool.toBytes(carrier);
-                    MPI.COMM_WORLD.Send(data, 0, data.length, MPI.BYTE, carrier.getWorkerId() + 1, MsgType.INIT_DATA.ordinal());
-                }
-                byte[] data = serializeTool.toBytes(carrier);//send marker element to all workers to notify all data sent.
-                IntStream.rangeClosed(1, workerNum).parallel().forEach(machineId ->
-                        MPI.COMM_WORLD.Send(data, 0, data.length, MPI.BYTE, machineId, MsgType.INIT_DATA.ordinal()));
-
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        Map<Integer, Integer> myIdxRankMap = new HashMap<>();
+        IntStream.range(1, workerNum).forEach(dest -> {
+            int[] myIdxRank = new int[2];
+            MPI.COMM_WORLD.Recv(myIdxRank, 0, 2, MPI.INT, dest, MsgType.REPORT_IDX_RANK.ordinal());
+            myIdxRankMap.put(myIdxRank[0], myIdxRank[1]);
         });
-        initThread.start();
-        clientEngine.run("Middle(int Key:0..875713, (double initD, int adj, int degree)).");
-        clientEngine.run("Middle(key, r, adj, degree) :- Rank(key, r), Edge(key, adj), EdgeCnt(key, degree).");
-        IntStream.rangeClosed(1, workerNum).forEach(dest -> MPI.COMM_WORLD.Send(new int[1], 0, 1, MPI.INT, dest, MsgType.TEST.ordinal()));
-
-        clientEngine.run("?- Middle(key, r, adj, degree).", new QueryVisitor() {
-            @Override
-            public boolean visit(Tuple _0) {
-//                int key = _0.getInt(0);
-//                double delta = _0.getDouble(1);
-//                int adjacent = _0.getInt(2);
-//                int degree = _0.getInt(3);
-//                int workerId = InitCarrier.getWorkerId(key, workerNum);
-//                InitCarrier initCarrier = initCarriers[workerId];
-//                initCarrier.addEntry(key, IDENTITY_ELEMENT, delta, adjacent, degree);
-//                if (initCarrier.getSize() > INIT_CARRIER_LOADED_THRESHOLD) {
-//                    initCarrierQueue.add(initCarrier);
-//                    initCarriers[workerId] = new InitCarrier(INIT_CARRIER_INIT_SIZE, workerId);
-//                    L.info("made InitCarrier");
-//                }
-//                L.info(_0);
-                return true;
-            }
-        }, 0);
-        L.info("query ok");
-        //send rest of init carriers
-        Arrays.stream(initCarriers).filter(initCarrier -> initCarrier.getSize() > 0).forEach(initCarrierQueue::add);
-        initCarrierQueue.add(new InitCarrier(0, 0));//add a marker element to notify exit
-        try {
-            initThread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        SerializeTool serializeTool = new SerializeTool.Builder().build();
+        byte[] bytes = serializeTool.toBytes(myIdxRankMap);
+        IntStream.range(1, workerNum).forEach(dest -> MPI.COMM_WORLD.Send(bytes, 0, bytes.length, MPI.BYTE, dest, MsgType.FEEDBACK_IDX_RANK.ordinal()));
+        L.info("All IDX REPORTED");
+        String tableSig = "Middle(int Key:0..875713, double initD, int degree, (int adj)).";
+        clientEngine.run(tableSig);
+        clientEngine.run("Middle(key, r, degree, adj) :- Rank(key, r), Edge(key, adj), EdgeCnt(key, degree).");
+        IntStream.rangeClosed(1, workerNum).forEach(dest -> MPI.COMM_WORLD.Send(tableSig.toCharArray(), 0, tableSig.length(), MPI.CHAR, dest, MsgType.INIT_DATA.ordinal()));
     }
 
     private class FeedBackThread extends Thread {

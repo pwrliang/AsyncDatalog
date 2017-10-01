@@ -9,7 +9,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import socialite.async.analysis.MyVisitorImpl;
 import socialite.async.atomic.MyAtomicDouble;
-import socialite.async.dist.master.InitCarrier;
+import socialite.resource.DistTableSliceMap;
 import socialite.util.SociaLiteException;
 
 import java.util.ArrayList;
@@ -88,10 +88,15 @@ public class DistAsyncTable extends BaseDistAsyncTable {
         });
     }
 
+    int tableId;
+
+    public void setTableId(int tableId) {
+        this.tableId = tableId;
+    }
 
     // should same as InitCarrier.getWorkerId
-    public int getWorkerId(Object key, int workerNum) {
-        return key.hashCode() % workerNum;
+    public int getWorkerId(int key, int workerNum) {
+        return sliceMap.machineIndexFor(tableId, key);
     }
 
     @Override
@@ -126,31 +131,6 @@ public class DistAsyncTable extends BaseDistAsyncTable {
         );
     }
 
-    @Override
-    public synchronized void applyInitCarrier(InitCarrier carrier) {
-        TIntList keyList = carrier.getKeyList();
-
-        //init key
-        for (int i = 0; i < keyList.size(); i++)
-            keyIndMap.put(keyList.get(i), size++);
-
-        //init value
-        valueList.addAll(carrier.getValueList());
-
-        //init delta
-        carrier.getDeltaList().forEach(delta -> {
-            deltaList.add(new MyAtomicDouble(delta));
-            return true;
-        });
-
-        dataList.addAll(carrier.getAdjacentList());
-
-        //init extra, pagerank algorithm required
-        if (carrier.getExtraList() != null) {
-            extra.addAll(carrier.getExtraList());
-        }
-    }
-
     //for dynamically algorithms
     public synchronized void addEntryDynamically(int key, int value, int delta, int extra) {
 
@@ -179,4 +159,35 @@ public class DistAsyncTable extends BaseDistAsyncTable {
             return true;
         });
     }
+
+    DistTableSliceMap sliceMap;
+
+    public void setSliceMap(DistTableSliceMap sliceMap) {
+        this.sliceMap = sliceMap;
+    }
+
+    public MyVisitorImpl getMiddleVisitor() {
+        return new MyVisitorImpl() {
+            TIntArrayList adjacents;
+
+            //"Middle(int Key:0..875713, double initD, int degree, (int adj))."
+            @Override
+            public boolean visit_0_1_2(int a1, double a2, int a3) {
+                keyIndMap.put(a1, size++);
+                valueList.add(IDENTITY_ELEMENT);
+                deltaList.add(new MyAtomicDouble(a2));
+                extra.add(a3);
+                dataList.add(adjacents);
+                adjacents = new TIntArrayList();
+                return true;
+            }
+
+            @Override
+            public boolean visit(int a1) {
+                adjacents.add(a1);
+                return true;
+            }
+        };
+    }
+
 }

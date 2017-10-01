@@ -4,6 +4,7 @@ import socialite.async.util.TextUtils;
 import socialite.dist.master.MasterNode;
 import socialite.engine.ClientEngine;
 import socialite.engine.LocalEngine;
+import socialite.resource.TableInstRegistry;
 import socialite.tables.QueryVisitor;
 import socialite.tables.Tuple;
 
@@ -26,7 +27,10 @@ public class ClientTest {
 //        clientEngine.shutdown();
         LocalEngine localEngine = new LocalEngine();
         localEngine.run(TextUtils.readText(args[0]));
-        localEngine.run("?- sssp(x, d).", new QueryVisitor() {
+        localEngine.run("Middle(int Key:0..875713, (double initD, int degree, int adj)).");
+        localEngine.run("Middle(key, r, degree, adj) :- Rank(key, r), Edge(key, adj), EdgeCnt(key, degree).");
+        TableInstRegistry tableInstRegistry = localEngine.getRuntime().getTableRegistry();
+        localEngine.run("?- Middle(key, r, degree, adj).", new QueryVisitor() {
             @Override
             public boolean visit(Tuple _0) {
                 return super.visit(_0);

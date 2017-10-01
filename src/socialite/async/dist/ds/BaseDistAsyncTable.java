@@ -28,6 +28,4 @@ public abstract class BaseDistAsyncTable extends BaseAsyncTable {
     public MyVisitorImpl getInitVisitor() {
         throw new NotImplementedException();
     }
-
-    public abstract void applyInitCarrier(InitCarrier carrier);
 }

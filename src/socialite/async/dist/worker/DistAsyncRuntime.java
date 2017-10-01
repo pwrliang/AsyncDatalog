@@ -13,11 +13,19 @@ import socialite.async.dist.ds.MsgType;
 import socialite.async.dist.master.AsyncMaster;
 import socialite.async.dist.master.InitCarrier;
 import socialite.async.util.SerializeTool;
+import socialite.parser.Table;
 import socialite.resource.DistTableSliceMap;
+import socialite.resource.SRuntime;
 import socialite.resource.SRuntimeWorker;
 import socialite.resource.TableInstRegistry;
+import socialite.tables.TableInst;
+import socialite.visitors.VisitorImpl;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
@@ -57,31 +65,68 @@ public class DistAsyncRuntime extends AsyncRuntimeBase {
         L.info(String.format("Worker %d all threads started.", workerId));
     }
 
+    Map<Integer, Integer> myIdxRankMap;
+
     private void initData() {
+        byte[] data = new byte[4096];
+        MPI.COMM_WORLD.Sendrecv(new int[]{SRuntimeWorker.getInst().getWorkerAddrMap().myIndex(), MPI.COMM_WORLD.Rank()}, 0, 2, MPI.INT, AsyncMaster.ID, MsgType.REPORT_IDX_RANK.ordinal(),
+                data, 0, data.length, MPI.INT, AsyncMaster.ID, MsgType.FEEDBACK_IDX_RANK.ordinal());
+        SerializeTool serializeTool = new SerializeTool.Builder().build();
+        myIdxRankMap = new HashMap<>();
+        myIdxRankMap = serializeTool.fromBytes(data, myIdxRankMap.getClass());
+
+        Status status = MPI.COMM_WORLD.Probe(AsyncMaster.ID, MsgType.INIT_DATA.ordinal());
+        char[] tableSig = new char[status.Get_count(MPI.CHAR)];
         //init keys
         distAsyncTable = new DistAsyncTable(workerNum, workerId, INIT_ASYNC_TABLE_SIZE, INIT_MESSAGE_TABLE_SIZE);
-        Thread recvInitDataThread = new Thread(() -> {
-            SerializeTool serializeTool = new SerializeTool.Builder().build();
 
-            while (true) {
-                Status status = MPI.COMM_WORLD.Probe(AsyncMaster.ID, MsgType.INIT_DATA.ordinal());
-                byte[] data = new byte[status.Get_count(MPI.BYTE)];
-                MPI.COMM_WORLD.Recv(data, 0, data.length, MPI.BYTE, AsyncMaster.ID, MsgType.INIT_DATA.ordinal());
-                InitCarrier initCarrier = serializeTool.fromBytes(data, InitCarrier.class);
-                if (initCarrier.getSize() == 0) break;//received zero init carrier, we got all init data already.
-                distAsyncTable.applyInitCarrier(initCarrier);
-            }
-        });
-        recvInitDataThread.start();
+        MPI.COMM_WORLD.Recv(tableSig, 0, tableSig.length, MPI.CHAR, status.source, MsgType.INIT_DATA.ordinal());
+        L.info("recv " + String.valueOf(tableSig));
+
+        TableInstRegistry tableInstRegistry = SRuntimeWorker.getInst().getTableRegistry();
+        Map<String, Table> tableMap = SRuntimeWorker.getInst().getTableMap();
+        Table initTable = tableMap.get("Middle");
+        distAsyncTable.setTableId(initTable.id());
+        distAsyncTable.setSliceMap(SRuntimeWorker.getInst().getSliceMap());
+
+        TableInst[] tableInsts = tableInstRegistry.getTableInstArray(initTable.id());
         try {
-            recvInitDataThread.join();
-        } catch (InterruptedException e) {
+            Method method = tableInsts[0].getClass().getMethod("iterate", VisitorImpl.class);
+            for (TableInst tableInst : tableInsts) {
+                if (!tableInst.isEmpty())
+                    method.invoke(tableInst, distAsyncTable.getMiddleVisitor());
+            }
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
-        } finally {
-            L.info("Machine " + (workerId + 1) + " all data loaded size:" + distAsyncTable.getSize());
         }
-//        distAsyncTable.display();
+        distAsyncTable.display();
     }
+
+//    private void initData() {
+//        //init keys
+//        distAsyncTable = new DistAsyncTable(workerNum, workerId, INIT_ASYNC_TABLE_SIZE, INIT_MESSAGE_TABLE_SIZE);
+//        Thread recvInitDataThread = new Thread(() -> {
+//            SerializeTool serializeTool = new SerializeTool.Builder().build();
+//
+//            while (true) {
+//                Status status = MPI.COMM_WORLD.Probe(AsyncMaster.ID, MsgType.INIT_DATA.ordinal());
+//                byte[] data = new byte[status.Get_count(MPI.BYTE)];
+//                MPI.COMM_WORLD.Recv(data, 0, data.length, MPI.BYTE, AsyncMaster.ID, MsgType.INIT_DATA.ordinal());
+//                InitCarrier initCarrier = serializeTool.fromBytes(data, InitCarrier.class);
+//                if (initCarrier.getSize() == 0) break;//received zero init carrier, we got all init data already.
+//                distAsyncTable.applyInitCarrier(initCarrier);
+//            }
+//        });
+//        recvInitDataThread.start();
+//        try {
+//            recvInitDataThread.join();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        } finally {
+//            L.info("Machine " + (workerId + 1) + " all data loaded size:" + distAsyncTable.getSize());
+//        }
+////        distAsyncTable.display();
+//    }
 
     private void createThreads() {
         computingThreads = new ComputingThread[threadNum];
