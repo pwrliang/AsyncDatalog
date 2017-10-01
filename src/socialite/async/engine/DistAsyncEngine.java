@@ -70,7 +70,7 @@ public class DistAsyncEngine implements Runnable {
     }
 
 
-    public static final int INIT_CARRIER_INIT_SIZE = 200000; //init size 200k
+    public static final int INIT_CARRIER_INIT_SIZE = 50000; //init size 200k
     public static final int INIT_CARRIER_LOADED_THRESHOLD = (int) (INIT_CARRIER_INIT_SIZE * 1.5); //when reach the threshold, send it
     public static final int IDENTITY_ELEMENT = 0;//depending on algorithms
 
@@ -100,27 +100,30 @@ public class DistAsyncEngine implements Runnable {
             }
         });
         initThread.start();
-        clientEngine.run("Middle(int Key, double initD, int adj, int degree).");
+        clientEngine.run("Middle(int Key:0..875713, (double initD, int adj, int degree)).");
         clientEngine.run("Middle(key, r, adj, degree) :- Rank(key, r), Edge(key, adj), EdgeCnt(key, degree).");
+        IntStream.rangeClosed(1, workerNum).forEach(dest -> MPI.COMM_WORLD.Send(new int[1], 0, 1, MPI.INT, dest, MsgType.TEST.ordinal()));
+
         clientEngine.run("?- Middle(key, r, adj, degree).", new QueryVisitor() {
             @Override
             public boolean visit(Tuple _0) {
-                int key = _0.getInt(0);
-                double delta = _0.getDouble(1);
-                int adjacent = _0.getInt(2);
-                int degree = _0.getInt(3);
-                int workerId = InitCarrier.getWorkerId(key, workerNum);
-                InitCarrier initCarrier = initCarriers[workerId];
-                initCarrier.addEntry(key, IDENTITY_ELEMENT, delta, adjacent, degree);
-                if (initCarrier.getSize() > INIT_CARRIER_LOADED_THRESHOLD) {
-                    initCarrierQueue.add(initCarrier);
-                    initCarriers[workerId] = new InitCarrier(INIT_CARRIER_INIT_SIZE, workerId);
-                }
+//                int key = _0.getInt(0);
+//                double delta = _0.getDouble(1);
+//                int adjacent = _0.getInt(2);
+//                int degree = _0.getInt(3);
+//                int workerId = InitCarrier.getWorkerId(key, workerNum);
+//                InitCarrier initCarrier = initCarriers[workerId];
+//                initCarrier.addEntry(key, IDENTITY_ELEMENT, delta, adjacent, degree);
+//                if (initCarrier.getSize() > INIT_CARRIER_LOADED_THRESHOLD) {
+//                    initCarrierQueue.add(initCarrier);
+//                    initCarriers[workerId] = new InitCarrier(INIT_CARRIER_INIT_SIZE, workerId);
+//                    L.info("made InitCarrier");
+//                }
 //                L.info(_0);
                 return true;
             }
         }, 0);
-
+        L.info("query ok");
         //send rest of init carriers
         Arrays.stream(initCarriers).filter(initCarrier -> initCarrier.getSize() > 0).forEach(initCarrierQueue::add);
         initCarrierQueue.add(new InitCarrier(0, 0));//add a marker element to notify exit

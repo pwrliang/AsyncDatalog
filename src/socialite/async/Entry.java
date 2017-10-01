@@ -32,7 +32,7 @@ public class Entry {
 //            worker id start with 0, call mpi api need to add 1
             WorkerNode.startWorkerNode();
             int workerId = machineId - 1;
-            AsyncWorker worker = new AsyncWorker(workerId, workerNum, 8);
+            AsyncWorker worker = new AsyncWorker(workerId, workerNum, 1);
             worker.startWorker();
         }
         L.info("process " + machineId + " exit.");

@@ -13,6 +13,9 @@ import socialite.async.dist.ds.MsgType;
 import socialite.async.dist.master.AsyncMaster;
 import socialite.async.dist.master.InitCarrier;
 import socialite.async.util.SerializeTool;
+import socialite.resource.DistTableSliceMap;
+import socialite.resource.SRuntimeWorker;
+import socialite.resource.TableInstRegistry;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -42,6 +45,11 @@ public class DistAsyncRuntime extends AsyncRuntimeBase {
 
     @Override
     public void run() {
+//        MPI.COMM_WORLD.Recv(new int[]{0}, 0, 1, MPI.INT, AsyncMaster.ID, MsgType.TEST.ordinal());
+//        TableInstRegistry tableInstRegistry = SRuntimeWorker.getInst().getTableRegistry();
+//        DistTableSliceMap sliceMap = SRuntimeWorker.getInst().getSliceMap();
+//        sliceMap.machineIndexFor()
+
         initData();
         createThreads();
         arrangeTask();
