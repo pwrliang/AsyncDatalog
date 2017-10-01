@@ -1,0 +1,7 @@
+import "AsyncTableSingle.stg"
+import "AsyncTablePair.stg"
+import "AsyncTableSingleTwoStep.stg"
+
+dummy() ::= <<
+  // this is dummy
+>>

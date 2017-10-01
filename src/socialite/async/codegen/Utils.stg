@@ -1,0 +1,167 @@
+TypeAtomicMap ::= [
+   "int": "MyAtomicInteger",
+    "long": "MyAtomicLong",
+    "float": "MyAtomicFloat",
+    "double": "MyAtomicDouble"
+]
+
+WrappedTypeMap ::= [
+   "int": "Integer",
+    "long": "Long",
+    "float": "Float",
+    "double": "Double",
+    "boolean": "Boolean"
+]
+
+PrimitiveMap ::= [
+	"int": "TIntArrayList",
+	"long": "TLongArrayList",
+	"float": "TFloatArrayList",
+	"double": "TDoubleArrayList",
+	"boolean": "List<Boolean>"
+]
+
+KeyIndMap ::= [
+    "int": "TIntIntHashMap",
+    "long": "TLongIntHashMap",
+    "float": "TFloatIntHashMap",
+    "double": "TDoubleIntHashMap"
+]
+
+PrimitiveObjectMap ::= [
+    "int": "TIntObjectHashMap",
+    "long": "TLongObjectHashMap",
+    "float": "TFloatObjectHashMap",
+    "double": "TDoubleObjectHashMap"
+]
+
+
+IntegerIdentityElement ::= [
+    "dsum": "0",
+    "dmax": "Integer.MIN_VALUE",
+    "dmin": "Integer.MAX_VALUE",
+    "dcount" : "0"
+]
+
+LongIdentityElement ::= [
+    "dsum": "0",
+    "dmax": "Long.MIN_VALUE",
+    "dmin": "Long.MAX_VALUE",
+    "dcount" : "0"
+]
+
+FloatIdentityElement ::= [
+    "dsum": "0",
+    "dmax": "Float.MIN_VALUE",
+    "dmin": "Float.MAX_VALUE",
+    "dcount" : "0"
+]
+
+DoubleIdentityElement ::= [
+    "dsum": "0",
+    "dmax": "Double.MIN_VALUE",
+    "dmin": "Double.MAX_VALUE",
+    "dcount" : "0"
+]
+
+PrimitiveInitValue ::= [
+    "int": "0",
+    "float" : "0.0f",
+    "long": "0l",
+    "double" : "0.0d",
+    "boolean" : "false"
+]
+
+IsSum ::= [
+    "dsum": true,
+    default: false
+]
+
+IsMax ::= [
+    "dmax": true,
+    default: false
+]
+
+IsMin ::= [
+    "dmin": true,
+    default: false
+]
+
+IsCount ::= [
+    "dcount": true,
+    default: false
+]
+
+IsCheckValue ::= [
+    "CheckValue" : true,
+    default: false
+]
+
+IsCheckDelta ::= [
+    "CheckDelta" : true,
+    default: false
+]
+
+IsInt ::= [
+    "int": true,
+    default: false
+]
+
+IsLong ::= [
+    "long": true,
+    default: false
+]
+
+IsFloat ::= [
+    "float": true,
+    default: false
+]
+
+IsDouble ::= [
+    "double": true,
+    default: false
+]
+
+IsBoolean ::= [
+    "boolean": true,
+    default: false
+]
+
+
+importForTable() ::= <<
+import socialite.async.atomic.*;
+import socialite.async.*;
+import socialite.async.analysis.*;
+import socialite.async.codegen.*;
+import socialite.util.*;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import gnu.trove.list.*;
+import gnu.trove.list.array.*;
+import gnu.trove.map.*;
+import gnu.trove.map.hash.*;
+import java.util.function.*;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+>>
+
+importForRuntime() ::= <<
+import socialite.async.*;
+import socialite.async.codegen.*;
+import socialite.engine.LocalEngine;
+import socialite.parser.Table;
+import socialite.util.Assert;
+import socialite.tables.TableInst;
+import socialite.visitors.VisitorImpl;
+import java.util.*;
+import java.util.concurrent.CyclicBarrier;
+import java.util.Arrays;
+import java.lang.Runnable;
+import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang3.time.StopWatch;
+import gnu.trove.list.*;
+import gnu.trove.list.array.*;
+>>

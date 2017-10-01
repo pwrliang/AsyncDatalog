@@ -1,0 +1,223 @@
+import "Utils.stg"
+AsyncRuntime(AsyncTableClass, valueType, initSize, threadNum, dynamic, barrier, checkType, checkerInterval, threshold, cond) ::= <<
+package socialite.async.codegen;
+<importForRuntime()>
+
+public class AsyncRuntime extends AsyncRuntimeBase{
+    private static final Log L = LogFactory.getLog(AsyncRuntime.class);
+    private LocalEngine syncEngine;
+    <if(barrier)>
+    private CyclicBarrier barrier;
+    <endif>
+    private BaseAsyncTable asyncTable;
+    private static final int INIT_SIZE = <initSize>;
+    private static final int THREAD_NUM = <threadNum>;
+    private Worker[] workers;
+    private Checker checker;
+
+    public AsyncRuntime(LocalEngine syncEngine, TableInst[] recInstArr, TableInst[] edgeInstArr, TableInst[] extraInstArr) {
+        this.syncEngine = syncEngine;
+        asyncTable = new <AsyncTableClass>(INIT_SIZE);
+        loadData(recInstArr, edgeInstArr, extraInstArr);
+        L.info("Data Loaded size:" + asyncTable.getSize());
+        createThreads();
+    }
+
+    private void loadData(TableInst[] recInstArr, TableInst[] edgeInstArr, TableInst[] extraInstArr) {
+        try {
+            for (TableInst tableInst : recInstArr) {
+                if (!tableInst.isEmpty()) {
+                    Method method = tableInst.getClass().getDeclaredMethod("iterate", VisitorImpl.class);
+                    method.invoke(tableInst, asyncTable.getInitVisitor());
+                    //tableInst.clear();
+                }
+            }
+
+            for (TableInst tableInst : edgeInstArr) {
+                if (!tableInst.isEmpty()) {
+                    Method method = tableInst.getClass().getDeclaredMethod("iterate", VisitorImpl.class);
+                    method.invoke(tableInst, asyncTable.getEdgeVisitor());
+                    //tableInst.clear();
+                }
+            }
+
+            if (extraInstArr != null) {
+                for (TableInst tableInst : extraInstArr) {
+                    if (!tableInst.isEmpty()) {
+                        Method method = tableInst.getClass().getDeclaredMethod("iterate", VisitorImpl.class);
+                        method.invoke(tableInst, asyncTable.getExtraVisitor());
+                        //tableInst.clear();
+                    }
+                }
+            }
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void createThreads(){
+        workers = new Worker[THREAD_NUM];
+        checker = new Checker();
+        checker.setPriority(Thread.MAX_PRIORITY);
+        <if(barrier)>
+        barrier = new CyclicBarrier(THREAD_NUM, checker);
+        <endif>
+        arrangeTask();
+    }
+
+    private void arrangeTask() {
+        int blockSize = asyncTable.getSize() / THREAD_NUM;
+        if (blockSize == 0) {
+            System.err.println("too many threads");
+            System.exit(0);
+        }
+        for (int tid = 0; tid \< THREAD_NUM; tid++) {
+            int start = tid * blockSize;
+            int end = (tid + 1) * blockSize;
+            if (tid == THREAD_NUM - 1)
+                end = asyncTable.getSize();
+            if (workers[tid] == null) {
+                workers[tid] = new Worker(tid, start, end);
+            } else {
+                workers[tid].start = start;
+                workers[tid].end = end;
+            }
+        }
+    }
+
+    @Override
+    public void run() {
+        <if(!barrier)>
+        checker.start();
+        System.out.println("CHECKER STARTED");
+        <endif>
+
+        Arrays.stream(workers).forEach(Worker::start);
+        L.info("worker started");
+        checker.stopWatch.start();
+        try {
+            for (Worker worker : workers)
+                worker.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        L.info("done elapsed:" + checker.stopWatch.getTime());
+        L.info("checker consumed " + checkerConsume);
+        L.info("checker thread exit");
+    }
+
+    @Override
+    public BaseAsyncTable getAsyncTable(){
+        return asyncTable;
+    }
+
+    private class Worker extends Thread {
+        int start;
+        int end;
+        int tid;
+
+        private Worker(int tid, int start, int end) {
+            this.tid = tid;
+            this.start = start;
+            this.end = end;
+        }
+
+        @Override
+        public void run() {
+            try {
+                while (!checker.stop) {
+                    for (int k = start; k \< end; k++) {
+                        asyncTable.updateLockFree(k);
+                    }
+                    <if(barrier)>
+                    barrier.await();
+                    <endif>
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            <if(barrier)>
+            barrier.reset();
+            <endif>
+        }
+
+        @Override
+        public String toString() {
+            return String.format("id: %d range: [%d, %d)", tid, start, end);
+        }
+    }
+
+    long checkerConsume;
+    private class Checker extends Thread {
+        private boolean stop = false;
+        StopWatch stopWatch;
+        private Double LAST_DELTA_SUM = null;
+        <PrimitiveMap.(valueType)> value;
+        <if(!barrier)>
+        private static final int CHECKER_INTERVAL = <checkerInterval>;
+        <endif>
+        StopWatch checkerSW;
+
+        private Checker(){
+            stopWatch = new StopWatch();
+            checkerSW = new StopWatch();
+            value = (<PrimitiveMap.(valueType)>) asyncTable.getValue();
+        }
+
+        private void done() {
+            stop = true;
+            stopWatch.stop();
+        }
+
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    checkerSW.reset();
+                    checkerSW.start();
+                    <if (IsCheckDelta.(checkType))>
+                    double sum = 0; //统一使用double，防止溢出
+                    for (int i = 0; i \< value.size(); i++) {
+                        <valueType> t = value.get(i);
+                        <if(IsBoolean.(valueType))>
+                        if(t)
+                            sum++;
+                        <else>
+                        if (t != <AsyncTableClass>.IDENTITY_ELEMENT)
+                            sum += t;
+                        <endif>
+                    }
+                    L.info("sum of delta: " + sum);
+                    if (LAST_DELTA_SUM != null && Math.abs(sum - LAST_DELTA_SUM) <cond> <threshold>) {
+                        done();
+                        break;
+                    }
+                    LAST_DELTA_SUM = sum;
+                    <elseif(IsCheckValue.(checkType))>
+                    double sum = 0;
+                    for (int i = 0; i \< asyncTable.value.size(); i++)
+                        sum += asyncTable.value.get(i);
+                    }
+                    if (sum <cond> <threshold>) {
+                        done();
+                        break;
+                    }
+                    <endif>
+                    checkerSW.stop();
+                    checkerConsume += checkerSW.getTime();
+                    <if(dynamic)>
+                    arrangeTask();
+                    <endif>
+                    <if(barrier)>
+                    break;//启用barrier，结束循环
+                    <else>
+                    Thread.sleep(CHECKER_INTERVAL);
+                    <endif>
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+}
+>>

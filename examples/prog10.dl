@@ -1,0 +1,3 @@
+galaxies(i, gid) :- galaxies_seed(gid), i=1.
+galaxies(t1, gid2) :- galaxies(t, gid1), edge(t, gid1, gid2, c), c>=threshold, t1=t+1.
+edges(t, gid1, gid2, $count(_)) :- galaxies(t, gid1), particles(pid, gid1, t), particles(pid, gid2, t1), t1=t+1.

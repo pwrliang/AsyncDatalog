@@ -1,0 +1,144 @@
+import "Utils.stg"
+AsyncTableSingleTwoStep(name, valueType, deltaType, aggrType,
+           edgeIsNested, srcV, dstV,
+           expr) ::= <<
+package socialite.async.codegen;
+<importForTable()>
+
+public class <name> extends AsyncTable{
+    private static final Log L = LogFactory.getLog(<name>.class);
+    <KeyIndMap.(srcV.type)> keyIndMap;
+    <PrimitiveMap.(srcV.type)> indKeyList;
+    <PrimitiveMap.(valueType)> value;
+    List\<<TypeAtomicMap.(deltaType)>\> deltaValue;
+    List\<<PrimitiveMap.(srcV.type)>\> data;
+    <PrimitiveObjectMap.(srcV.type)>\<<PrimitiveMap.(srcV.type)>\> bucket;//src -> dst1,2,3...
+    List\<Boolean> filled;
+    List\<Boolean> send;
+    private int size;
+
+    public <name>(int initSize){
+        keyIndMap = new <KeyIndMap.(srcV.type)>(initSize);
+        indKeyList = new <PrimitiveMap.(srcV.type)>(initSize);
+        value = new ArrayList\<>(initSize);
+        deltaValue = new ArrayList\<>(initSize);
+        data = new ArrayList\<>(initSize);
+        bucket = new TIntObjectHashMap\<>(initSize);
+        filled = new ArrayList\<>(initSize);
+        send = new ArrayList\<>(initSize);
+    }
+
+    @Override
+    public void updateLockFree(int ind) {
+        <srcV.type> key = indKeyList.get(ind);
+        <! 特殊处理example9 !>
+        <if(IsCount.(aggrType))>
+        <deltaType> oldDelta = deltaValue.get(ind).get();
+
+        if (eval(key, 0, oldDelta)) {
+            value.set(ind, true); // twoStep的value都为boolean ？
+        }
+
+        <PrimitiveMap.(srcV.type)> dstList = data.get(ind);
+        if (!filled.get(ind)) {
+            join(key, dstList);
+            filled.set(ind, true);
+        }
+
+        if (value.get(ind) && !send.get(ind)) {
+            for (int i = 0; i \< dstList.size(); i++) {
+                <dstV.type> dst = dstList.get(i);
+                int dstInd = keyIndMap.get(dst);
+                deltaValue.get(dstInd).accumulateAndGet(1, Integer::sum);
+            }
+            send.set(ind, true);
+        }
+        <else>
+        Assert.not_implemented();
+        <endif>
+    }
+
+    private <valueType> eval(<srcV.type> src, <deltaType> weight, <deltaType> oldDelta){
+        return (<valueType>) (<expr>);
+    }
+
+    @Override
+    public <PrimitiveMap.(valueType)> getValue(){
+        return value;
+    }
+
+    public synchronized int getSize() {
+        return size;
+    }
+
+    public void join(<srcV.type> key, <PrimitiveMap.(srcV.type)> dstList) {
+        <PrimitiveMap.(srcV.type)> list = bucket.get(key);
+        if (list == null)
+            return;
+        for(int i=0; i \< list.size(); i++){
+            <srcV.type> dst = list.get(i);
+            dstList.add(dst);
+            addKey(dst, <PrimitiveInitValue.(valueType)>, <PrimitiveInitValue.(deltaType)>);
+        }
+    }
+
+    private synchronized boolean addKey(<srcV.type> key, <valueType> initValue, <deltaType> initDelta) {
+        if (keyIndMap.containsKey(key))
+            return false;
+        int ind = size++;
+        keyIndMap.put(key, ind);
+        indKeyList.add(key);
+        value.add(initValue);
+        deltaValue.add(new <TypeAtomicMap.(deltaType)>(initDelta));
+        data.add(new <PrimitiveMap.(srcV.type)>());
+        filled.add(false);
+        send.add(false);
+        return true;
+    }
+
+    public MyVisitorImpl getInitVisitor(){
+        return new MyVisitorImpl() {
+            @Override
+            public boolean visit(<srcV.type> a1) {
+                addKey(a1, true, 1);
+                return true;
+            }
+        };
+    }
+
+    @Override
+    public MyVisitorImpl getExtraVisitor() {
+        return null;
+    }
+
+    public MyVisitorImpl getEdgeVisitor(){
+        return new MyVisitorImpl() {
+            <srcV.type> src;
+
+            @Override
+            public boolean visit_0(<srcV.type> a1) {
+                src = a1;
+                if (bucket.get(src) == null)
+                    bucket.put(src, new TIntArrayList());
+                return true;
+            }
+
+            @Override
+            public boolean visit(<dstV.type> a1) {
+                bucket.get(src).add(a1);
+                return true;
+            }
+        };
+    }
+
+    @Override
+    public void iterate(MyVisitorImpl visitor) {
+        for (int ind=0; ind\<size; ind++) {
+            <srcV.type> key = indKeyList.get(ind);
+            <valueType> val = value.get(ind);
+            if (!visitor.visit(key, val))
+                break;
+        }
+    }
+}
+>>

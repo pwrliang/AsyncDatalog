@@ -1,0 +1,5 @@
+cite(int y, int x).
+
+ancestor(Y, X, $min(M)) :- cite(Y, X), M = 1, X < 123.
+ancestor(Z, X, $min(D1)) :- ancestor(Z, Y, D), cite(Y, X), D1 = ancestor.D + 1.
+LCA(p1, p2, $min(D), YEAR, X) :- ancestor(P1, X, D1), ancestor(P2, X, D2), Paper(X, YEAR), D = $max(D1, D2), P1 < P2.

@@ -1,0 +1,231 @@
+import "Utils.stg"
+AsyncTablePair(name, valueType, aggrType, weightV,
+           edgeIsNested, expr) ::= <<
+package socialite.async.codegen;
+<importForTable()>
+
+public class <name> extends BaseAsyncTable{
+    private static final Log L = LogFactory.getLog(<name>.class);
+    private TObjectIntMap\<Key> keyIndMap;
+    private TIntObjectMap\<Key> indKeyMap;
+    private <PrimitiveMap.(valueType)> value;
+    private List\<<TypeAtomicMap.(valueType)>\> deltaValue;
+    private List\<List\<Key\>> data;
+    private List\<Boolean> filled;
+    TIntObjectMap\<List\<Key\>> bucket;//common col is index
+    private int size;
+    <if(IsInt.(valueType))>
+    public static final <valueType> IDENTITY_ELEMENT = <IntegerIdentityElement.(aggrType)>;
+    <elseif(IsLong.(valueType))>
+    public static final <valueType> IDENTITY_ELEMENT = <LongIdentityElement.(aggrType)>;
+    <elseif(IsFloat.(valueType))>
+    public static final <valueType> IDENTITY_ELEMENT = <FloatIdentityElement.(aggrType)>;
+    <elseif(IsDouble.(valueType))>
+    public static final <valueType> IDENTITY_ELEMENT = <DoubleIdentityElement.(aggrType)>;
+    <endif>
+
+    public <name>(int initSize){
+        keyIndMap = new TObjectIntHashMap\<>(initSize);
+        indKeyMap = new TIntObjectHashMap\<>(initSize);
+        value = new <PrimitiveMap.(valueType)>(initSize);
+        deltaValue = new ArrayList\<>(initSize);
+        data = new ArrayList\<>(initSize);
+        filled = new ArrayList\<>(initSize);
+        bucket = new TIntObjectHashMap\<>(initSize);
+    }
+
+
+   public void updateLockFree(int ind) {
+        Key key = indKeyMap.get(ind);
+        <valueType> oldDelta = deltaValue.get(ind).getAndSet(IDENTITY_ELEMENT);
+        if (oldDelta == IDENTITY_ELEMENT)
+            return;
+        List\<Key> dstList = data.get(ind);
+        if (!filled.get(ind)) {
+            join(key, dstList);
+            filled.set(ind, true);
+        }
+        <if(IsSum.(aggrType))>
+        //non-weight sum
+        value.set(ind, value.get(ind) + oldDelta);
+        for (Key dst : dstList) {
+            <valueType> newDelta = eval(key, 0, oldDelta);
+            deltaValue.get(keyIndMap.get(dst)).addAndGet(oldDelta);
+        }
+        <elseif(IsMax.(aggrType))>
+        //non-weight max
+        <valueType> tmp = Math.max(value.get(ind), oldDelta);
+        if(tmp > value.get(k)){
+            value.set(ind, oldDelta);
+            for (Key dst : dstList){
+                <valueType> newDelta = eval(key, 0, oldDelta);
+                deltaValue.get(keyIndMap.get(dst)).accumulateAndGet(newDelta, Math::max);
+            }
+        }
+        <elseif(IsMin.(aggrType))>
+        //non-weight min
+        <valueType> tmp = Math.min(value.get(ind), oldDelta);
+        if(tmp \< value.get(k)){
+            value.set(ind, oldDelta);
+            for (Key dst : dstList){
+                <valueType> newDelta = eval(key, 0, oldDelta);
+                deltaValue.get(keyIndMap.get(dst)).accumulateAndGet(newDelta, Math::min);
+            }
+        }
+        <elseif(IsCount.(aggrType))>
+        //non-weight count
+        value.set(ind, value.get(ind) + oldDelta);
+        for (Key dst : dstList) {
+            deltaValue.get(keyIndMap.get(dst)).accumulateAndGet(1, Integer::sum);
+        }
+        <endif>
+    }
+
+    private <valueType> eval(Key key, int weight, <valueType> oldDelta){
+        return (<valueType>) (<expr>);
+    }
+
+    @Override
+    public <PrimitiveMap.(valueType)> getValue(){
+        return value;
+    }
+
+    private void join(Key key1, List\<Key> dstList) {
+        List\<Key> list = bucket.get(key1.v1);
+        if (list == null)
+            return;
+        for (Key key2 : list) {
+            Key newKey = new Key(key1.v0, key2.v1);
+            dstList.add(newKey);
+            addKey(newKey, IDENTITY_ELEMENT);
+        }
+    }
+
+    private synchronized boolean addKey(Key key, int initDelta) {
+        if (keyIndMap.containsKey(key))
+            return false;
+        keyIndMap.put(key, size);
+        indKeyMap.put(size, key);
+        deltaValue.add(new <TypeAtomicMap.(valueType)>(initDelta));
+        value.add(IDENTITY_ELEMENT);
+        data.add(new ArrayList\<>());
+        filled.add(false);
+        size++;
+        return true;
+    }
+
+   @Override
+    public MyVisitorImpl getEdgeVisitor() {
+        return new MyVisitorImpl() {
+            int src;
+
+            @Override
+            <! 嵌套列 !>
+            <if(edgeIsNested)>
+            public boolean visit_0(int a0) {
+                this.src = a0;
+                return true;
+            }
+
+            @Override
+            <! 带权重 !>
+            <if(weightV)>
+            //not implemented
+            <else>
+            //nested non-weight
+            public boolean visit(int a1) {
+                List\<Key> keyList = bucket.get(src);
+                if (keyList == null) {
+                    keyList = new ArrayList\<>();
+                    bucket.put(src, keyList);
+                }
+                Key key = new Key(src, a1);
+                keyList.add(key);
+                return true;
+            }
+            <endif>
+            <else><! 非嵌套 !>
+            //not implemented
+            <endif>
+        };
+    }
+
+    @Override
+    public MyVisitorImpl getExtraVisitor() {
+        return null;
+    }
+
+    @Override
+    public MyVisitorImpl getInitVisitor(){
+        return new MyVisitorImpl(){
+            int src;
+
+            @Override
+            public boolean visit_0(int a1) {
+                src = a1;
+                return true;
+            }
+
+            @Override
+            public boolean visit(int a1, int a2) {
+                Key key = new Key(src, a1);
+                addKey(key, a2);
+                return true;
+            }
+        };
+    }
+
+    @Override
+	public void iterate(MyVisitorImpl visitor) {
+		for (Key key:indKeyMap.valueCollection()) {
+		    int ind = keyIndMap.get(key);
+		    if (!visitor.visit(key.v0, key.v1, value.get(ind)))
+		        break;
+		}
+	}
+
+    @Override
+    public synchronized int getSize(){
+        return size;
+    }
+
+    private class Key {
+        int v0;
+        int v1;
+        private int hashCode = -1;
+
+        Key(int v0, int v1) {
+            this.v0 = v0;
+            this.v1 = v1;
+        }
+
+        @Override
+        public String toString() {
+            return v0 + " " + v1;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Key key = (Key) o;
+
+            if (v0 != key.v0) return false;
+            return v1 == key.v1;
+        }
+
+        @Override
+        public int hashCode() {
+            if (hashCode != -1)
+                return hashCode;
+            hashCode = v0;
+            hashCode = 31 * hashCode + v1;
+            return hashCode;
+        }
+    }
+}
+
+
+
+>>

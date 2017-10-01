@@ -1,0 +1,6 @@
+s(int X, int EX).
+p(int X, int EX, int L1).
+pi(int X, int L2).
+
+calcV(i, X, $max(L)) :- s(j, EX), p(X, EX, L1), pi(X, L2), L = p.L1 * pi.L2, i = 0, j=0.
+calcV(T, Y, $max(DL)) :- s(T, EY), p(Y, EY, L1), T1 = s.T - 1, t(X, Y, L2), calcV(T1, X, DL3), DL = p.L1 * t.L2 * calcV.DL3.

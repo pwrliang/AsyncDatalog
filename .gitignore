@@ -1,0 +1,9 @@
+*.class
+classes/
+gen/
+grammar/output/
+ext/cachedir/
+jython/cachedir/
+gen_master/
+logs/
+socialite-all.jar

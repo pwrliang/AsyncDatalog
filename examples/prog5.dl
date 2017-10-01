@@ -1,0 +1,4 @@
+net(int X, int Y, int P).
+
+reach(X, Y, $max(P)) :- net(X, Y, P).
+reach(X, Y, $max(P)) :- reach(X, Z, P1), reach(Z, Y, P2), P = P1 * P2.

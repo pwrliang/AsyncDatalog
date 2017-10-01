@@ -1,0 +1,9 @@
+Edge(int src:0..4847571, (int dst)).
+CC(int node:0..4847571, int tag).
+Node(int node:0..4847571).
+
+Edge(s, t) :- l=$read("/home/gengl/Desktop/gengl/Datasets/undirected/LiveJournal-edge1_fix_undirected.txt"), (s1,s2)=$split(l, "	"),
+             s=$toInt(s1), t=$toInt(s2).
+Node(n) :- l=$read("/home/gengl/Desktop/gengl/Datasets/undirected/LiveJournal-node.txt"), n=$toInt(l).
+CC(X, X) :- Node(X).
+CC(Y, $dmin(V)) :- CC(X, V), Edge(X, Y), V1 = V.
