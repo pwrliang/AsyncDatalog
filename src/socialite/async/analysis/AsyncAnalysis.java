@@ -99,6 +99,7 @@ public class AsyncAnalysis {
         List<Param> args = aggrFunc.getArgs();
         if (args.size() != 1)
             Assert.die("only support 1 arg");
+
         deltaType = aggrTable.getColumn(aggrFunc.getIdx()).getType();
         if (resultRule.getHeadVariables().size() == 1) {//result表只有一列，则value为boolean
             valueType = boolean.class.toString();
@@ -299,10 +300,6 @@ public class AsyncAnalysis {
         return tableMap.get(edgeP.name()).hasNesting();
     }
 
-    public Rule getMidRule() {
-        return midRule;
-    }
-
     public boolean isTwoStep() {
         return midRule != null;
     }
@@ -317,5 +314,17 @@ public class AsyncAnalysis {
 
     public List<MyVariable> getDstV() {
         return dstV;
+    }
+
+    public Rule getResultRule(){
+        return resultRule;
+    }
+
+    public String getInitRuleBody() {
+        Rule rule = recRules.get(0);
+        StringJoiner joiner = new StringJoiner(", ");
+        for (Predicate predicate : rule.getBodyP())
+            joiner.add(predicate.toString());
+        return joiner.toString();
     }
 }

@@ -5,17 +5,24 @@ import mpi.MPIException;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import socialite.async.AsyncConfig;
 import socialite.async.analysis.AsyncAnalysis;
+import socialite.async.codegen.AsyncCodeGen;
+import socialite.async.codegen.DistAsyncCodeGen;
 import socialite.async.dist.ds.MsgType;
 import socialite.async.dist.master.AsyncMaster;
 import socialite.async.util.SerializeTool;
+import socialite.async.util.TextUtils;
 import socialite.codegen.Analysis;
 import socialite.engine.ClientEngine;
+import socialite.engine.LocalEngine;
 import socialite.parser.DeltaRule;
 import socialite.parser.Parser;
 import socialite.parser.Rule;
 import socialite.parser.antlr.TableDecl;
 import socialite.resource.SRuntimeWorker;
+import socialite.tables.QueryVisitor;
+import socialite.tables.Tuple;
 
 import java.util.HashMap;
 import java.util.List;
@@ -29,18 +36,22 @@ public class DistAsyncEngine implements Runnable {
     private static final Log L = LogFactory.getLog(DistAsyncEngine.class);
     private int workerNum;
     private StopWatch stopWatch;
-    private ClientEngine clientEngine;
+    //    private ClientEngine clientEngine;
+    private LocalEngine clientEngine=new LocalEngine();
+    private AsyncAnalysis asyncAnalysis;
+    private DistAsyncCodeGen distAsyncCodeGen;
+
 
     public DistAsyncEngine(String program, int workerNum) {
         this.workerNum = workerNum;
 
-        clientEngine = new ClientEngine();
+//        clientEngine = new ClientEngine();
         Parser parser = new Parser(program);
         parser.parse(program);
         Analysis tmpAn = new Analysis(parser);
         tmpAn.run();
 
-        AsyncAnalysis asyncAnalysis = new AsyncAnalysis(tmpAn);
+        asyncAnalysis = new AsyncAnalysis(tmpAn);
         List<String> decls = parser.getTableDeclMap().values().stream().map(TableDecl::getDeclText).collect(Collectors.toList());
         List<Rule> rules = tmpAn.getEpochs().stream().flatMap(epoch -> epoch.getRules().stream()).filter(rule -> !(rule instanceof DeltaRule)
                 && !rule.toString().contains("Remote_")).collect(Collectors.toList()); //get rid of DeltaRule and Remote_rule
@@ -54,6 +65,18 @@ public class DistAsyncEngine implements Runnable {
                 asyncAnalysis.addRecRule(rule);
             }
         }
+//        asyncAnalysis.analysis();
+//        distAsyncCodeGen = new DistAsyncCodeGen(asyncAnalysis);
+//        for (String initRule : distAsyncCodeGen.generateInitStat()) {
+//            L.info("exec: " + initRule);
+//            clientEngine.run(initRule);
+//        }
+//        clientEngine.run("?- AsyncTableSingle_sssp_mid(x, r, d, y).", new QueryVisitor() {
+//            @Override
+//            public boolean visit(Tuple _0) {
+//                return super.visit(_0);
+//            }
+//        });
     }
 
     @Override
@@ -68,13 +91,11 @@ public class DistAsyncEngine implements Runnable {
         }
     }
 
-
-    public static final int INIT_CARRIER_INIT_SIZE = 50000; //init size 200k
-    public static final int INIT_CARRIER_LOADED_THRESHOLD = (int) (INIT_CARRIER_INIT_SIZE * 1.5); //when reach the threshold, send it
-    public static final int IDENTITY_ELEMENT = 0;//depending on algorithms
-
-
     private void loadData() {
+        String tableSig = "Middle(int Key:0..875713, double initD, int degree, (int adj)).";
+        clientEngine.run(tableSig);
+        clientEngine.run("Middle(key, r, degree, adj) :- Rank(key, r), Edge(key, adj), EdgeCnt(key, degree).");
+
         Map<Integer, Integer> myIdxRankMap = new HashMap<>();
         IntStream.range(1, workerNum).forEach(dest -> {
             int[] myIdxRank = new int[2];
@@ -84,11 +105,6 @@ public class DistAsyncEngine implements Runnable {
         SerializeTool serializeTool = new SerializeTool.Builder().build();
         byte[] bytes = serializeTool.toBytes(myIdxRankMap);
         IntStream.range(1, workerNum).forEach(dest -> MPI.COMM_WORLD.Send(bytes, 0, bytes.length, MPI.BYTE, dest, MsgType.FEEDBACK_IDX_RANK.ordinal()));
-        L.info("All IDX REPORTED");
-        String tableSig = "Middle(int Key:0..875713, double initD, int degree, (int adj)).";
-        clientEngine.run(tableSig);
-        clientEngine.run("Middle(key, r, degree, adj) :- Rank(key, r), Edge(key, adj), EdgeCnt(key, degree).");
-        IntStream.rangeClosed(1, workerNum).forEach(dest -> MPI.COMM_WORLD.Send(tableSig.toCharArray(), 0, tableSig.length(), MPI.CHAR, dest, MsgType.INIT_DATA.ordinal()));
     }
 
     private class FeedBackThread extends Thread {
@@ -123,4 +139,15 @@ public class DistAsyncEngine implements Runnable {
         }
     }
 
+
+    public static void main(String[] args) {
+        AsyncConfig asyncConfig = new AsyncConfig.Builder()
+                .setBarrier()
+//                .setCheckInterval(1500)
+                .setCheckerType(AsyncConfig.CheckerType.DELTA)
+                .setCheckerCond(AsyncConfig.Cond.LE)
+                .setThreshold(0.00001)
+                .build();
+        DistAsyncEngine distAsyncEngine = new DistAsyncEngine(TextUtils.readText(args[0]), 4);
+    }
 }

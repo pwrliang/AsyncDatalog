@@ -70,18 +70,13 @@ public class DistAsyncRuntime extends AsyncRuntimeBase {
     private void initData() {
         byte[] data = new byte[4096];
         MPI.COMM_WORLD.Sendrecv(new int[]{SRuntimeWorker.getInst().getWorkerAddrMap().myIndex(), MPI.COMM_WORLD.Rank()}, 0, 2, MPI.INT, AsyncMaster.ID, MsgType.REPORT_IDX_RANK.ordinal(),
-                data, 0, data.length, MPI.INT, AsyncMaster.ID, MsgType.FEEDBACK_IDX_RANK.ordinal());
+                data, 0, data.length, MPI.BYTE, AsyncMaster.ID, MsgType.FEEDBACK_IDX_RANK.ordinal());
         SerializeTool serializeTool = new SerializeTool.Builder().build();
         myIdxRankMap = new HashMap<>();
         myIdxRankMap = serializeTool.fromBytes(data, myIdxRankMap.getClass());
 
-        Status status = MPI.COMM_WORLD.Probe(AsyncMaster.ID, MsgType.INIT_DATA.ordinal());
-        char[] tableSig = new char[status.Get_count(MPI.CHAR)];
         //init keys
         distAsyncTable = new DistAsyncTable(workerNum, workerId, INIT_ASYNC_TABLE_SIZE, INIT_MESSAGE_TABLE_SIZE);
-
-        MPI.COMM_WORLD.Recv(tableSig, 0, tableSig.length, MPI.CHAR, status.source, MsgType.INIT_DATA.ordinal());
-        L.info("recv " + String.valueOf(tableSig));
 
         TableInstRegistry tableInstRegistry = SRuntimeWorker.getInst().getTableRegistry();
         Map<String, Table> tableMap = SRuntimeWorker.getInst().getTableMap();

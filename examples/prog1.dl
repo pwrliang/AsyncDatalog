@@ -6,6 +6,6 @@ edge(s, t, w) :- l=$read("C:\\Users\\g\\IdeaProjects\\socialite-before-yarn\\exa
 
 sssp(s, d) :- l=$read("C:\\Users\\g\\IdeaProjects\\socialite-before-yarn\\examples\\prog1_node.txt"), (s1,s2)=$split(l, "	"),
              s=$toInt(s1), d=$toInt(s2).
-sssp(Y, $min(D)) :- sssp(X, D1), edge(X, Y, D2), D = D1 + D2.
+sssp(Y, $dmin(D)) :- sssp(X, D1), edge(X, Y, D2), D = D1 + D2.
 // /home/gengl/IdeaProjects/AsyncDatalog/examples
 //?- sssp(x, y).

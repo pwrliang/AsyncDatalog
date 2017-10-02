@@ -8,6 +8,9 @@ import socialite.engine.Config;
 import socialite.util.Assert;
 import socialite.util.MySTGroupFile;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class AsyncCodeGen {
     private AsyncAnalysis asyncAn;
     private AsyncConfig asyncConfig = AsyncConfig.get();

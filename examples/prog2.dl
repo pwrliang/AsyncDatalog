@@ -11,7 +11,7 @@ EdgeCnt(s, $inc(1)) :- Edge(s, t).
 Node(n) :- l=$read("C:\\Users\\g\\IdeaProjects\\socialite-before-yarn\\examples\\prog2_node.txt"), n=$toInt(l).
 
 Rank(n, r) :- Node(n), r = 0.2 / 12.
-//Rank(y, $dsum(r1)) :- Rank(x, r), Edge(x, y),  EdgeCnt(x, d), r1 = 0.8 * r / d.
+Rank(y, $dsum(r1)) :- Rank(x, r), Edge(x, y),  EdgeCnt(x, d), r1 = 0.8 * r / d.
 // /home/gengl/Datasets/directed/web-Google_fix.txt
 // /home/gengl/Datasets/nodes/web-Google_fix_nodes.txt
 // /home/gengl/socialite-mod/examples
