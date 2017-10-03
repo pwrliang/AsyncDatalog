@@ -3,14 +3,14 @@ Rank(int n:0..875713, double rank).
 Edge(int n:0..875713, (int t)).
 EdgeCnt(int n:0..875713, int cnt).
 
-Edge(s, t) :- l=$read("C:\\Users\\g\\IdeaProjects\\socialite-before-yarn\\examples\\prog2_edge.txt"), (s1,s2)=$split(l, "	"),
+Edge(s, t) :- l=$read("/home/gengl/Datasets/directed/web-Google_fix.txt"), (s1,s2)=$split(l, "	"),
              s=$toInt(s1), t=$toInt(s2).
 
 EdgeCnt(s, $inc(1)) :- Edge(s, t).
 
-Node(n) :- l=$read("C:\\Users\\g\\IdeaProjects\\socialite-before-yarn\\examples\\prog2_node.txt"), n=$toInt(l).
+Node(n) :- l=$read("/home/gengl/Datasets/nodes/web-Google_fix_nodes.txt"), n=$toInt(l).
 
-Rank(n, r) :- Node(n), r = 0.2 / 12.
+Rank(n, r) :- Node(n), r = 0.2 / 875713.
 Rank(y, $dsum(r1)) :- Rank(x, r), Edge(x, y),  EdgeCnt(x, d), r1 = 0.8 * r / d.
 // /home/gengl/Datasets/directed/web-Google_fix.txt
 // /home/gengl/Datasets/nodes/web-Google_fix_nodes.txt

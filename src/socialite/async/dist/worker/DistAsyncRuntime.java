@@ -5,17 +5,15 @@ import mpi.MPIException;
 import mpi.Status;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import socialite.async.analysis.MyVisitorImpl;
 import socialite.async.codegen.AsyncRuntimeBase;
 import socialite.async.codegen.BaseAsyncTable;
 import socialite.async.dist.ds.DistAsyncTable;
 import socialite.async.dist.ds.MessageTable;
 import socialite.async.dist.ds.MsgType;
 import socialite.async.dist.master.AsyncMaster;
-import socialite.async.dist.master.InitCarrier;
 import socialite.async.util.SerializeTool;
 import socialite.parser.Table;
-import socialite.resource.DistTableSliceMap;
-import socialite.resource.SRuntime;
 import socialite.resource.SRuntimeWorker;
 import socialite.resource.TableInstRegistry;
 import socialite.tables.TableInst;
@@ -32,7 +30,7 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 //this class needs dynamic generate future
 public class DistAsyncRuntime extends AsyncRuntimeBase {
     private static final Log L = LogFactory.getLog(DistAsyncRuntime.class);
-    private static final int INIT_MESSAGE_TABLE_SIZE = 1000;
+    private static final int INIT_MESSAGE_TABLE_SIZE = 10000;
     private static final int INIT_ASYNC_TABLE_SIZE = 100000;
     private static final int MESSAGE_TABLE_UPDATE_THRESHOLD = 50000;
     public final int workerId;
@@ -65,24 +63,26 @@ public class DistAsyncRuntime extends AsyncRuntimeBase {
         L.info(String.format("Worker %d all threads started.", workerId));
     }
 
-    Map<Integer, Integer> myIdxRankMap;
+    Map<Integer, Integer> myIdxWorkerIdMap;
 
     private void initData() {
         byte[] data = new byte[4096];
-        MPI.COMM_WORLD.Sendrecv(new int[]{SRuntimeWorker.getInst().getWorkerAddrMap().myIndex(), MPI.COMM_WORLD.Rank()}, 0, 2, MPI.INT, AsyncMaster.ID, MsgType.REPORT_IDX_RANK.ordinal(),
-                data, 0, data.length, MPI.BYTE, AsyncMaster.ID, MsgType.FEEDBACK_IDX_RANK.ordinal());
+        MPI.COMM_WORLD.Sendrecv(new int[]{SRuntimeWorker.getInst().getWorkerAddrMap().myIndex(), workerId}, 0, 2, MPI.INT, AsyncMaster.ID, MsgType.REPORT_IDX_WORKERID.ordinal(),
+                data, 0, data.length, MPI.BYTE, AsyncMaster.ID, MsgType.FEEDBACK_IDX_WORKERID.ordinal());
+
         SerializeTool serializeTool = new SerializeTool.Builder().build();
-        myIdxRankMap = new HashMap<>();
-        myIdxRankMap = serializeTool.fromBytes(data, myIdxRankMap.getClass());
+        myIdxWorkerIdMap = new HashMap<>();
+        myIdxWorkerIdMap = serializeTool.fromBytes(data, myIdxWorkerIdMap.getClass());
 
         //init keys
         distAsyncTable = new DistAsyncTable(workerNum, workerId, INIT_ASYNC_TABLE_SIZE, INIT_MESSAGE_TABLE_SIZE);
-
         TableInstRegistry tableInstRegistry = SRuntimeWorker.getInst().getTableRegistry();
         Map<String, Table> tableMap = SRuntimeWorker.getInst().getTableMap();
         Table initTable = tableMap.get("Middle");
         distAsyncTable.setTableId(initTable.id());
         distAsyncTable.setSliceMap(SRuntimeWorker.getInst().getSliceMap());
+        distAsyncTable.setMyIdxWorkerIdMap(myIdxWorkerIdMap);
+
 
         TableInst[] tableInsts = tableInstRegistry.getTableInstArray(initTable.id());
         try {
@@ -94,7 +94,9 @@ public class DistAsyncRuntime extends AsyncRuntimeBase {
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
         }
-        distAsyncTable.display();
+        L.info("machine " + workerId + " dataloaded " + distAsyncTable.getSize());
+//        distAsyncTable.display();
+
     }
 
 //    private void initData() {
@@ -175,13 +177,13 @@ public class DistAsyncRuntime extends AsyncRuntimeBase {
     }
 
     private void saveResult() {
-//        distAsyncTable.iterate(new MyVisitorImpl() {
-//            @Override
-//            public boolean visit(int a1, double a2, double a3) {
-//                L.info("machine: " + (workerId + 1) + "\t" + a1 + "\t" + a2 + "\t" + a3);
-//                return true;
-//            }
-//        });
+        distAsyncTable.iterate(new MyVisitorImpl() {
+            @Override
+            public boolean visit(int a1, double a2, double a3) {
+                L.info("machine: " + (workerId + 1) + "\t" + a1 + "\t" + a2 + "\t" + a3);
+                return false;
+            }
+        });
     }
 
     private class ComputingThread extends Thread {

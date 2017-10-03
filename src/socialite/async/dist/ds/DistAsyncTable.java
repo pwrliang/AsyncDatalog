@@ -15,6 +15,7 @@ import socialite.util.SociaLiteException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 //this is array table
@@ -30,8 +31,12 @@ public class DistAsyncTable extends BaseDistAsyncTable {
     private TIntList extra;
     private AtomicIntegerArray messageTableSelector;
     private MessageTable[][] messageTableList;
-
+    Map<Integer, Integer> myIdxWorkerIdMap;
     private int myWorkerId;
+
+    public void setMyIdxWorkerIdMap(Map<Integer, Integer> myIdxWorkerIdMap) {
+        this.myIdxWorkerIdMap = myIdxWorkerIdMap;
+    }
 
     public DistAsyncTable(int workerNum, int myWorkerId, int initSize, int initBufferTableSize) {
         this.workerNum = workerNum;
@@ -96,7 +101,8 @@ public class DistAsyncTable extends BaseDistAsyncTable {
 
     // should same as InitCarrier.getWorkerId
     public int getWorkerId(int key, int workerNum) {
-        return sliceMap.machineIndexFor(tableId, key);
+        int myIdx = sliceMap.machineIndexFor(tableId, key);
+        return myIdxWorkerIdMap.get(myIdx);
     }
 
     @Override
@@ -124,10 +130,7 @@ public class DistAsyncTable extends BaseDistAsyncTable {
 
     @Override
     public void iterate(MyVisitorImpl visitor) {
-        keyIndMap.forEachEntry((key, ind) -> {
-                    visitor.visit(key, valueList.get(ind), deltaList.get(ind).doubleValue());
-                    return true;
-                }
+        keyIndMap.forEachEntry((key, ind) -> visitor.visit(key, valueList.get(ind), deltaList.get(ind).doubleValue())
         );
     }
 
@@ -177,8 +180,8 @@ public class DistAsyncTable extends BaseDistAsyncTable {
                 valueList.add(IDENTITY_ELEMENT);
                 deltaList.add(new MyAtomicDouble(a2));
                 extra.add(a3);
-                dataList.add(adjacents);
                 adjacents = new TIntArrayList();
+                dataList.add(adjacents);
                 return true;
             }
 

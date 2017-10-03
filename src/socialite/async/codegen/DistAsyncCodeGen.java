@@ -8,7 +8,7 @@ import java.util.List;
 
 public class DistAsyncCodeGen {
     private AsyncAnalysis asyncAn;
-    private AsyncConfig asyncConfig = AsyncConfig.get();
+//    private AsyncConfig asyncConfig = AsyncConfig.get();
 
     public DistAsyncCodeGen(AsyncAnalysis asyncAn) {
         this.asyncAn = asyncAn;
