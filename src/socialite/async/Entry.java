@@ -20,6 +20,7 @@ public class Entry {
         int machineId = MPI.COMM_WORLD.Rank();
         int workerNum = machineNum - 1;
         System.setProperty("socialite.worker.num", workerNum + "");
+        L.info("Machine "+machineId+" Xmx "+Runtime.getRuntime().maxMemory()/1024/1024);
         if (machineNum - 1 != Config.getWorkerNodeNum())
             throw new SociaLiteException(String.format("MPI Workers (%d)!= Socialite Workers (%d)", workerNum, Config.getWorkerNodeNum()));
         if (machineId == 0) {
@@ -32,7 +33,7 @@ public class Entry {
 //            worker id start with 0, call mpi api need to add 1
             WorkerNode.startWorkerNode();
             int workerId = machineId - 1;
-            AsyncWorker worker = new AsyncWorker(workerId, workerNum, 1);
+            AsyncWorker worker = new AsyncWorker(workerId, workerNum, 32);
             worker.startWorker();
         }
         L.info("process " + machineId + " exit.");

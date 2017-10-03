@@ -32,7 +32,7 @@ public class DistAsyncRuntime extends AsyncRuntimeBase {
     private static final Log L = LogFactory.getLog(DistAsyncRuntime.class);
     private static final int INIT_MESSAGE_TABLE_SIZE = 10000;
     private static final int INIT_ASYNC_TABLE_SIZE = 100000;
-    private static final int MESSAGE_TABLE_UPDATE_THRESHOLD = 50000;
+    private static final int MESSAGE_TABLE_UPDATE_THRESHOLD = 5000000;
     public final int workerId;
     private final int workerNum;
     private int threadNum;
