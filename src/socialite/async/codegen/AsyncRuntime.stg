@@ -1,5 +1,5 @@
 import "Utils.stg"
-AsyncRuntime(AsyncTableClass, valueType, initSize, threadNum, dynamic, barrier, checkType, checkerInterval, threshold, cond) ::= <<
+AsyncRuntime(valueType, initSize, threadNum, dynamic, barrier, checkType, checkerInterval, threshold, cond) ::= <<
 package socialite.async.codegen;
 <importForRuntime()>
 
@@ -17,7 +17,7 @@ public class AsyncRuntime extends AsyncRuntimeBase{
 
     public AsyncRuntime(LocalEngine syncEngine, TableInst[] recInstArr, TableInst[] edgeInstArr, TableInst[] extraInstArr) {
         this.syncEngine = syncEngine;
-        asyncTable = new <AsyncTableClass>(INIT_SIZE);
+        asyncTable = new AsyncTable(INIT_SIZE);
         loadData(recInstArr, edgeInstArr, extraInstArr);
         L.info("Data Loaded size:" + asyncTable.getSize());
         createThreads();

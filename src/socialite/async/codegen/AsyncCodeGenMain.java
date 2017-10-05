@@ -7,21 +7,34 @@ import socialite.codegen.Compiler;
 import socialite.util.Loader;
 import socialite.util.SociaLiteException;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class AsyncCodeGenMain {
     public static final String PACKAGE_NAME = AsyncCodeGenMain.class.getPackage().getName();
     private static final Log L = LogFactory.getLog(AsyncCodeGenMain.class);
     private AsyncAnalysis asyncAn;
     private Class<?> runtimeClass;
+    private List<String> initStats;
 
     public AsyncCodeGenMain(AsyncAnalysis asyncAn) {
         this.asyncAn = asyncAn;
     }
 
     public void generate() {
-        genAsyncTable();
-        L.info("AsyncTable compiled");
+        generateInitTableStats();
+//        genAsyncTable();
+//        L.info("AsyncTable compiled");
 //        genRuntime();
 //        L.info("AsyncRuntime compiled");
+    }
+
+    public void generateInitTableStats(){
+        AsyncCodeGen asyncCodeGen = new AsyncCodeGen(asyncAn);
+        String stats = asyncCodeGen.generateInitTable();
+        String[] statArr = stats.replace("\r","").replace("\n","").split("\\$");
+        initStats= Arrays.stream(statArr).map(String::trim).collect(Collectors.toList());
     }
 
     public void genAsyncTable() {
@@ -60,6 +73,9 @@ public class AsyncCodeGenMain {
             throw new SociaLiteException("Load Runtime Fail!!!");
     }
 
+    public List<String> getInitStats() {
+        return initStats;
+    }
 
     public Class<?> getRuntimeClass() {
         return runtimeClass;

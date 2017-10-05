@@ -36,7 +36,7 @@ public class LocalAsyncEngine {
         List<String> decls = parser.getTableDeclMap().values().stream().map(TableDecl::getDeclText).collect(Collectors.toList());
         List<Rule> rules = tmpAn.getEpochs().stream().flatMap(epoch -> epoch.getRules().stream()).filter(rule -> !(rule instanceof DeltaRule)).collect(Collectors.toList());
         //由socialite执行表创建和非递归规则
-//        decls.forEach(localEngine::run);
+        decls.forEach(localEngine::run);
         for (Rule rule : rules) {
             if (!rule.isLeftRec()) {
 //                localEngine.run(rule.getRuleText());
@@ -94,6 +94,11 @@ public class LocalAsyncEngine {
 
     public void run() {
         compile();
+        List<String> initStats = asyncCodeGenMain.getInitStats();
+        for(String stat:initStats) {
+            localEngine.run(stat);
+            System.out.println(stat);
+        }
 //        run(new MyVisitorImpl() {
 //            @Override
 //            public boolean visit(int a1, int a2) {

@@ -24,6 +24,7 @@ public class AsyncAnalysis {
     private int initSize;
     /*  edge属性  */
     private Predicate edgeP;
+    private Predicate extraP;
     /* 求值表达式 */
     private Map<String, Table> tableMap;
     private AggrFunction aggrFunc;
@@ -170,7 +171,7 @@ public class AsyncAnalysis {
         Predicate headP = resultRule.getHead();
         Set<Variable> varInExpr = expr.getVariables();
         //bodyP过滤掉recP、剩下的谓词extraP需要满足：谓词的变量在求值表达式出现过，并且该谓词只有src变量没有dst变量（否则就是edgeP了）
-        Predicate extraP = bodyPList.stream().filter(predicate -> {
+        extraP = bodyPList.stream().filter(predicate -> {
             if (predicate.name().equals(headP.name()))//跳过recursive predicate
                 return false;
             if (predicate == edgeP)//跳过edge
@@ -267,6 +268,20 @@ public class AsyncAnalysis {
 
     public int getInitSize() {
         return initSize;
+    }
+
+    public String getRecPName() {
+        return recRules.get(0).getHead().name();
+    }
+
+    public String getEdgePName() {
+        return edgeP.name();
+    }
+
+    public String getExtraPName() {
+        if (extraP == null)
+            return null;
+        return extraP.name();
     }
 
     public String getResultPName() {

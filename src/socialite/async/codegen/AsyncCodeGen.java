@@ -16,6 +16,23 @@ public class AsyncCodeGen {
         this.asyncAn = asyncAn;
     }
 
+    String generateInitTable(){
+        STGroup stg = new MySTGroupFile(AsyncCodeGen.class.getResource("AsyncTable.stg"),
+                "UTF-8", '<', '>');
+        stg.load();
+        ST st = stg.getInstanceOf("InitTableStat");
+        st.add("initSize",asyncAn.getInitSize());
+        st.add("keyType",asyncAn.getKeyType());
+        st.add("valueType", asyncAn.getValueType());
+        st.add("weightType", asyncAn.getWeightType());
+        st.add("extraType", asyncAn.getExtraType());
+        st.add("recPName", asyncAn.getResultPName());
+        st.add("edgePName", asyncAn.getEdgePName());
+        st.add("extraPName", asyncAn.getExtraPName());
+
+        return st.render();
+    }
+
     String generateAsyncTable() {
         STGroup stg = new MySTGroupFile(AsyncCodeGen.class.getResource("AsyncTable.stg"),
                 "UTF-8", '<', '>');
@@ -84,15 +101,13 @@ public class AsyncCodeGen {
                 "UTF-8", '<', '>');
         stg.load();
         ST st = stg.getInstanceOf("AsyncRuntime");
-//        st.add("AsyncTableClass", asyncAn.getClassName());
-//        st.add("valueType", asyncAn.getValueType());
-//        st.add("initSize", asyncAn.getInitSize());
-//        st.add("threadNum", Config.getInst().getWorkerThreadNum());// standalone
-//        st.add("dynamic", asyncAn.isPairKey() || asyncAn.isTwoStep());
-//        st.add("threshold", asyncConfig.getThreshold());
-//        st.add("cond", asyncConfig.getCond());
-//        st.add("barrier", asyncConfig.isBarrier());
-//        st.add("checkerInterval", asyncConfig.getCheckInterval());
+        st.add("valueType", asyncAn.getValueType());
+        st.add("initSize", asyncAn.getInitSize());
+        st.add("threadNum", Config.getInst().getWorkerThreadNum());// standalone
+        st.add("dynamic", asyncAn.getKeyType().equals("Pair") || asyncAn.isTwoStep());
+        st.add("threshold", asyncConfig.getThreshold());
+        st.add("cond", asyncConfig.getCond());
+        st.add("checkerInterval", asyncConfig.getCheckInterval());
         if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DELTA)
             st.add("checkType", "CheckDelta");
         else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.VALUE)

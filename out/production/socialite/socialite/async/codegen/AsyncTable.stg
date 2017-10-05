@@ -1,7 +1,7 @@
 import "AsyncTableSingle.stg"
 import "AsyncTablePair.stg"
 import "AsyncTableSingleTwoStep.stg"
-
+import "InitTableStat.stg"
 dummy() ::= <<
   // this is dummy
 >>
