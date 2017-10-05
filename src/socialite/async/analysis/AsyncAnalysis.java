@@ -9,16 +9,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class AsyncAnalysis {
-    List<MyVariable> srcV;
-    List<MyVariable> dstV;
-    //    MyVariable srcV, dstV, weightV;
-    /*  edge属性  */
-    /* 附加表 */
-    Predicate extraP;
-    MyVariable extra;
+    private List<MyVariable> srcV;
+    private List<MyVariable> dstV;
+    private MyVariable extraV;
     /* 附加表 */
     /* 求值表达式 */
-    String sExpr;
+    private String sExpr;
     private Analysis an;
     private List<Rule> recRules;
     private MyVariable weightV;
@@ -78,7 +74,7 @@ public class AsyncAnalysis {
         if (tableMap.get(resultRule.getHead().name()).isArrayTable())
             initSize = tableMap.get(resultRule.getHead().name()).arrayTableSize();
         else
-            initSize = -1;
+            Assert.die("Need to be ArrayTable, Please specify a range.");
         return true;
     }
 
@@ -112,7 +108,7 @@ public class AsyncAnalysis {
         int aggFuncPos = aggrFunc.getIdx();
 
         Table table = tableMap.get(resultRule.getHead().name());
-        if (aggFuncPos == 1) {
+        if (aggFuncPos == 1) { //primitive key
             if (resultRule.getHead().getVariables().size() == 1) {//2-step
                 srcV.add(new MyVariable(((Variable) resultRule.getHead().first()).name, table.getColumn(0).type()));
                 table = tableMap.get(midRule.getHead().name());//中间结果表的第一列作为dst变量
@@ -121,7 +117,7 @@ public class AsyncAnalysis {
                 srcV.add(new MyVariable(((Variable) resultRule.firstP().first()).name, table.getColumn(0).type()));
                 dstV.add(new MyVariable(((Variable) resultRule.getHead().first()).name, table.getColumn(0).type()));
             }
-        } else if (aggFuncPos == 2) {
+        } else if (aggFuncPos == 2) { //pair key
             srcV.add(new MyVariable(((Variable) resultRule.firstP().params.get(0)).name, table.getColumn(0).type()));
             srcV.add(new MyVariable(((Variable) resultRule.firstP().params.get(1)).name, table.getColumn(1).type()));
             dstV.add(new MyVariable(((Variable) resultRule.getHead().params.get(0)).name, table.getColumn(0).type()));
@@ -174,7 +170,7 @@ public class AsyncAnalysis {
         Predicate headP = resultRule.getHead();
         Set<Variable> varInExpr = expr.getVariables();
         //bodyP过滤掉recP、剩下的谓词extraP需要满足：谓词的变量在求值表达式出现过，并且该谓词只有src变量没有dst变量（否则就是edgeP了）
-        extraP = bodyPList.stream().filter(predicate -> {
+        Predicate extraP = bodyPList.stream().filter(predicate -> {
             if (predicate.name().equals(headP.name()))//跳过recursive predicate
                 return false;
             if (predicate == edgeP)//跳过edge
@@ -187,7 +183,7 @@ public class AsyncAnalysis {
         if (srcV.size() == 1) {
             if (extraP != null) {
                 Column extraC = an.getTableMap().get(extraP.name()).getColumns()[1];//先假定第一列和key同名，第二列存值
-                extra = new MyVariable(((Variable) extraP.params.get(1)).name, extraC.type());//bug is here
+                extraV = new MyVariable(((Variable) extraP.params.get(1)).name, extraC.type());//bug is here
             }
         } else {
             //对于顶点对程序，寻找extra变量
@@ -220,8 +216,8 @@ public class AsyncAnalysis {
             Variable variable = (Variable) param;
             if (resultRule.firstP().getVariables().contains(variable))
                 return "oldDelta";
-            if (extra != null && variable.name.equals(extra.getName()))
-                return "extra.get(src)";
+            if (extraV != null && variable.name.equals(extraV.getName()))
+                return "extra";
             if (weightV != null && variable.name.equals(weightV.getName()))
                 return "weight";
             throw new SociaLiteException("unknown var: " + variable.name);
@@ -244,20 +240,25 @@ public class AsyncAnalysis {
         return cmpExprToString(binOp.arg1) + binOp.op + cmpExprToString(binOp.arg2);
     }
 
-    public String getClassName() {
-        if (isPairKey()) {
-            return "AsyncTablePair_" + getResultPName();
+    public String getKeyType() {
+        assert srcV.size() == dstV.size();
+        if (srcV.size() == 1) {
+            return srcV.get(0).getType().toString();
         } else {
-            if (isTwoStep()) {
-                return "AsyncTableSingleTwo_" + getResultPName();
-            } else {
-                return "AsyncTableSingle_" + getResultPName();
-            }
+            return "Pair";
         }
     }
 
-    public MyVariable getWeightV() {
-        return weightV;
+    public String getWeightType() {
+        if (weightV == null)
+            return null;
+        return weightV.getType().toString();
+    }
+
+    public String getExtraType() {
+        if (extraV == null)
+            return null;
+        return extraV.getType().toString();
     }
 
     public String getsExpr() {
@@ -272,52 +273,16 @@ public class AsyncAnalysis {
         return resultRule.getHead().name();
     }
 
-    public String getEdgePName() {
-        return edgeP.name();
-    }
-
-    public String getExtraPName() {
-        return extraP.name();
-    }
-
     public String getValueType() {
         return valueType;
-    }
-
-    public String getDeltaType() {
-        return deltaType;
     }
 
     public String getAggrName() {
         return aggrName;
     }
 
-    public boolean isPairKey() {
-        return srcV.size() > 1;
-    }
-
-    public boolean edgePIsNested() {
-        return tableMap.get(edgeP.name()).hasNesting();
-    }
-
     public boolean isTwoStep() {
         return midRule != null;
-    }
-
-    public MyVariable getExtra() {
-        return extra;
-    }
-
-    public List<MyVariable> getSrcV() {
-        return srcV;
-    }
-
-    public List<MyVariable> getDstV() {
-        return dstV;
-    }
-
-    public Rule getResultRule(){
-        return resultRule;
     }
 
     public String getInitRuleBody() {

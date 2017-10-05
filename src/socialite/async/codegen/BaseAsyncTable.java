@@ -19,9 +19,4 @@ public abstract class BaseAsyncTable {
     public MyVisitorImpl getInitVisitor() {
         throw new NotImplementedException();
     }
-
-    public abstract MyVisitorImpl getEdgeVisitor();
-
-    public abstract MyVisitorImpl getExtraVisitor();
-
 }

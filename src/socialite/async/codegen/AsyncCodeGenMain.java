@@ -20,14 +20,14 @@ public class AsyncCodeGenMain {
     public void generate() {
         genAsyncTable();
         L.info("AsyncTable compiled");
-        genRuntime();
-        L.info("AsyncRuntime compiled");
+//        genRuntime();
+//        L.info("AsyncRuntime compiled");
     }
 
     public void genAsyncTable() {
         AsyncCodeGen asyncCodeGen = new AsyncCodeGen(asyncAn);
         String asyncTableCode = asyncCodeGen.generateAsyncTable();
-        String className = asyncAn.getClassName();
+        String className = "AsyncTable";
         Compiler c = new Compiler();
         boolean success = c.compile(PACKAGE_NAME + "." + className, asyncTableCode);
         if (c.getCompiledClasses().size() == 0) {

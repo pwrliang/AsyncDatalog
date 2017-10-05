@@ -136,7 +136,6 @@ public class DistAsyncEngine implements Runnable {
 
     public static void main(String[] args) {
         AsyncConfig asyncConfig = new AsyncConfig.Builder()
-                .setBarrier()
 //                .setCheckInterval(1500)
                 .setCheckerType(AsyncConfig.CheckerType.DELTA)
                 .setCheckerCond(AsyncConfig.Cond.LE)

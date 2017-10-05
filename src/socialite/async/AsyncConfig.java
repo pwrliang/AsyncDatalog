@@ -7,13 +7,11 @@ public class AsyncConfig {
     public static final int CHECK_DELTA = 0;
     public static final int CHECK_VALUE = 1;
     private static AsyncConfig asyncConfig;
-    private boolean barrier;
     private int checkInterval = -1;
     private double threshold;
     private CheckerType checkType;
     private Cond cond;
     private boolean asyncDebug;
-    private boolean enable;
 
     public static AsyncConfig get() {
         if (asyncConfig == null) {
@@ -28,18 +26,6 @@ public class AsyncConfig {
 
     public boolean isAsyncDebug() {
         return asyncDebug;
-    }
-
-    public boolean isEnable() {
-        return enable;
-    }
-
-    public void disable() {
-        enable = false;
-    }
-
-    public boolean isBarrier() {
-        return barrier;
     }
 
     public int getCheckInterval() {
@@ -80,17 +66,10 @@ public class AsyncConfig {
     }
 
     public static class Builder {
-        private boolean barrier;
         private int checkInterval = -1;
         private Double threshold = null;
         private CheckerType checkType;
         private Cond cond;
-
-
-        public Builder setBarrier() {
-            barrier = true;
-            return this;
-        }
 
         public Builder setCheckerType(CheckerType checkType) {
             this.checkType = checkType;
@@ -114,17 +93,12 @@ public class AsyncConfig {
 
         public AsyncConfig build() {
             AsyncConfig asyncConfig = new AsyncConfig();
-            if (barrier && checkInterval != -1)
-                throw new SociaLiteException("barrier option is conflicted with interval option");
-            if (!barrier && checkInterval == -1)
-                throw new SociaLiteException("must set the option of barrier or check interval");
             if (threshold == null)
                 throw new SociaLiteException("threshold is not set");
             if (checkType == null)
                 throw new SociaLiteException("check type is not set");
             if (cond == null)
                 throw new SociaLiteException("condition is not set");
-            asyncConfig.barrier = barrier;
             asyncConfig.checkInterval = checkInterval;
             asyncConfig.threshold = threshold;
             asyncConfig.checkType = checkType;

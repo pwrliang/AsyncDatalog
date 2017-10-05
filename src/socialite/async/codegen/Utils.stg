@@ -38,8 +38,8 @@ PrimitiveMap ::= [
 	"long": "TLongArrayList",
 	"float": "TFloatArrayList",
 	"double": "TDoubleArrayList",
-	"boolean": "List<Boolean>",
-	default: "List<Pair>"
+	"boolean": "ArrayList<Boolean>",
+	default: "ArrayList<Pair>"
 ]
 
 KeyIndMap ::= [
@@ -47,7 +47,7 @@ KeyIndMap ::= [
     "long": "TLongIntHashMap",
     "float": "TFloatIntHashMap",
     "double": "TDoubleIntHashMap",
-    default: "TObjectIntHashMap\<Pair>"
+    default: "TObjectIntHashMap<Pair>"
 ]
 
 IndKeyMap ::= [

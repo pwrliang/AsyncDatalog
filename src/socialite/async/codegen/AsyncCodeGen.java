@@ -24,61 +24,59 @@ public class AsyncCodeGen {
         if (asyncAn.isTwoStep()) {
         } else {
             st = stg.getInstanceOf("AsyncTableSingle");
-            st.add("name", asyncAn.getClassName());
+            st.add("name", asyncAn.getResultPName());
+            st.add("keyType",asyncAn.getKeyType());
             st.add("valueType", asyncAn.getValueType());
             st.add("aggrType", asyncAn.getAggrName());
-            st.add("srcV", asyncAn.getSrcV().get(0));
-            st.add("dstV", asyncAn.getDstV().get(0));
-            st.add("weightV", asyncAn.getWeightV());
-            st.add("edgeIsNested", asyncAn.edgePIsNested());
-            st.add("extraV", asyncAn.getExtra());
+            st.add("weightType", asyncAn.getWeightType());
+            st.add("extraType", asyncAn.getExtraType());
             st.add("expr", asyncAn.getsExpr());
         }
         return st.render();
     }
 
-    String generateAsyncTable1() {
-        STGroup stg = new MySTGroupFile(AsyncCodeGen.class.getResource("AsyncTable.stg"),
-                "UTF-8", '<', '>');
-        stg.load();
-        ST st;
-        if (asyncAn.isPairKey()) {
-            st = stg.getInstanceOf("AsyncTablePair");
-            st.add("name", asyncAn.getClassName());
-            st.add("valueType", asyncAn.getValueType());
-            st.add("aggrType", asyncAn.getAggrName());
-            st.add("weightV", asyncAn.getWeightV());
-            st.add("edgeIsNested", asyncAn.edgePIsNested());
-//            st.add("extraV", asyncAn.extra);
-            st.add("expr", asyncAn.getsExpr());
-        } else {
-            if (asyncAn.isTwoStep()) {//two step
-                st = stg.getInstanceOf("AsyncTableSingleTwoStep");
-                st.add("name", asyncAn.getClassName());
-                st.add("valueType", asyncAn.getValueType());
-                st.add("deltaType", asyncAn.getDeltaType());
-                st.add("aggrType", asyncAn.getAggrName());
-                st.add("srcV", asyncAn.getSrcV().get(0));
-                st.add("dstV", asyncAn.getDstV().get(0));
-                st.add("edgeIsNested", asyncAn.edgePIsNested());
-                st.add("expr", asyncAn.getsExpr());
-            } else {
-                st = stg.getInstanceOf("AsyncTableSingle");
-                st.add("name", asyncAn.getClassName());
-                st.add("valueType", asyncAn.getValueType());
-                st.add("aggrType", asyncAn.getAggrName());
-                st.add("srcV", asyncAn.getSrcV().get(0));
-                st.add("dstV", asyncAn.getDstV().get(0));
-                st.add("weightV", asyncAn.getWeightV());
-                st.add("edgeIsNested", asyncAn.edgePIsNested());
-                st.add("extraV", asyncAn.getExtra());
-                st.add("expr", asyncAn.getsExpr());
-            }
-        }
-        String code = st.render();
-        stg.unload();
-        return code;
-    }
+//    String generateAsyncTable1() {
+//        STGroup stg = new MySTGroupFile(AsyncCodeGen.class.getResource("AsyncTable.stg"),
+//                "UTF-8", '<', '>');
+//        stg.load();
+//        ST st;
+//        if (asyncAn.isPairKey()) {
+//            st = stg.getInstanceOf("AsyncTablePair");
+//            st.add("name", asyncAn.getClassName());
+//            st.add("valueType", asyncAn.getValueType());
+//            st.add("aggrType", asyncAn.getAggrName());
+//            st.add("weightV", asyncAn.getWeightV());
+//            st.add("edgeIsNested", asyncAn.edgePIsNested());
+////            st.add("extraV", asyncAn.extra);
+//            st.add("expr", asyncAn.getsExpr());
+//        } else {
+//            if (asyncAn.isTwoStep()) {//two step
+//                st = stg.getInstanceOf("AsyncTableSingleTwoStep");
+//                st.add("name", asyncAn.getClassName());
+//                st.add("valueType", asyncAn.getValueType());
+//                st.add("deltaType", asyncAn.getDeltaType());
+//                st.add("aggrType", asyncAn.getAggrName());
+//                st.add("srcV", asyncAn.getSrcV().get(0));
+//                st.add("dstV", asyncAn.getDstV().get(0));
+//                st.add("edgeIsNested", asyncAn.edgePIsNested());
+//                st.add("expr", asyncAn.getsExpr());
+//            } else {
+//                st = stg.getInstanceOf("AsyncTableSingle");
+//                st.add("name", asyncAn.getClassName());
+//                st.add("valueType", asyncAn.getValueType());
+//                st.add("aggrType", asyncAn.getAggrName());
+//                st.add("srcV", asyncAn.getSrcV().get(0));
+//                st.add("dstV", asyncAn.getDstV().get(0));
+//                st.add("weightV", asyncAn.getWeightV());
+//                st.add("edgeIsNested", asyncAn.edgePIsNested());
+//                st.add("extraV", asyncAn.getExtra());
+//                st.add("expr", asyncAn.getsExpr());
+//            }
+//        }
+//        String code = st.render();
+//        stg.unload();
+//        return code;
+//    }
 
     public String generateAsyncRuntime() {
 
@@ -86,15 +84,15 @@ public class AsyncCodeGen {
                 "UTF-8", '<', '>');
         stg.load();
         ST st = stg.getInstanceOf("AsyncRuntime");
-        st.add("AsyncTableClass", asyncAn.getClassName());
-        st.add("valueType", asyncAn.getValueType());
-        st.add("initSize", asyncAn.getInitSize());
-        st.add("threadNum", Config.getInst().getWorkerThreadNum());// standalone
-        st.add("dynamic", asyncAn.isPairKey() || asyncAn.isTwoStep());
-        st.add("threshold", asyncConfig.getThreshold());
-        st.add("cond", asyncConfig.getCond());
-        st.add("barrier", asyncConfig.isBarrier());
-        st.add("checkerInterval", asyncConfig.getCheckInterval());
+//        st.add("AsyncTableClass", asyncAn.getClassName());
+//        st.add("valueType", asyncAn.getValueType());
+//        st.add("initSize", asyncAn.getInitSize());
+//        st.add("threadNum", Config.getInst().getWorkerThreadNum());// standalone
+//        st.add("dynamic", asyncAn.isPairKey() || asyncAn.isTwoStep());
+//        st.add("threshold", asyncConfig.getThreshold());
+//        st.add("cond", asyncConfig.getCond());
+//        st.add("barrier", asyncConfig.isBarrier());
+//        st.add("checkerInterval", asyncConfig.getCheckInterval());
         if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DELTA)
             st.add("checkType", "CheckDelta");
         else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.VALUE)
