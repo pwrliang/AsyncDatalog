@@ -10,7 +10,27 @@ WrappedTypeMap ::= [
     "long": "Long",
     "float": "Float",
     "double": "Double",
-    "boolean": "Boolean"
+    "boolean": "Boolean" ,
+    default: "Pair"
+]
+
+IsKeyAsIndex ::= [
+    "int": true,
+    default: false
+]
+
+KeyTypeMap ::= [
+   "int": "int",
+    "long": "long",
+    "float": "float",
+    "double": "double",
+    "boolean": "boolean" ,
+    default: "Pair"
+]
+
+IsPairKey ::= [
+    "Pair" : true,
+    default: false
 ]
 
 PrimitiveMap ::= [
@@ -18,14 +38,24 @@ PrimitiveMap ::= [
 	"long": "TLongArrayList",
 	"float": "TFloatArrayList",
 	"double": "TDoubleArrayList",
-	"boolean": "List<Boolean>"
+	"boolean": "List<Boolean>",
+	default: "List<Pair>"
 ]
 
 KeyIndMap ::= [
     "int": "TIntIntHashMap",
     "long": "TLongIntHashMap",
     "float": "TFloatIntHashMap",
-    "double": "TDoubleIntHashMap"
+    "double": "TDoubleIntHashMap",
+    default: "TObjectIntHashMap\<Pair>"
+]
+
+IndKeyMap ::= [
+    "int": "TIntIntHashMap",
+    "long": "TIntLongHashMap",
+    "float": "TIntFloatHashMap",
+    "double": "TIntDoubleHashMap",
+    default: "TIntObjectHashMap\<Pair>"
 ]
 
 PrimitiveObjectMap ::= [
@@ -70,6 +100,13 @@ PrimitiveInitValue ::= [
     "long": "0l",
     "double" : "0.0d",
     "boolean" : "false"
+]
+
+AggrTypeFuncMap ::= [
+    "dmax": "max",
+    "dmin" : "min",
+    "dsum" : "sum",
+    "dcount" : "sum"
 ]
 
 IsSum ::= [
@@ -143,6 +180,31 @@ import gnu.trove.map.hash.*;
 import java.util.function.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+>>
+
+importForDistTable()::=<<
+import gnu.trove.list.TDoubleList;
+import gnu.trove.list.TIntList;
+import gnu.trove.list.array.*;
+import gnu.trove.map.hash.TIntIntHashMap;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import socialite.async.analysis.MyVisitorImpl;
+import socialite.async.atomic.*;
+import socialite.resource.DistTableSliceMap;
+import socialite.util.SociaLiteException;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicIntegerArray;
+>>
+
+importForMsgTable() ::= <<
+import socialite.async.atomic.*;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 >>
 
 importForRuntime() ::= <<

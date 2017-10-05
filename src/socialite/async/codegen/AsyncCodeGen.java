@@ -8,9 +8,6 @@ import socialite.engine.Config;
 import socialite.util.Assert;
 import socialite.util.MySTGroupFile;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class AsyncCodeGen {
     private AsyncAnalysis asyncAn;
     private AsyncConfig asyncConfig = AsyncConfig.get();
@@ -20,6 +17,27 @@ public class AsyncCodeGen {
     }
 
     String generateAsyncTable() {
+        STGroup stg = new MySTGroupFile(AsyncCodeGen.class.getResource("AsyncTable.stg"),
+                "UTF-8", '<', '>');
+        stg.load();
+        ST st = null;
+        if (asyncAn.isTwoStep()) {
+        } else {
+            st = stg.getInstanceOf("AsyncTableSingle");
+            st.add("name", asyncAn.getClassName());
+            st.add("valueType", asyncAn.getValueType());
+            st.add("aggrType", asyncAn.getAggrName());
+            st.add("srcV", asyncAn.getSrcV().get(0));
+            st.add("dstV", asyncAn.getDstV().get(0));
+            st.add("weightV", asyncAn.getWeightV());
+            st.add("edgeIsNested", asyncAn.edgePIsNested());
+            st.add("extraV", asyncAn.getExtra());
+            st.add("expr", asyncAn.getsExpr());
+        }
+        return st.render();
+    }
+
+    String generateAsyncTable1() {
         STGroup stg = new MySTGroupFile(AsyncCodeGen.class.getResource("AsyncTable.stg"),
                 "UTF-8", '<', '>');
         stg.load();

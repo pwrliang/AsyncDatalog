@@ -45,15 +45,6 @@ public class MessageTable {
         updateCounter.set(0);
     }
 
-    public int getAllocationSize() {
-        int unit = 0;
-        unit += 4;//integer
-        unit += 8;//myatomicdouble
-        unit += 4;//reference
-        unit += 10;//padding or others
-        return 1000 + unit * keyDeltaMap.size();
-    }
-
     public Map<Integer, MyAtomicDouble> getKeyDeltaMap() {
         return keyDeltaMap;
     }

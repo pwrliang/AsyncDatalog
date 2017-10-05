@@ -1,4 +1,4 @@
-package socialite.expr;
+package socialite.test;
 
 import com.google.common.util.concurrent.AtomicDouble;
 import gnu.trove.map.TIntDoubleMap;

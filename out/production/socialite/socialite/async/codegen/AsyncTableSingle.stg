@@ -1,25 +1,25 @@
 import "Utils.stg"
-AsyncTableSingle(name, valueType, aggrType,
-           edgeIsNested, srcV, dstV, weightV,
-           extraV, expr) ::= <<
+AsyncTableSingle(name, keyType, valueType, aggrType, weightType, extraType, expr) ::= <<
 package socialite.async.codegen;
 <importForTable()>
-
-public class <name> extends BaseAsyncTable{
+//algorithm <name>
+public class AsyncTable extends BaseAsyncTable{
     private static final Log L = LogFactory.getLog(<name>.class);
-    //private <PrimitiveMap.(srcV.type)> srcArr;
-    private <PrimitiveMap.(valueType)> value;
-    private List\<<TypeAtomicMap.(valueType)>\> deltaValue;
-    <if(IsFloat.(weightV.type))>
-    Assert.not_supported("float is not supported");
-    <else>
-    private List\<<PrimitiveMap.(dstV.type)>\> dstList;
+    <!when key is int or long, use key as index!>
+    <if(!IsKeyAsIndex.(keyType))>private <PrimitiveMap.(keyType)> keyIndMap;<endif>
+    <if(IsPairKey.(keyType))>
+        private TIntObjectArrayList\<Pair> indKeyMap;
+        private TIntObjectArrayList\<List\<Pair\>> col1KeysMap;
     <endif>
 
-    <! for PageRank !>
-    <if(extraV)>
-    private <PrimitiveMap.(extraV.type)> extra;
-    <endif>
+    private <PrimitiveMap.(valueType)> valueList;
+    private List\<<TypeAtomicMap.(valueType)>\> deltaList;
+    private List\<<PrimitiveMap.(keyType)>\> adjacenciesList; //除了key为int类型的装ind，该字段装邻接点数据
+    <!optional dependent on algorithms!>
+    <if(weightType)>private List\<<PrimitiveMap.(weightType)>\> weightsList;<endif>
+    <if(extraType)>private <PrimitiveMap.(extraType)> extraList;<endif>
+
+
 
     <if(IsInt.(valueType))>
     public static final <valueType> IDENTITY_ELEMENT = <IntegerIdentityElement.(aggrType)>;
@@ -33,212 +33,190 @@ public class <name> extends BaseAsyncTable{
 
     private int size;
 
-    public <name>(int initSize){
-       //srcArr = new <PrimitiveMap.(srcV.type)>(initSize);
-       value = new <PrimitiveMap.(valueType)>(initSize);
-       deltaValue = new ArrayList\<>(initSize);
-       dstList = new ArrayList\<>(initSize);
-       <if(extraV)>
-       extra = new <PrimitiveMap.(extraV.type)>(initSize);
-       <endif>
+    public AsyncTable(int initSize){
+       <if(!IsKeyAsIndex.(keyType))> keyIndMap = new <PrimitiveMap.(keyType)>(size);<endif>
+       <if(IsPairKey.(keyType))> indKeyMap = new TIntObjectArrayList\<>(size);<endif>
+       valueList = new <PrimitiveMap.(valueType)>(initSize);
+       deltaList = new ArrayList\<>(initSize);
+       adjacenciesList = new ArrayList\<>(size);
+       <if(weightType)> weightsList = new ArrayList\<>(size);<endif>
+       <if(extraType)> extraList = new <PrimitiveMap.(extraType)>;<endif>
     }
 
     @Override
-    public void updateLockFree(int k) {
-        <valueType> oldDelta = deltaValue.get(k).getAndSet(IDENTITY_ELEMENT);
-        if (oldDelta == IDENTITY_ELEMENT)
+    public void updateLockFree(int localInd) {
+        <valueType> oldDelta = deltaList.get(localInd).getAndSet(IDENTITY_ELEMENT);
+        if(oldDelta == IDENTITY_ELEMENT)
             return;
 
-        <! 对于带权图的更新 !>
-        <if(weightV)>
-        <!判定聚集函数类型!>
-        <if(IsSum.(aggrType))>
-        //weight sum
-        value.set(k, value.get(k) + oldDelta);
-        <PrimitiveMap.(dstV.type)> dstWeight = dstList.get(k);
-        for(int i = 0; i \< dstWeight.size() - 1; i+=2){
-            <dstV.type> dst = dstWeight.get(i);
-            <weightV.type> weight = dstWeight.get(i+1);
-            <valueType> newDelta = eval(k, weight, oldDelta);
-            deltaValue.get(dst).addAndGet(newDelta);
-        }
-        <elseif(IsMax.(aggrType))>
-        //weight max
-        <valueType> tmp = Math.max(value.get(k), oldDelta);
-        if(tmp > value.get(k)){
-            value.set(k, tmp);
-            <PrimitiveMap.(dstV.type)> dstWeight = dstList.get(k);
-            for(int i = 0; i \< dstWeight.size() - 1; i+=2){
-                <dstV.type> dst = dstWeight.get(i);
-                <weightV.type> weight = dstWeight.get(i+1);
-                <valueType> newDelta = eval(k, weight, oldDelta);
-                deltaValue.get(dst).accumulateAndGet(newDelta, Math::max);
-            }
-        }
-        <elseif(IsMin.(aggrType))>
-        //weight min
-          <valueType> tmp = Math.min(value.get(k), oldDelta);
-            if(tmp \< value.get(k)){
-                value.set(k, tmp);
-                <PrimitiveMap.(dstV.type)> dstWeight = dstList.get(k);
-                for(int i = 0; i \< dstWeight.size() - 1; i+=2){
-                    <dstV.type> dst = dstWeight.get(i);
-                    <weightV.type> weight = dstWeight.get(i+1);
-                    <valueType> newDelta = eval(k, weight, oldDelta);
-                    deltaValue.get(dst).accumulateAndGet(newDelta, Math::min);
-                }
-            }
-        <elseif(IsCount.(aggrType))>
-        //weight count
-        value.set(k, value.get(k) + oldDelta);
-        //int[] dstWeight = dstList.get(k);
-        for(int i = 0; i \< dstWeight.size() - 1; i+=2){
-            //<valueType> newDelta = eval(k, dstWeight[i], oldDelta);
-            deltaValue.get(dst).addAndGet(1);
-        }
-        <endif><!判定聚集函数类型结束!>
-        <! 对于无权图的更新 !>
-        <else>
-        <if(IsSum.(aggrType))>
-        //non-weight sum
-        value.set(k, value.get(k) + oldDelta);
-        <PrimitiveMap.(dstV.type)> dstArr = dstList.get(k);
-        for(int i = 0; i \< dstArr.size(); i++){
-            <dstV.type> dst = dstArr.get(i);
-            <valueType> newDelta = eval(k, 0, oldDelta);
-            deltaValue.get(dst).addAndGet(newDelta);
-        }
-        <elseif(IsMax.(aggrType))>
-        //non-weight max
-        <valueType> tmp = Math.max(value.get(k), oldDelta);
-        if(tmp > value.get(k)){
-            value.set(k, tmp);
-            <PrimitiveMap.(dstV.type)> dstArr = dstList.get(k);
-            for(int i = 0; i \< dstArr.size(); i++){
-                <dstV.type> dst = dstArr.get(i);
-                <valueType> newDelta = eval(k, 0, oldDelta);
-                deltaValue.get(dst).accumulateAndGet(newDelta, Math::max);
-            }
-        }
-        <elseif(IsMin.(aggrType))>
-        //non-weight min
-        <valueType> tmp = Math.min(value.get(k), oldDelta);
-        if(tmp \< value.get(k)){
-            value.set(k, tmp);
-            <PrimitiveMap.(dstV.type)> dstArr = dstList.get(k);
-            for(int i = 0; i \< dstArr.size(); i++){
-                <dstV.type> dst = dstArr.get(i);
-                <valueType> newDelta = eval(k, 0, oldDelta);
-                deltaValue.get(dst).accumulateAndGet(newDelta, Math::min);
-            }
-        }
-        <elseif(IsCount.(aggrType))>
-        //non-weight count
-        value.set(k, value.get(k) + oldDelta);
-        <srcV.type>[] dstArr = dstList.get(k);
-        for(int i = 0; i \< dstArr.length; i++){
-            deltaValue.get(dst).addAndGet(1);
-        }
+        //keyType: <keyType> aggrType: <aggrType> weightType:<weightType> extraType: <extraType>
+        <valueType> accumulatedValue = <WrappedTypeMap.(valueType)>.<AggrTypeFuncMap.(aggrType)>(valueList.get(localInd), oldDelta);
+        <! 聚集后比原来还小，则不更新 !>
+        <if(IsMax.(aggrType))>if(accumulatedValue \<= valueList.get(localInd))return;
+        <elseif(IsMin.(aggrType))>if(accumulatedValue >= valueList.get(localInd))return;<endif>
+
+        <!Count函数在不准与extra、weight同用，因为语义不明!>
+        <if(!IsCount.(aggrType))>
+        <! 有权值 !>
+        <if(weightType)><PrimitiveMap.(weightType)> weights = weightsList.get(localInd);<endif>
+        <! 有附加值，如图的degree !>
+        <if(extraType)><extraType> extra = extraList.get(localInd);<endif>
         <endif>
-        <endif>
-    }
 
-    private <valueType> eval(<srcV.type> src, <weightV.type> weight, <valueType> oldDelta){
-        //0.8*oldDelta/extra.get(src)
-        return (<valueType>) (<expr>);
-    }
-
-    @Override
-    public <PrimitiveMap.(valueType)> getValue(){
-        return value;
-    }
-
-    @Override
-    public MyVisitorImpl getEdgeVisitor() {
-        return new MyVisitorImpl() {
-            <if(edgeIsNested)>
-            <srcV.type> <srcV.name>;
+        <PrimitiveMap.(keyType)> adjacencies = adjacenciesList.get(localInd);
+        <! 遍历每个邻接点 !>
+        for(int i = 0; i \< adjacencies.size(); i++){
+            <if(!IsCount.(aggrType))>
+            <valueType> newDelta = eval(oldDelta <if(weightType)>, weights.get(i)<endif> <if(extraType)>, extra<endif>);
             <endif>
-
-            @Override
-            <! 嵌套列 !>
-            <if(edgeIsNested)>
-            public boolean visit_0(<srcV.type> <srcV.name>) {
-                this.<srcV.name> = <srcV.name>;
-                return true;
-            }
-            <! 带权重 !>
-            <if(weightV)>
-            //nested weight
-            public boolean visit(<dstV.type> <dstV.name>, <weightV.type> <weightV.name>) {
-                <PrimitiveMap.(dstV.type)> dstWeight = dstList.get(<srcV.name>);
-                dstWeight.add(<dstV.name>);
-                dstWeight.add(<weightV.name>);
-                return true;
-            }
+            <!when use int as key, use key as index!>
+            <if(IsKeyAsIndex.(keyType))>
+            int adjacentLocalInd = adjacencies.get(i);
             <else>
-            //nested non-weight
-            public boolean visit(<dstV.type> <dstV.name>) {
-                <PrimitiveMap.(dstV.type)> dstWeight = dstList.get(<srcV.name>);
-                dstWeight.add(<dstV.name>);
-                return true;
-            }
+                <if(IsPairKey(keyType))>
+                    int adjacentLocalInd;
+                    Pair adjacency = adjacencies.get(i);
+                    if(keyIndMap.contains(adjacency))
+                        adjacentLocalInd = keyIndMap.get(adjacency);
+                    else{
+                        Pair key = indKeyMap.get(localInd);
+                        adjacentLocalInd = addEntry(key.v0, adjacency.v1);
+                    }
+                <else>
+                    int adjacentLocalInd = keyIndMap.get(adjacencies.get(i)); //key for adjacent node
+                <endif>
             <endif>
-            <else><! 非嵌套 !>
-            <if(weightV)>
-            //non-nested weight
-            public boolean visit(<srcV.type> <srcV.name>, <dstV.type> <dstV.name>, <weightV.type> <weightV.name>) {
-                Assert.not_supported();
-                return true;
-            }
-            <else>
-            //non-nested non-weight
-            public boolean visit(<srcV.type> <srcV.name>, <dstV.type> <dstV.name>) {
-                Assert.not_supported();
-                return true;
-            }
-            <endif>
-            <endif>
-        };
+            <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
+            <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
+            <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
+            <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+        }
     }
 
-    @Override
-    public MyVisitorImpl getExtraVisitor(){
-        <if(extraV)>
-        return new MyVisitorImpl() {
-            @Override
-            public boolean visit(<srcV.type> a1, <extraV.type> a2) {
-                extra.add(a2);
-                return true;
-            }
-        };
-        <else>
-        return null;
-        <endif>
+    private double eval(<valueType> oldDelta <if(weightType)>,<weightType> weight<endif> <if(extraType)>, <extraType> extra<endif>) {
+        return (<valueType>)(<expr>);
     }
+
+    <if(IsPairKey(keyType))>
+    private synchronized int addEntry(int col1OfKey, int col2OfKey){
+        Pair key = new Pair(col1OfKey, col2OfKey);
+        keyIndMap.put(key, size);
+        indKeyMap.put(size, pair);
+        deltaList.add(new <TypeAtomicMap.(valueType)>(IDENTITY_ELEMENT));
+        adjacencies = new <PrimitiveMap.(keyType)>(col1KeysMap.get(col2OfKey));
+        adjacenciesList.add(adjacencies);
+        return size++;
+    }
+    <endif>
 
     @Override
     public MyVisitorImpl getInitVisitor(){
         return new MyVisitorImpl(){
+            int col1OfKey;
+            <PrimitiveMap.(keyType)> adjacencies;
+            <! Pair类型的Key!>
+            <if(IsPairKey.(keyType))>
             @Override
-            public boolean visit(<srcV.type> a1, <valueType> a2) {
-                //srcArr.add(a1);
-                dstList.add(new <PrimitiveMap.(dstV.type)>());
-                <! 初始化Value !>
-                <if(IsInt.(valueType))>
-                value.add(<IntegerIdentityElement.(aggrType)>);
-                <elseif(IsLong.(valueType))>
-                value.add(<LongIdentityElement.(aggrType)>);
-                <elseif(IsFloat.(valueType))>
-                value.add(<FloatIdentityElement.(aggrType)>);
-                <elseif(IsDouble.(valueType))>
-                value.add(<DoubleIdentityElement.(aggrType)>);
-                <endif><! 初始化Value !>
-                deltaValue.add(new <TypeAtomicMap.(valueType)>(a2));
+            public boolean visit_0_1_2(int col1OfKey, int col2OfKey, <valueType> delta){
+                this.col1OfKey = col1OfKey;
+                Pair key = new Pair(col1OfKey, col2OfKey);
+                keyIndMap.put(key, size);
+                indKeyMap.put(size, pair);
+                <!按照第一列建立索引!>
+                List\<Key> keys = col1KeysMap.get(col1OfKey);
+                if(keys == null){
+                    keys = new ArrayList\<>();
+                    col1KeysMap.put(col1OfKey, keys)
+                }
+                keys.add(key);
+                <!按照第一列建立索引!>
+                valueList.add(IDENTITY_ELEMENT);
+                deltaList.add(new <TypeAtomicMap.(valueType)>(delta));
+                adjacencies = new <PrimitiveMap.(keyType)>();
+                adjacenciesList.add(adjacencies);
                 size++;
                 return true;
             }
-        };
+
+            @Override
+            public boolean visit(int col2OfAdjacency){
+                adjacency = new Pair(col1OfKey, col2OfAdjacency);
+                adjacencies.add(adjacency);
+                return true;
+            }
+            <else>
+            @Override
+            public boolean visit_0_1<if(extraType)>_2<endif>(<keyType> key, <valueType> delta <if(extraType)>, <extraType> extra<endif>){
+                <if(!IsKeyAsIndex)>keyIndMap.put(key, size)<endif>
+                valueList.add(IDENTITY_ELEMENT);
+                deltaList.add(new <TypeAtomicMap.(valueType)>(delta));
+                <if(extraType)>extraList.add(extra);<endif>
+                adjacencies = new <PrimitiveMap.(keyType)>();
+                adjacenciesList.add(adjacencies);
+                size++;
+                return true;
+            }
+
+            @Override
+            public boolean visit(<keyType> adjacency <if(weightType)>, <weightType> weight<endif>){
+                adjacencies.add(adjacency);
+                <if(weightType)>weightsList.add(weight);<endif>
+                return true;
+            }
+            <endif>
+        }
+    }
+
+    <if(IsPairKey(keyType))>
+    private class Pair {
+        final int v0;
+        final int v1;
+        private int hashCode = -1;
+
+        Pair(int v0, int v1) {
+            this.v0 = v0;
+            this.v1 = v1;
+        }
+
+        @Override
+        public String toString() {
+            return v0 + " " + v1;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Key key = (Key) o;
+
+            if (v0 != key.v0) return false;
+            return v1 == key.v1;
+        }
+
+        @Override
+        public int hashCode() {
+            if (hashCode != -1)
+                return hashCode;
+            hashCode = v0;
+            hashCode = 31 * hashCode + v1;
+            return hashCode;
+        }
+    }
+    <endif>
+
+    @Override
+    public <valueType> accumulateValue(){
+        double sum = 0;
+        for(int i=0;i\<size;i++) sum+=valueList.get(i);
+        return sum;
+    }
+
+    @Override
+    public <valueType> accumulateDelta(){
+        double sum = 0;
+        for(int i=0;i\<size;i++) sum+=deltaList.get(i);
+        return sum;
     }
 
     @Override

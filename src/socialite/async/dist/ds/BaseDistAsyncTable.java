@@ -3,7 +3,6 @@ package socialite.async.dist.ds;
 
 import socialite.async.analysis.MyVisitorImpl;
 import socialite.async.codegen.BaseAsyncTable;
-import socialite.async.dist.master.InitCarrier;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.concurrent.atomic.AtomicIntegerArray;

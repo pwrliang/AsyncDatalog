@@ -42,7 +42,6 @@ public class DistAsyncRuntime extends AsyncRuntimeBase {
     private ReceiveThread[] receiveThreads;
     private CheckerThread checkerThread;
     private volatile boolean stop;//notify computing threads to stop
-
     public DistAsyncRuntime(int workerId, int workerNum, int threadNum) {
         this.workerId = workerId;
         this.workerNum = workerNum;
@@ -51,11 +50,6 @@ public class DistAsyncRuntime extends AsyncRuntimeBase {
 
     @Override
     public void run() {
-//        MPI.COMM_WORLD.Recv(new int[]{0}, 0, 1, MPI.INT, AsyncMaster.ID, MsgType.TEST.ordinal());
-//        TableInstRegistry tableInstRegistry = SRuntimeWorker.getInst().getTableRegistry();
-//        DistTableSliceMap sliceMap = SRuntimeWorker.getInst().getSliceMap();
-//        sliceMap.machineIndexFor()
-
         initData();
         createThreads();
         arrangeTask();
@@ -98,32 +92,6 @@ public class DistAsyncRuntime extends AsyncRuntimeBase {
 //        distAsyncTable.display();
 
     }
-
-//    private void initData() {
-//        //init keys
-//        distAsyncTable = new DistAsyncTable(workerNum, workerId, INIT_ASYNC_TABLE_SIZE, INIT_MESSAGE_TABLE_SIZE);
-//        Thread recvInitDataThread = new Thread(() -> {
-//            SerializeTool serializeTool = new SerializeTool.Builder().build();
-//
-//            while (true) {
-//                Status status = MPI.COMM_WORLD.Probe(AsyncMaster.ID, MsgType.INIT_DATA.ordinal());
-//                byte[] data = new byte[status.Get_count(MPI.BYTE)];
-//                MPI.COMM_WORLD.Recv(data, 0, data.length, MPI.BYTE, AsyncMaster.ID, MsgType.INIT_DATA.ordinal());
-//                InitCarrier initCarrier = serializeTool.fromBytes(data, InitCarrier.class);
-//                if (initCarrier.getSize() == 0) break;//received zero init carrier, we got all init data already.
-//                distAsyncTable.applyInitCarrier(initCarrier);
-//            }
-//        });
-//        recvInitDataThread.start();
-//        try {
-//            recvInitDataThread.join();
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        } finally {
-//            L.info("Machine " + (workerId + 1) + " all data loaded size:" + distAsyncTable.getSize());
-//        }
-////        distAsyncTable.display();
-//    }
 
     private void createThreads() {
         computingThreads = new ComputingThread[threadNum];
@@ -251,7 +219,7 @@ public class DistAsyncRuntime extends AsyncRuntimeBase {
             messageTableSelector.set(sendToWorkerId, tableInd == 0 ? 1 : 0);//switch to backup message table
 
 
-            byte[] data = serializeTool.toBytes(messageTable.getAllocationSize(), messageTable);
+            byte[] data = serializeTool.toBytes(messageTable);
             MPI.COMM_WORLD.Send(data, 0, data.length, MPI.BYTE, sendToWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal());
             messageTable.resetDelta();//clear delta !!!! if interval checker is enable, should lock it
 //            L.info(String.format("Machine %d ----> Machine %d", workerId + 1, sendToWorkerId + 1));

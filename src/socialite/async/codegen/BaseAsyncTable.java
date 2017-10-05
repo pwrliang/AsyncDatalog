@@ -8,20 +8,20 @@ public abstract class BaseAsyncTable {
 
     public abstract void iterate(MyVisitorImpl visitor);
 
-    public void updateLockFree(int k) {
+    public void updateLockFree(int localInd) {
         throw new NotImplementedException();
     }
 
-    public void updateLockFree(long k) {
+    public abstract Object accumulateValue();
+
+    public abstract Object accumulateDelta();
+
+    public MyVisitorImpl getInitVisitor() {
         throw new NotImplementedException();
     }
-
-    public abstract Object getValue();
 
     public abstract MyVisitorImpl getEdgeVisitor();
 
     public abstract MyVisitorImpl getExtraVisitor();
-
-    public abstract MyVisitorImpl getInitVisitor();
 
 }

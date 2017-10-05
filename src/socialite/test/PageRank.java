@@ -1,4 +1,4 @@
-package socialite.expr;
+package socialite.test;
 
 import gnu.trove.map.TIntFloatMap;
 import gnu.trove.map.hash.TIntFloatHashMap;

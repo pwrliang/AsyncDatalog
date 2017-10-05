@@ -55,11 +55,11 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="file:///opt/mpj-v0_44/lib" />
+          <root url="file://E:/Liang/mpj-v0_44/lib" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
-        <jarDirectory url="file:///opt/mpj-v0_44/lib" recursive="false" />
+        <jarDirectory url="file://E:/Liang/mpj-v0_44/lib" recursive="false" />
       </library>
     </orderEntry>
   </component>

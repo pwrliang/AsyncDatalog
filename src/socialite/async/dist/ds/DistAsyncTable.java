@@ -106,17 +106,17 @@ public class DistAsyncTable extends BaseDistAsyncTable {
     }
 
     @Override
-    public Object getValue() {
-        return valueList;
-    }
-
-    @Override
     public Double accumulateValue() {
         double sum = 0;
         for (int i = 0; i < size; i++) {
             sum += valueList.get(i);
         }
         return sum;
+    }
+
+    @Override
+    public Object accumulateDelta() {
+        return null;
     }
 
     private double eval(int ind, int weight, double oldDelta) {
