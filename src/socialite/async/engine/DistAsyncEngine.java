@@ -86,7 +86,7 @@ public class DistAsyncEngine implements Runnable {
     }
 
     private void loadData() {
-        String tableSig = "Middle(int Key:0..875713, double initD, int degree, (int adj)).";
+        String tableSig = "Middle(int Key:0..4847571, double initD, int degree, (int adj)).";
         clientEngine.run(tableSig);
         clientEngine.run("Middle(key, r, degree, adj) :- Rank(key, r), Edge(key, adj), EdgeCnt(key, degree).");
 

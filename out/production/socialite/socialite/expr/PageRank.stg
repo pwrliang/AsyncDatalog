@@ -1,0 +1,18 @@
+Init(N, PATH) ::= <<
+Edge(int n:0..<N>, (int t)) multiset.
+Edge(s,t) :- l=$read("<PATH>"), (s1,s2)=$split(l, "	"),
+             s=$toInt(s1), t=$toInt(s2).
+EdgeCnt(int n:0..<N>, int cnt).
+EdgeCnt(s, $inc(1)) :- Edge(s, t).
+Node(int n:0..<N>).
+Node(n) :- Edge(n, _). <!  Node(n) :- Edge(n, _). 这就要求每个顶点都有出边，否则Node中会少顶点 !>
+Rank(int n:0..<N>, int i:iter, double rank).
+Rank(n, 0, r) :- Node(n), r = 0.0 + 1.0 * 1.0 / <N>.
+
+<! ?- Node(n). !>
+>>
+
+Iter(i, N)::=<<
+Rank(n, <i> + 1, $sum(r)) :- Node(n), r=0.2*1.0 / <N> ;
+                      :- Rank(s, <i>, r1), EdgeCnt(s, cnt), r=0.8*r1/cnt, Edge(s, n).
+>>
