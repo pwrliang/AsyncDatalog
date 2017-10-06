@@ -26,9 +26,9 @@ public class AsyncCodeGenMain {
     public void generate() {
         generateInitTableStats();
         genAsyncTable();
-//        L.info("AsyncTable compiled");
-//        genRuntime();
-//        L.info("AsyncRuntime compiled");
+        L.info("AsyncTable compiled");
+        genRuntime();
+        L.info("AsyncRuntime compiled");
     }
 
     public void generateInitTableStats(){

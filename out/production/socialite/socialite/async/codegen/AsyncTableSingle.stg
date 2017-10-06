@@ -5,24 +5,25 @@ package socialite.async.codegen;
 //algorithm <name>
 public class AsyncTable extends BaseAsyncTable{
     private static final Log L = LogFactory.getLog(AsyncTable.class);
-    <if(IsBoolean.(valueType))>private <KeyIndMap.(keyType)> keyIndMap;
-    <!when key is int or long, use key as index!>
-    <elseif(!IsKeyAsIndex.(keyType))>private <KeyIndMap.(keyType)> keyIndMap;<endif>
+    <!when key is int, use key as index!>
+    <if(IsBoolean.(valueType) || !IsKeyAsIndex.(keyType))>private <KeyIndMap.(keyType)> keyIndMap;<endif>
 
     <if(IsBoolean.(valueType))>
         private <IndKeyMap.(keyType)> indKeyMap;
         private <PrimitiveObjectMap.(keyType)>\<<PrimitiveMap.(keyType)>\> col1KeysMap;
     <elseif(IsPairKey.(keyType))>
         private TIntObjectHashMap\<Pair> indKeyMap;//动态添加做连接用
-        private TIntObjectHashMap\<List\<Pair\>> col1KeysMap;
+        private TIntObjectHashMap\<<PrimitiveMap.(keyType)>\> col1KeysMap;
     <endif>
 
     private <PrimitiveMap.(valueType)> valueList;
     private List\<<TypeAtomicMap.(deltaType)>\> deltaList;
     private List\<<PrimitiveMap.(keyType)>\> adjacenciesList; //除了key为int类型的装ind，该字段装邻接点数据
-    <!optional dependent on algorithms!>
-    <if(weightType)>private List\<<PrimitiveMap.(weightType)>\> weightsList;<endif>
-    <if(extraType)>private <PrimitiveMap.(extraType)> extraList;<endif>
+    <if(!IsBoolean.(valueType))> <!暂时忽略2-step程序的weight和extra!>
+        <!optional dependent on algorithms!>
+        <if(weightType)>private List\<<PrimitiveMap.(weightType)>\> weightsList;<endif>
+        <if(extraType)>private <PrimitiveMap.(extraType)> extraList;<endif>
+    <endif>
     <if(IsBoolean.(valueType))>private List\<Boolean> sentFlagList;<endif>
 
 
@@ -39,8 +40,7 @@ public class AsyncTable extends BaseAsyncTable{
     private int size;
 
     public AsyncTable(int initSize){
-       <if(IsBoolean.(valueType))>keyIndMap = new <KeyIndMap.(keyType)>(size);
-       <elseif(!IsKeyAsIndex.(keyType))> keyIndMap = new <KeyIndMap.(keyType)>(size);<endif>
+    <if(IsBoolean.(valueType) || !IsKeyAsIndex.(keyType))>keyIndMap = new <KeyIndMap.(keyType)>(size);<endif>
 
        <if(IsBoolean.(valueType))>
             indKeyMap = new <IndKeyMap.(keyType)>(size);
@@ -53,8 +53,10 @@ public class AsyncTable extends BaseAsyncTable{
        valueList = new <PrimitiveMap.(valueType)>(initSize);
        deltaList = new ArrayList\<>(initSize);
        adjacenciesList = new ArrayList\<>(size);
-       <if(weightType)> weightsList = new ArrayList\<>(size);<endif>
-       <if(extraType)> extraList = new <PrimitiveMap.(extraType)>(size);<endif>
+       <if(!IsBoolean.(valueType))>
+           <if(weightType)> weightsList = new ArrayList\<>(size);<endif>
+           <if(extraType)> extraList = new <PrimitiveMap.(extraType)>(size);<endif>
+       <endif>
        <if(IsBoolean.(valueType))>sentFlagList = new ArrayList\<>();<endif>
     }
 
@@ -152,7 +154,11 @@ public class AsyncTable extends BaseAsyncTable{
         indKeyMap.put(size, key);
         valueList.add(IDENTITY_ELEMENT);
         deltaList.add(new <TypeAtomicMap.(deltaType)>(IDENTITY_ELEMENT));
-        adjacenciesList.add(new <PrimitiveMap.(keyType)>(col1KeysMap.get(col2OfKey)));
+        <PrimitiveMap.(keyType)> adjacencies = col1KeysMap.get(col2OfKey);
+        if(adjacencies!=null)
+            adjacenciesList.add(new <PrimitiveMap.(keyType)>(adjacencies));
+        else
+            adjacenciesList.add(new <PrimitiveMap.(keyType)>());
         return size++;
     }
     <elseif(IsBoolean.(valueType))>
@@ -161,7 +167,11 @@ public class AsyncTable extends BaseAsyncTable{
         indKeyMap.put(size, key);
         valueList.add(false);
         deltaList.add(new <TypeAtomicMap.(deltaType)>(IDENTITY_ELEMENT));
-        adjacenciesList.add(new <PrimitiveMap.(keyType)>(col1KeysMap.get(key)));
+        <PrimitiveMap.(keyType)> adjacencies = col1KeysMap.get(key);
+        if(adjacencies!=null)
+            adjacenciesList.add(new <PrimitiveMap.(keyType)>(col1KeysMap.get(key)));
+        else
+            adjacenciesList.add(new <PrimitiveMap.(keyType)>());
         sentFlagList.add(false);
         return size++;
     }
@@ -180,14 +190,6 @@ public class AsyncTable extends BaseAsyncTable{
                     Pair key = new Pair(col1OfKey, col2OfKey);
                     keyIndMap.put(key, size);
                     indKeyMap.put(size, key);
-                    <!按照第一列建立索引!>
-                    List\<Pair> keys = col1KeysMap.get(col1OfKey);
-                    if(keys == null){
-                        keys = new ArrayList\<>();
-                        col1KeysMap.put(col1OfKey, keys);
-                    }
-                    keys.add(key);
-                    <!按照第一列建立索引!>
                     valueList.add(IDENTITY_ELEMENT);
                     deltaList.add(new <TypeAtomicMap.(valueType)>(delta));
                     adjacencies = new <PrimitiveMap.(keyType)>();
@@ -248,26 +250,38 @@ public class AsyncTable extends BaseAsyncTable{
         };
     }
 
-    <if(IsBoolean.(valueType))>
+    <if(IsBoolean.(valueType) || IsPairKey.(keyType))>
+    @Override
     public MyVisitorImpl getEdgeVisitor(){
         return new MyVisitorImpl() {
             <PrimitiveMap.(keyType)> keys;
-
+            <if(IsPairKey.(keyType))>int col1OfKey;<endif>
             @Override
-            public boolean visit_0(<keyType> key) {
-                <!按照第一列建立索引!>
-                keys = col1KeysMap.get(key);
-                if(keys == null){
-                    keys = new <PrimitiveMap.(keyType)>();
-                    col1KeysMap.put(key, keys);
-                }
-                <!按照第一列建立索引!>
+            public boolean visit_0(<if(IsPairKey.(keyType))>int col1OfKey<else><keyType> key<endif>) {
+                <if(IsPairKey.(keyType))>
+                    this.col1OfKey = col1OfKey;
+                    keys = col1KeysMap.get(col1OfKey);
+                    if(keys == null){
+                        keys = new <PrimitiveMap.(keyType)>();
+                        col1KeysMap.put(col1OfKey, keys);
+                    }
+                <else>
+                    keys = col1KeysMap.get(key);
+                    if(keys == null){
+                        keys = new <PrimitiveMap.(keyType)>();
+                        col1KeysMap.put(key, keys);
+                    }
+                <endif>
                 return true;
             }
 
             @Override
-            public boolean visit(<keyType> key) {
-                keys.add(key);
+            public boolean visit(<if(IsPairKey.(keyType))>int col2OfKey<else><keyType> col2<endif>) {
+                <if(IsPairKey.(keyType))>
+                    keys.add(new Pair(col1OfKey, col2OfKey));
+                <else>
+                    keys.add(col2);
+                <endif>
                 return true;
             }
         };
@@ -286,7 +300,11 @@ public class AsyncTable extends BaseAsyncTable{
     <else>
     public <WrappedTypeMap.(deltaType)> accumulateValue(){
         <valueType> sum = 0;
-        for(int i=0;i\<size;i++) sum+=valueList.get(i);
+        for(int i=0;i\<size;i++){
+            <valueType> value = valueList.get(i);
+            if(value != IDENTITY_ELEMENT)
+                sum+=valueList.get(i);
+        }
         return sum;
     }
     <endif>
@@ -294,7 +312,11 @@ public class AsyncTable extends BaseAsyncTable{
     @Override
     public <WrappedTypeMap.(deltaType)> accumulateDelta(){
         <deltaType> sum = 0;
-        for(int i=0;i\<size;i++) sum+=deltaList.get(i).<deltaType>Value();
+        for(int i=0;i\<size;i++){
+            <deltaType> delta = deltaList.get(i).<deltaType>Value();
+            if(delta != IDENTITY_ELEMENT)
+                sum+=delta;
+        }
         return sum;
     }
 

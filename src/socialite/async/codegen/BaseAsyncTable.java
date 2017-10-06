@@ -16,7 +16,9 @@ public abstract class BaseAsyncTable {
 
     public abstract Object accumulateDelta();
 
-    public MyVisitorImpl getInitVisitor() {
+    public abstract MyVisitorImpl getInitVisitor();
+
+    public MyVisitorImpl getEdgeVisitor(){
         throw new NotImplementedException();
     }
 }

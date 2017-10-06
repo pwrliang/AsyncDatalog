@@ -136,6 +136,7 @@ public class AsyncAnalysis {
         outer:
         for (Rule recRule : recRules) {
             for (Predicate predicate : recRule.getBodyP()) {
+                if(predicate==recRule.firstP())continue ;//skip rec predicate
                 Set<String> edgeSet = predicate.getVariables().stream().map(x -> x.name).collect(Collectors.toSet());
                 Set<String> tmp = new HashSet<>(varSet);
                 tmp.retainAll(edgeSet);

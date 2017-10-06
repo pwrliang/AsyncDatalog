@@ -1,55 +1,44 @@
 import "Utils.stg"
-AsyncRuntime(valueType, initSize, threadNum, dynamic, barrier, checkType, checkerInterval, threshold, cond) ::= <<
+AsyncRuntime(initSize, threadNum, dynamic, checkType, checkerInterval, threshold, cond) ::= <<
 package socialite.async.codegen;
 <importForRuntime()>
 
 public class AsyncRuntime extends AsyncRuntimeBase{
     private static final Log L = LogFactory.getLog(AsyncRuntime.class);
     private LocalEngine syncEngine;
-    <if(barrier)>
-    private CyclicBarrier barrier;
-    <endif>
     private BaseAsyncTable asyncTable;
     private static final int INIT_SIZE = <initSize>;
     private static final int THREAD_NUM = <threadNum>;
     private Worker[] workers;
     private Checker checker;
 
-    public AsyncRuntime(LocalEngine syncEngine, TableInst[] recInstArr, TableInst[] edgeInstArr, TableInst[] extraInstArr) {
+    public AsyncRuntime(LocalEngine syncEngine, TableInst[] recInstArr, TableInst[] edgeInstArr) {
         this.syncEngine = syncEngine;
         asyncTable = new AsyncTable(INIT_SIZE);
-        loadData(recInstArr, edgeInstArr, extraInstArr);
+        loadData(recInstArr, edgeInstArr);
         L.info("Data Loaded size:" + asyncTable.getSize());
         createThreads();
     }
 
-    private void loadData(TableInst[] recInstArr, TableInst[] edgeInstArr, TableInst[] extraInstArr) {
+    private void loadData(TableInst[] initTableInstArr, TableInst[] edgeTableInstArr) {
         try {
-            for (TableInst tableInst : recInstArr) {
+            Method method = initTableInstArr[0].getClass().getDeclaredMethod("iterate", VisitorImpl.class);
+            for (TableInst tableInst : initTableInstArr) {
                 if (!tableInst.isEmpty()) {
-                    Method method = tableInst.getClass().getDeclaredMethod("iterate", VisitorImpl.class);
                     method.invoke(tableInst, asyncTable.getInitVisitor());
                     //tableInst.clear();
                 }
             }
 
-            for (TableInst tableInst : edgeInstArr) {
+            <if(dynamic)><!动态算法需要edge做连接，如prog4、9!>
+            method = edgeTableInstArr[0].getClass().getDeclaredMethod("iterate", VisitorImpl.class);
+            for (TableInst tableInst : edgeTableInstArr) {
                 if (!tableInst.isEmpty()) {
-                    Method method = tableInst.getClass().getDeclaredMethod("iterate", VisitorImpl.class);
                     method.invoke(tableInst, asyncTable.getEdgeVisitor());
                     //tableInst.clear();
                 }
             }
-
-            if (extraInstArr != null) {
-                for (TableInst tableInst : extraInstArr) {
-                    if (!tableInst.isEmpty()) {
-                        Method method = tableInst.getClass().getDeclaredMethod("iterate", VisitorImpl.class);
-                        method.invoke(tableInst, asyncTable.getExtraVisitor());
-                        //tableInst.clear();
-                    }
-                }
-            }
+            <endif>
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
         }
@@ -59,9 +48,6 @@ public class AsyncRuntime extends AsyncRuntimeBase{
         workers = new Worker[THREAD_NUM];
         checker = new Checker();
         checker.setPriority(Thread.MAX_PRIORITY);
-        <if(barrier)>
-        barrier = new CyclicBarrier(THREAD_NUM, checker);
-        <endif>
         arrangeTask();
     }
 
@@ -87,11 +73,7 @@ public class AsyncRuntime extends AsyncRuntimeBase{
 
     @Override
     public void run() {
-        <if(!barrier)>
         checker.start();
-        System.out.println("CHECKER STARTED");
-        <endif>
-
         Arrays.stream(workers).forEach(Worker::start);
         L.info("worker started");
         checker.stopWatch.start();
@@ -124,21 +106,11 @@ public class AsyncRuntime extends AsyncRuntimeBase{
 
         @Override
         public void run() {
-            try {
-                while (!checker.stop) {
-                    for (int k = start; k \< end; k++) {
-                        asyncTable.updateLockFree(k);
-                    }
-                    <if(barrier)>
-                    barrier.await();
-                    <endif>
+            while (!checker.stop) {
+                for (int k = start; k \< end; k++) {
+                    asyncTable.updateLockFree(k);
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
-            <if(barrier)>
-            barrier.reset();
-            <endif>
         }
 
         @Override
@@ -151,17 +123,12 @@ public class AsyncRuntime extends AsyncRuntimeBase{
     private class Checker extends Thread {
         private boolean stop = false;
         StopWatch stopWatch;
-        private Double LAST_DELTA_SUM = null;
-        <PrimitiveMap.(valueType)> value;
-        <if(!barrier)>
         private static final int CHECKER_INTERVAL = <checkerInterval>;
-        <endif>
         StopWatch checkerSW;
 
         private Checker(){
             stopWatch = new StopWatch();
             checkerSW = new StopWatch();
-            value = (<PrimitiveMap.(valueType)>) asyncTable.getValue();
         }
 
         private void done() {
@@ -176,28 +143,14 @@ public class AsyncRuntime extends AsyncRuntimeBase{
                     checkerSW.reset();
                     checkerSW.start();
                     <if (IsCheckDelta.(checkType))>
-                    double sum = 0; //统一使用double，防止溢出
-                    for (int i = 0; i \< value.size(); i++) {
-                        <valueType> t = value.get(i);
-                        <if(IsBoolean.(valueType))>
-                        if(t)
-                            sum++;
-                        <else>
-                        if (t != <AsyncTableClass>.IDENTITY_ELEMENT)
-                            sum += t;
-                        <endif>
-                    }
+                    double sum = (double)asyncTable.accumulateDelta(); //统一使用double，防止溢出
                     L.info("sum of delta: " + sum);
-                    if (LAST_DELTA_SUM != null && Math.abs(sum - LAST_DELTA_SUM) <cond> <threshold>) {
+                    if (sum <cond> <threshold>) {
                         done();
                         break;
                     }
-                    LAST_DELTA_SUM = sum;
                     <elseif(IsCheckValue.(checkType))>
-                    double sum = 0;
-                    for (int i = 0; i \< asyncTable.value.size(); i++)
-                        sum += asyncTable.value.get(i);
-                    }
+                    double sum = (double)asyncTable.accumulateValue();
                     if (sum <cond> <threshold>) {
                         done();
                         break;
@@ -208,11 +161,7 @@ public class AsyncRuntime extends AsyncRuntimeBase{
                     <if(dynamic)>
                     arrangeTask();
                     <endif>
-                    <if(barrier)>
-                    break;//启用barrier，结束循环
-                    <else>
                     Thread.sleep(CHECKER_INTERVAL);
-                    <endif>
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
