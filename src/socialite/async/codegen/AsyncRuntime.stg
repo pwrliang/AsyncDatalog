@@ -76,7 +76,6 @@ public class AsyncRuntime extends AsyncRuntimeBase{
         checker.start();
         Arrays.stream(workers).forEach(Worker::start);
         L.info("worker started");
-        checker.stopWatch.start();
         try {
             for (Worker worker : workers)
                 worker.join();
@@ -93,7 +92,7 @@ public class AsyncRuntime extends AsyncRuntimeBase{
         return asyncTable;
     }
 
-    private class Worker extends Thread {
+    private class Worker extends Thread{
         int start;
         int end;
         int tid;
@@ -138,19 +137,28 @@ public class AsyncRuntime extends AsyncRuntimeBase{
 
         @Override
         public void run() {
+            stopWatch.start();
             while (true) {
                 try {
                     checkerSW.reset();
                     checkerSW.start();
                     <if (IsCheckDelta.(checkType))>
-                    double sum = (double)asyncTable.accumulateDelta(); //统一使用double，防止溢出
+                    double sum = 0.0d;
+                    if(asyncTable.accumulateDelta() instanceof Integer)
+                        sum = ((Integer)asyncTable.accumulateDelta()) + 0.0d;
+                    else if(asyncTable.accumulateDelta() instanceof Long)
+                        sum = ((Long)asyncTable.accumulateDelta()) + 0.0d;
+                    else if(asyncTable.accumulateDelta() instanceof Float)
+                        sum = ((Float)asyncTable.accumulateDelta()) + 0.0d;
+                    else if(asyncTable.accumulateDelta() instanceof Double)
+                        sum = ((Double)asyncTable.accumulateDelta()) + 0.0d;
                     L.info("sum of delta: " + sum);
                     if (sum <cond> <threshold>) {
                         done();
                         break;
                     }
                     <elseif(IsCheckValue.(checkType))>
-                    double sum = (double)asyncTable.accumulateValue();
+                    double sum = asyncTable.accumulateValue() + 0.0d;
                     if (sum <cond> <threshold>) {
                         done();
                         break;

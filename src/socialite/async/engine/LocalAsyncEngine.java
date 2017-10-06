@@ -36,7 +36,8 @@ public class LocalAsyncEngine {
         List<String> decls = parser.getTableDeclMap().values().stream().map(TableDecl::getDeclText).collect(Collectors.toList());
         List<Rule> rules = tmpAn.getEpochs().stream().flatMap(epoch -> epoch.getRules().stream()).filter(rule -> !(rule instanceof DeltaRule)).collect(Collectors.toList());
         //由socialite执行表创建和非递归规则
-//        decls.forEach(localEngine::run);
+        if (!AsyncConfig.get().isDebugging())
+            decls.forEach(localEngine::run);
         boolean existLeftRec = rules.stream().anyMatch(Rule::isLeftRec);
         for (Rule rule : rules) {
             boolean added = false;
@@ -49,8 +50,9 @@ public class LocalAsyncEngine {
                 asyncAnalysis.addRecRule(rule);
                 added = true;
             }
-//            if (!added)
-//                localEngine.run(rule.getRuleText());
+            if (!AsyncConfig.get().isDebugging())
+                if (!added)
+                    localEngine.run(rule.getRuleText());
         }
     }
 
@@ -63,6 +65,7 @@ public class LocalAsyncEngine {
                 .setCheckerCond(AsyncConfig.Cond.LE)
                 .setThreshold(0.00001)
                 .setDynamic(true)
+//                .setDebugging(true)
                 .build();
         LocalAsyncEngine localAsyncEngine = new LocalAsyncEngine(TextUtils.readText(args[0]));
         localAsyncEngine.run();
@@ -96,16 +99,23 @@ public class LocalAsyncEngine {
     public void run() {
         compile();
         List<String> initStats = asyncCodeGenMain.getInitStats();
-        for (String stat : initStats) {
-//            localEngine.run(stat);
+        if (!AsyncConfig.get().isDebugging()) {
+            initStats.forEach(initStat -> localEngine.run(initStat));
+            run(new MyVisitorImpl() {
+                //CC
+                @Override
+                public boolean visit(int a1, int a2, int a3) {
+                    System.out.println(a1 + " " + a2 + " " + a3);
+                    return true;
+                }
+                //COUNT PATH IN DAG
+                @Override
+                public boolean visit(Object a1, int a2, int a3) {
+                    System.out.println(a1 + " " + a2 + " " + a3);
+                    return true;
+                }
+            });
         }
-//        run(new MyVisitorImpl() {
-//            @Override
-//            public boolean visit(int a1, int a2) {
-//                System.out.println(a1 + " " + a2);
-//                return true;
-//            }
-//        });
         localEngine.shutdown();
     }
 

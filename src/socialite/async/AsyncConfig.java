@@ -10,6 +10,7 @@ public class AsyncConfig {
     private CheckerType checkType;
     private Cond cond;
     private boolean dynamic;
+    private boolean debugging;
 
     public static AsyncConfig get() {
         if (asyncConfig == null) {
@@ -51,6 +52,10 @@ public class AsyncConfig {
         return dynamic;
     }
 
+    public boolean isDebugging() {
+        return debugging;
+    }
+
     public enum Cond {
         G, GE, E, L, LE
     }
@@ -65,6 +70,7 @@ public class AsyncConfig {
         private CheckerType checkType;
         private Cond cond;
         private boolean dynamic;
+        private boolean debugging;
 
         public Builder setCheckerType(CheckerType checkType) {
             this.checkType = checkType;
@@ -91,6 +97,11 @@ public class AsyncConfig {
             return this;
         }
 
+        public Builder setDebugging(boolean debugging){
+            this.debugging = debugging;
+            return this;
+        }
+
         public AsyncConfig build() {
             AsyncConfig asyncConfig = new AsyncConfig();
             if (threshold == null)
@@ -103,7 +114,8 @@ public class AsyncConfig {
             asyncConfig.threshold = threshold;
             asyncConfig.checkType = checkType;
             asyncConfig.cond = cond;
-            asyncConfig.dynamic = this.dynamic;
+            asyncConfig.dynamic = dynamic;
+            asyncConfig.debugging = debugging;
             if(AsyncConfig.asyncConfig!=null)
                 throw new SociaLiteException("AsyncConfig already built");
             AsyncConfig.asyncConfig = asyncConfig;

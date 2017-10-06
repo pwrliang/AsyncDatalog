@@ -14,6 +14,7 @@ public class AsyncTable extends BaseAsyncTable{
     <elseif(dynamic)>
         private <IndKeyMap.(keyType)> indKeyMap;
         private <PrimitiveObjectMap.(keyType)>\<<PrimitiveMap.(keyType)>\> col1AdjacenciesMap;
+        <if(weightType)>private <PrimitiveObjectMap.(keyType)>\<<PrimitiveMap.(weightType)>\> col1WeightsMap;<endif>
     <endif>
 
     private <PrimitiveMap.(valueType)> valueList;
@@ -48,6 +49,7 @@ public class AsyncTable extends BaseAsyncTable{
         <elseif(dynamic)>
             indKeyMap = new <IndKeyMap.(keyType)>(size);
             col1AdjacenciesMap = new <PrimitiveObjectMap.(keyType)>\<<PrimitiveMap.(keyType)>\>(size);
+            <if(weightType)>col1WeightsMap = new <PrimitiveObjectMap.(keyType)>\<<PrimitiveMap.(weightType)>\>(size);<endif>
         <endif>
 
        valueList = new <PrimitiveMap.(valueType)>(initSize);
@@ -149,13 +151,14 @@ public class AsyncTable extends BaseAsyncTable{
     }
     <endif>
 
-    <if(dynamic || !IsKeyAsIndex.(keyType))>
+    <if(dynamic)>
     private synchronized int addEntry(<if(IsPairKey.(keyType))>int col1OfKey, int col2OfKey<else><keyType> key<endif>, <valueType> value, <deltaType> delta){
         <if(IsPairKey.(keyType))>
         Pair key = new Pair(col1OfKey, col2OfKey);
         <PrimitiveMap.(keyType)> adjacencies = col1AdjacenciesMap.get(col2OfKey);
         <else>
         <PrimitiveMap.(keyType)> adjacencies = col1AdjacenciesMap.get(key);
+        <if(weightType)><PrimitiveMap.(keyType)> weights = col1WeightsMap.get(key);<endif>
         <endif>
         keyIndMap.put(key, size);
         indKeyMap.put(size, key);
@@ -165,6 +168,12 @@ public class AsyncTable extends BaseAsyncTable{
             adjacenciesList.add(new <PrimitiveMap.(keyType)>(adjacencies));
         else
             adjacenciesList.add(new <PrimitiveMap.(keyType)>());
+        <if(weightType)>
+        if(weights!=null)
+            weightsList.add(new <PrimitiveMap.(weightType)>(weights));
+        else
+            weightsList.add(new <PrimitiveMap.(weightType)>());
+        <endif>
         <if(IsBoolean.(valueType))>sentFlagList.add(false);<endif>
         return size++;
     }
@@ -174,7 +183,20 @@ public class AsyncTable extends BaseAsyncTable{
     public MyVisitorImpl getInitVisitor(){
         return new MyVisitorImpl(){
             <if(dynamic)>
-                <if(IsBoolean.(valueType))>
+                <if(IsPairKey.(keyType))>
+                    int col1OfKey;
+                    @Override
+                    public boolean visit_0(int col1OfKey){
+                        this.col1OfKey = col1OfKey;
+                        return true;
+                    }
+
+                    @Override
+                    public boolean visit(int col2OfKey, <valueType> delta) {
+                        addEntry(col1OfKey, col2OfKey, IDENTITY_ELEMENT, delta);
+                        return true;
+                    }
+                <elseif(IsBoolean.(valueType))>
                     @Override
                     public boolean visit(<keyType> key){
                         addEntry(key, true, IDENTITY_ELEMENT);
@@ -182,8 +204,8 @@ public class AsyncTable extends BaseAsyncTable{
                     }
                 <else>
                     @Override
-                    public boolean visit(<if(IsPairKey.(keyType))>int col1OfKey, int col2OfKey<else><keyType> key<endif>, <valueType> delta){
-                        addEntry(<if(IsPairKey.(keyType))>col1OfKey, col2OfKey<else>key<endif>, IDENTITY_ELEMENT, delta);
+                    public boolean visit(<keyType> key, <valueType> delta){
+                        addEntry(key, IDENTITY_ELEMENT, delta);
                         return true;
                     }
                 <endif>
@@ -229,7 +251,7 @@ public class AsyncTable extends BaseAsyncTable{
                 col1AdjacenciesMap.put(key, keys);
                 <if(weightType)>
                 weights = new <PrimitiveMap.(weightType)>();
-                weightsList.add(weights);
+                col1WeightsMap.put(key, weights);
                 <endif>
                 return true;
             }
@@ -329,10 +351,10 @@ public class AsyncTable extends BaseAsyncTable{
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
 
-            Key key = (Key) o;
+            Pair pair = (Pair) o;
 
-            if (v0 != key.v0) return false;
-            return v1 == key.v1;
+            if (v0 != pair.v0) return false;
+            return v1 == pair.v1;
         }
 
         @Override

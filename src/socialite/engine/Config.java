@@ -19,9 +19,9 @@ public class Config {
     public static final Log L = LogFactory.getLog(Config.class);
     private static Config inst;
 
-    public static Config getInst() {
-        return inst;
-    }
+//    public static Config getInst() {
+//        return inst;
+//    }
 
     public static Config seq() {
         inst = new Config(EngineType.SEQ);

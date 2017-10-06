@@ -1,6 +1,6 @@
 edge(int src:0..5, (int dst)).
 cpaths(int src:0..5, (int dst, int count)).
-edge(s, d) :- l=$read("E:\\Liang_Projects\\socialite0.8\\socialite\\examples\\prog4_edge.txt"),  (s1,s2)=$split(l, "	"),
+edge(s, d) :- l=$read("E:\\socialite-before-yarn\\examples\\prog4_edge.txt"),  (s1,s2)=$split(l, "	"),
                      s=$toInt(s1), d=$toInt(s2).
 cpaths(x, y, 1) :- edge(x, y).
 cpaths(X, Y, $dcount(C1)) :- cpaths(X, Z, C), edge(Z, Y), C1 = C.
