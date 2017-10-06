@@ -57,7 +57,7 @@ public class AsyncCodeGen {
         stg.load();
         ST st = stg.getInstanceOf("AsyncRuntime");
         st.add("initSize", asyncAn.getInitSize());
-        st.add("threadNum", Config.par().getWorkerThreadNum());// standalone
+        st.add("threadNum", Config.par(1).getWorkerThreadNum());// standalone
         st.add("dynamic", asyncConfig.isDynamic());
         st.add("threshold", asyncConfig.getThreshold());
         st.add("cond", asyncConfig.getCond());

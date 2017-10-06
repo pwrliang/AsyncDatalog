@@ -38,7 +38,7 @@ public class AsyncConfig {
             case GE:
                 return ">=";
             case E:
-                return "=";
+                return "==";
             case LE:
                 return "<=";
             case L:

@@ -85,6 +85,12 @@ public class AsyncRuntime extends AsyncRuntimeBase{
         L.info("done elapsed:" + checker.stopWatch.getTime());
         L.info("checker consumed " + checkerConsume);
         L.info("checker thread exit");
+        <!
+        int size = 6;
+        for(int i=0;i\<size;i++){
+            asyncTable.updateLockFree(i);
+            size = asyncTable.getSize();
+        }!>
     }
 
     @Override
@@ -158,7 +164,16 @@ public class AsyncRuntime extends AsyncRuntimeBase{
                         break;
                     }
                     <elseif(IsCheckValue.(checkType))>
-                    double sum = asyncTable.accumulateValue() + 0.0d;
+                    double sum = 0.0d;
+                    if(asyncTable.accumulateValue() instanceof Integer)
+                        sum = ((Integer)asyncTable.accumulateValue()) + 0.0d;
+                    else if(asyncTable.accumulateValue() instanceof Long)
+                        sum = ((Long)asyncTable.accumulateValue()) + 0.0d;
+                    else if(asyncTable.accumulateValue() instanceof Float)
+                        sum = ((Float)asyncTable.accumulateValue()) + 0.0d;
+                    else if(asyncTable.accumulateValue() instanceof Double)
+                        sum = ((Double)asyncTable.accumulateValue()) + 0.0d;
+                    L.info("sum of delta: " + sum);
                     if (sum <cond> <threshold>) {
                         done();
                         break;

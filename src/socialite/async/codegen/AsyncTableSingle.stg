@@ -65,12 +65,17 @@ public class AsyncTable extends BaseAsyncTable{
     @Override
     public void updateLockFree(int localInd) {
         <if(IsBoolean.(valueType))>
-            if (sentFlagList.get(localInd)) return;
+            if (sentFlagList.get(localInd)){
+                //L.info("sentFlagList return");
+                return;
+            }
             <deltaType> oldDelta = deltaList.get(localInd).get();
             if (eval(oldDelta))
                 valueList.set(localInd, true);
-            if (!valueList.get(localInd))
+            if (!valueList.get(localInd)){
+                //L.info("valueList return");
                 return;
+            }
             <PrimitiveMap.(keyType)> adjacencies = adjacenciesList.get(localInd);
             <! 遍历每个邻接点 !>
             for(int i = 0; i \< adjacencies.size(); i++){
@@ -156,6 +161,10 @@ public class AsyncTable extends BaseAsyncTable{
         <if(IsPairKey.(keyType))>
         Pair key = new Pair(col1OfKey, col2OfKey);
         <PrimitiveMap.(keyType)> adjacencies = col1AdjacenciesMap.get(col2OfKey);
+        if(adjacencies!=null){
+            for(int i=0;i\<adjacencies.size();i++)
+                adjacencies.set(i, new Pair(col1OfKey, adjacencies.get(i).v1));
+        }
         <else>
         <PrimitiveMap.(keyType)> adjacencies = col1AdjacenciesMap.get(key);
         <if(weightType)><PrimitiveMap.(keyType)> weights = col1WeightsMap.get(key);<endif>
@@ -275,7 +284,7 @@ public class AsyncTable extends BaseAsyncTable{
     public Integer accumulateValue(){
         int sum = 0;
         for(int i=0;i\<size;i++)
-            if(valueList.get(i))
+            if(valueList.get(i) && !sentFlagList.get(i))//可见性问题，只能这么解决
                 sum++;
         return sum;
     }

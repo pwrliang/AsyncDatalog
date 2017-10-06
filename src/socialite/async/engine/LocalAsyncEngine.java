@@ -19,6 +19,7 @@ import socialite.tables.TableInst;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.stream.Collectors;
 
 public class LocalAsyncEngine {
@@ -61,12 +62,14 @@ public class LocalAsyncEngine {
         //waiting all workers online
         new AsyncConfig.Builder()
                 .setCheckInterval(1500)
-                .setCheckerType(AsyncConfig.CheckerType.DELTA)
-                .setCheckerCond(AsyncConfig.Cond.LE)
-                .setThreshold(0.00001)
+//                .setCheckerType(AsyncConfig.CheckerType.DELTA)
+                .setCheckerType(AsyncConfig.CheckerType.VALUE)
+                .setCheckerCond(AsyncConfig.Cond.E)
+                .setThreshold(0)
                 .setDynamic(true)
 //                .setDebugging(true)
                 .build();
+        //prog9 volatile problem
         LocalAsyncEngine localAsyncEngine = new LocalAsyncEngine(TextUtils.readText(args[0]));
         localAsyncEngine.run();
     }
@@ -112,6 +115,13 @@ public class LocalAsyncEngine {
                 @Override
                 public boolean visit(Object a1, int a2, int a3) {
                     System.out.println(a1 + " " + a2 + " " + a3);
+                    return true;
+                }
+
+                //PARTY
+                @Override
+                public boolean visit(int a1) {
+                    System.out.println(a1);
                     return true;
                 }
             });
