@@ -7,5 +7,5 @@ sure(X) :- l=$read("G:\\MyProject\\Java\\AsyncDatalog\\examples\\prog9_sure.txt"
 friend(X, Y) :- l=$read("G:\\MyProject\\Java\\AsyncDatalog\\examples\\prog9_edge.txt"), (s1, s2)=$split(l, "	"), X=$toInt(s1), Y=$toInt(s2).
 
 coming(X) :- sure(X).
-cntComing(Y, $Dcount(1)) :- coming(X), friend(X, Y).
+cntComing(Y, $dcount(1)) :- coming(X), friend(X, Y).
 coming(X) :- cntComing(X, N), N >= 3.

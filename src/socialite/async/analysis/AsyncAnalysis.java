@@ -292,6 +292,10 @@ public class AsyncAnalysis {
         return valueType;
     }
 
+    public String getDeltaType() {
+        return deltaType;
+    }
+
     public String getAggrName() {
         return aggrName;
     }
@@ -300,11 +304,4 @@ public class AsyncAnalysis {
         return midRule != null;
     }
 
-    public String getInitRuleBody() {
-        Rule rule = recRules.get(0);
-        StringJoiner joiner = new StringJoiner(", ");
-        for (Predicate predicate : rule.getBodyP())
-            joiner.add(predicate.toString());
-        return joiner.toString();
-    }
 }

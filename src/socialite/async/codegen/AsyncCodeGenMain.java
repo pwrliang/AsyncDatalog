@@ -8,6 +8,7 @@ import socialite.util.Loader;
 import socialite.util.SociaLiteException;
 
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,7 +25,7 @@ public class AsyncCodeGenMain {
 
     public void generate() {
         generateInitTableStats();
-//        genAsyncTable();
+        genAsyncTable();
 //        L.info("AsyncTable compiled");
 //        genRuntime();
 //        L.info("AsyncRuntime compiled");

@@ -16,13 +16,14 @@ public class AsyncCodeGen {
         this.asyncAn = asyncAn;
     }
 
-    String generateInitTable(){
+    String generateInitTable() {
         STGroup stg = new MySTGroupFile(AsyncCodeGen.class.getResource("AsyncTable.stg"),
                 "UTF-8", '<', '>');
         stg.load();
         ST st = stg.getInstanceOf("InitTableStat");
-        st.add("initSize",asyncAn.getInitSize());
-        st.add("keyType",asyncAn.getKeyType());
+        st.add("initSize", asyncAn.getInitSize());
+        st.add("keyType", asyncAn.getKeyType());
+        st.add("deltaType", asyncAn.getDeltaType());
         st.add("valueType", asyncAn.getValueType());
         st.add("weightType", asyncAn.getWeightType());
         st.add("extraType", asyncAn.getExtraType());
@@ -37,18 +38,15 @@ public class AsyncCodeGen {
         STGroup stg = new MySTGroupFile(AsyncCodeGen.class.getResource("AsyncTable.stg"),
                 "UTF-8", '<', '>');
         stg.load();
-        ST st = null;
-        if (asyncAn.isTwoStep()) {
-        } else {
-            st = stg.getInstanceOf("AsyncTableSingle");
-            st.add("name", asyncAn.getResultPName());
-            st.add("keyType",asyncAn.getKeyType());
-            st.add("valueType", asyncAn.getValueType());
-            st.add("aggrType", asyncAn.getAggrName());
-            st.add("weightType", asyncAn.getWeightType());
-            st.add("extraType", asyncAn.getExtraType());
-            st.add("expr", asyncAn.getsExpr());
-        }
+        ST st = stg.getInstanceOf("AsyncTableSingle");
+        st.add("name", asyncAn.getResultPName());
+        st.add("keyType", asyncAn.getKeyType());
+        st.add("deltaType", asyncAn.getDeltaType());
+        st.add("valueType", asyncAn.getValueType());
+        st.add("aggrType", asyncAn.getAggrName());
+        st.add("weightType", asyncAn.getWeightType());
+        st.add("extraType", asyncAn.getExtraType());
+        st.add("expr", asyncAn.getsExpr());
         return st.render();
     }
 

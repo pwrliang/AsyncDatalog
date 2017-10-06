@@ -4,8 +4,6 @@ import socialite.async.AsyncConfig;
 import socialite.async.analysis.AsyncAnalysis;
 import socialite.async.analysis.MyVisitorImpl;
 import socialite.async.codegen.AsyncCodeGenMain;
-import socialite.async.codegen.AsyncRuntimeBase;
-import socialite.async.codegen.BaseAsyncTable;
 import socialite.async.util.TextUtils;
 import socialite.codegen.Analysis;
 import socialite.engine.LocalEngine;
@@ -13,11 +11,7 @@ import socialite.parser.DeltaRule;
 import socialite.parser.Parser;
 import socialite.parser.Rule;
 import socialite.parser.antlr.TableDecl;
-import socialite.resource.TableInstRegistry;
-import socialite.tables.TableInst;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,14 +30,19 @@ public class LocalAsyncEngine {
         List<String> decls = parser.getTableDeclMap().values().stream().map(TableDecl::getDeclText).collect(Collectors.toList());
         List<Rule> rules = tmpAn.getEpochs().stream().flatMap(epoch -> epoch.getRules().stream()).filter(rule -> !(rule instanceof DeltaRule)).collect(Collectors.toList());
         //由socialite执行表创建和非递归规则
-        decls.forEach(localEngine::run);
+//        decls.forEach(localEngine::run);
+        boolean existLeftRec = rules.stream().anyMatch(Rule::isLeftRec);
         for (Rule rule : rules) {
-            if (!rule.isLeftRec()) {
-//                localEngine.run(rule.getRuleText());
-            } else {//process recursive rules
+            if (existLeftRec) {
+                if (rule.isLeftRec())
+                    asyncAnalysis.addRecRule(rule);
+            } else if (rule.inScc()) {
                 asyncAnalysis.addRecRule(rule);
+            } else {
+                //localEngine.run(rule.getRuleText());
             }
         }
+
     }
 
     public static void main(String[] args) throws InterruptedException {
@@ -94,11 +93,11 @@ public class LocalAsyncEngine {
 
     public void run() {
         compile();
-        List<String> initStats = asyncCodeGenMain.getInitStats();
-        for(String stat:initStats) {
-            localEngine.run(stat);
-            System.out.println(stat);
-        }
+//        List<String> initStats = asyncCodeGenMain.getInitStats();
+//        for(String stat:initStats) {
+//            localEngine.run(stat);
+//            System.out.println(stat);
+//        }
 //        run(new MyVisitorImpl() {
 //            @Override
 //            public boolean visit(int a1, int a2) {

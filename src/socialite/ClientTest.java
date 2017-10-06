@@ -26,16 +26,7 @@ public class ClientTest {
 //        },0);
 //        clientEngine.shutdown();
         LocalEngine localEngine = new LocalEngine();
-        localEngine.run(TextUtils.readText(args[0]));
-        localEngine.run("Middle(int Key:0..875713, (double initD, int degree, int adj)).");
-        localEngine.run("Middle(key, r, degree, adj) :- Rank(key, r), Edge(key, adj), EdgeCnt(key, degree).");
-        TableInstRegistry tableInstRegistry = localEngine.getRuntime().getTableRegistry();
-        localEngine.run("?- Middle(key, r, degree, adj).", new QueryVisitor() {
-            @Override
-            public boolean visit(Tuple _0) {
-                return super.visit(_0);
-            }
-        });
+        localEngine.run("Test(int Key:0..875713, boolean come).");
         localEngine.shutdown();
     }
 }
