@@ -1,10 +1,10 @@
 edge(int src:0..3, (int dst, int weight)).
 sssp(int node:0..3, int dist).
 
-edge(s, t, w) :- l=$read("C:\\Users\\g\\IdeaProjects\\socialite-before-yarn\\examples\\prog1_edge.txt"), (s1,s2,s3)=$split(l, "	"),
+edge(s, t, w) :- l=$read("E:\\socialite-before-yarn\\examples\\prog1_edge.txt"), (s1,s2,s3)=$split(l, "	"),
              s=$toInt(s1), t=$toInt(s2), w=$toInt(s3).
 
-sssp(s, d) :- l=$read("C:\\Users\\g\\IdeaProjects\\socialite-before-yarn\\examples\\prog1_node.txt"), (s1,s2)=$split(l, "	"),
+sssp(s, d) :- l=$read("E:\\socialite-before-yarn\\examples\\prog1_node.txt"), (s1,s2)=$split(l, "	"),
              s=$toInt(s1), d=$toInt(s2).
 sssp(Y, $dmin(D)) :- sssp(X, D1), edge(X, Y, D2), D = D1 + D2.
 // /home/gengl/IdeaProjects/AsyncDatalog/examples

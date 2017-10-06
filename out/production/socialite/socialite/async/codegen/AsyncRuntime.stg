@@ -22,14 +22,7 @@ public class AsyncRuntime extends AsyncRuntimeBase{
 
     private void loadData(TableInst[] initTableInstArr, TableInst[] edgeTableInstArr) {
         try {
-            Method method = initTableInstArr[0].getClass().getDeclaredMethod("iterate", VisitorImpl.class);
-            for (TableInst tableInst : initTableInstArr) {
-                if (!tableInst.isEmpty()) {
-                    method.invoke(tableInst, asyncTable.getInitVisitor());
-                    //tableInst.clear();
-                }
-            }
-
+            Method method;
             <if(dynamic)><!动态算法需要edge做连接，如prog4、9!>
             method = edgeTableInstArr[0].getClass().getDeclaredMethod("iterate", VisitorImpl.class);
             for (TableInst tableInst : edgeTableInstArr) {
@@ -39,6 +32,13 @@ public class AsyncRuntime extends AsyncRuntimeBase{
                 }
             }
             <endif>
+            method = initTableInstArr[0].getClass().getDeclaredMethod("iterate", VisitorImpl.class);
+            for (TableInst tableInst : initTableInstArr) {
+                if (!tableInst.isEmpty()) {
+                    method.invoke(tableInst, asyncTable.getInitVisitor());
+                    //tableInst.clear();
+                }
+            }
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
         }

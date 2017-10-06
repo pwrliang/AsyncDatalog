@@ -4,28 +4,18 @@ import socialite.util.Assert;
 import socialite.util.SociaLiteException;
 
 public class AsyncConfig {
-    public static final int CHECK_DELTA = 0;
-    public static final int CHECK_VALUE = 1;
     private static AsyncConfig asyncConfig;
     private int checkInterval = -1;
     private double threshold;
     private CheckerType checkType;
     private Cond cond;
-    private boolean asyncDebug;
+    private boolean dynamic;
 
     public static AsyncConfig get() {
         if (asyncConfig == null) {
             throw new SociaLiteException("AsyncConfig is not create");
         }
         return asyncConfig;
-    }
-
-    public void setAsyncDebug() {
-        asyncDebug = true;
-    }
-
-    public boolean isAsyncDebug() {
-        return asyncDebug;
     }
 
     public int getCheckInterval() {
@@ -57,6 +47,10 @@ public class AsyncConfig {
         return null;
     }
 
+    public boolean isDynamic() {
+        return dynamic;
+    }
+
     public enum Cond {
         G, GE, E, L, LE
     }
@@ -70,6 +64,7 @@ public class AsyncConfig {
         private Double threshold = null;
         private CheckerType checkType;
         private Cond cond;
+        private boolean dynamic;
 
         public Builder setCheckerType(CheckerType checkType) {
             this.checkType = checkType;
@@ -91,6 +86,11 @@ public class AsyncConfig {
             return this;
         }
 
+        public Builder setDynamic(boolean dynamic){
+            this.dynamic = dynamic;
+            return this;
+        }
+
         public AsyncConfig build() {
             AsyncConfig asyncConfig = new AsyncConfig();
             if (threshold == null)
@@ -103,6 +103,9 @@ public class AsyncConfig {
             asyncConfig.threshold = threshold;
             asyncConfig.checkType = checkType;
             asyncConfig.cond = cond;
+            asyncConfig.dynamic = this.dynamic;
+            if(AsyncConfig.asyncConfig!=null)
+                throw new SociaLiteException("AsyncConfig already built");
             AsyncConfig.asyncConfig = asyncConfig;
             return asyncConfig;
         }

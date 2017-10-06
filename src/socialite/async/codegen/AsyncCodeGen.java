@@ -30,7 +30,6 @@ public class AsyncCodeGen {
         st.add("recPName", asyncAn.getResultPName());
         st.add("edgePName", asyncAn.getEdgePName());
         st.add("extraPName", asyncAn.getExtraPName());
-
         return st.render();
     }
 
@@ -47,6 +46,7 @@ public class AsyncCodeGen {
         st.add("weightType", asyncAn.getWeightType());
         st.add("extraType", asyncAn.getExtraType());
         st.add("expr", asyncAn.getsExpr());
+        st.add("dynamic", asyncConfig.isDynamic());
         return st.render();
     }
 
@@ -57,7 +57,7 @@ public class AsyncCodeGen {
         ST st = stg.getInstanceOf("AsyncRuntime");
         st.add("initSize", asyncAn.getInitSize());
         st.add("threadNum", Config.getInst().getWorkerThreadNum());// standalone
-        st.add("dynamic", asyncAn.getKeyType().equals("Pair") || asyncAn.isTwoStep());
+        st.add("dynamic", asyncConfig.isDynamic());
         st.add("threshold", asyncConfig.getThreshold());
         st.add("cond", asyncConfig.getCond());
         st.add("checkerInterval", asyncConfig.getCheckInterval());
