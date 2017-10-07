@@ -284,7 +284,7 @@ public class AsyncTable extends BaseAsyncTable{
     public Integer accumulateValue(){
         int sum = 0;
         for(int i=0;i\<size;i++)
-            if(valueList.get(i) && !sentFlagList.get(i))
+            if(valueList.get(i) && !sentFlagList.get(i))//可见性问题，只能这么解决
                 sum++;
         return sum;
     }

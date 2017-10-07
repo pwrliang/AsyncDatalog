@@ -1,28 +1,26 @@
 package socialite.dist.master;
 
-import java.io.*;
-import java.lang.reflect.Method;
-import java.net.*;
-import java.util.*;
-
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.*;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
-
+import socialite.async.util.MPIUtils;
 import socialite.dist.Host;
 import socialite.dist.worker.WorkerCmd;
 import socialite.engine.Config;
 import socialite.resource.SRuntimeMaster;
 import socialite.resource.WorkerAddrMap;
-import socialite.resource.SRuntime;
 import socialite.resource.WorkerAddrMapW;
 import socialite.util.SociaLiteException;
 
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicInteger;
 
 class Call {
@@ -186,11 +184,13 @@ public class MasterNode {
     WorkerReqListener workerListener;
     Map<InetAddress, WorkerCmd> workerMap;
     Set<InetAddress> workersToRegister;
+    private Map<InetAddress, Integer> addressWorkerIdMap;
 
     private MasterNode(Config _conf) {
         conf = _conf;
         workerMap = Collections.synchronizedMap(new LinkedHashMap<InetAddress, WorkerCmd>());
         workersToRegister = Collections.synchronizedSet(Host.getAddrs(Config.getWorkers()));
+        addressWorkerIdMap = new LinkedHashMap<>();
         monitorWorkerRegistration();
     }
 
@@ -243,22 +243,46 @@ public class MasterNode {
         if (!workersToRegister.isEmpty())
             return;
 
+        //Liang: executed when last worker registered
         // We are in the middle of worker registration.
         // This is asynchronous, so that the registration can immediately terminate.
-        new Thread(new Runnable() {
-            public void run() {
-                // this needs to be asynchronous
-                queryListener.init();
-                SRuntimeMaster runtime = SRuntimeMaster.getInst();
-                WorkerAddrMap addrMap = runtime.getWorkerAddrMap();
-                try {
-                    Method init = WorkerCmd.class.getMethod("init", new Class[]{WorkerAddrMapW.class});
-                    MasterNode.callWorkers(init, new Object[]{new WorkerAddrMapW(addrMap)});
-                    L.info("All workers registered. Ready to run queries.");
-                } catch (InterruptedException e) {
-                } catch (Exception e) {
-                    L.fatal("Exception while running WorkerCmd.init():" + ExceptionUtils.getStackTrace(e));
-                }
+        new Thread(() -> {
+            // this needs to be asynchronous
+            queryListener.init();
+            SRuntimeMaster runtime = SRuntimeMaster.getInst();
+            WorkerAddrMap addrMap = runtime.getWorkerAddrMap();
+            try {
+                Method init = WorkerCmd.class.getMethod("init", new Class[]{WorkerAddrMapW.class});
+                MasterNode.callWorkers(init, new Object[]{new WorkerAddrMapW(addrMap)});
+                L.info("All workers registered. Ready to run queries.");
+            } catch (InterruptedException e) {
+            } catch (Exception e) {
+                L.fatal("Exception while running WorkerCmd.init():" + ExceptionUtils.getStackTrace(e));
+            }
+        }).start();
+    }
+
+    public synchronized void addRegisteredWorker(InetAddress workerAddr, int workerId) {
+        workersToRegister.remove(workerAddr);
+        addressWorkerIdMap.put(workerAddr, workerId);
+        if (!workersToRegister.isEmpty())
+            return;
+
+        //Liang: executed when last worker registered
+        // We are in the middle of worker registration.
+        // This is asynchronous, so that the registration can immediately terminate.
+        new Thread(() -> {
+            // this needs to be asynchronous
+            queryListener.init();
+            SRuntimeMaster runtime = SRuntimeMaster.getInst();
+            WorkerAddrMap addrMap = runtime.getWorkerAddrMap();
+            try {
+                Method init = WorkerCmd.class.getMethod("init", new Class[]{WorkerAddrMapW.class});
+                MasterNode.callWorkers(init, new Object[]{new WorkerAddrMapW(addrMap)});
+                L.info("All workers registered. Ready to run queries.");
+            } catch (InterruptedException e) {
+            } catch (Exception e) {
+                L.fatal("Exception while running WorkerCmd.init():" + ExceptionUtils.getStackTrace(e));
             }
         }).start();
     }
@@ -336,7 +360,10 @@ public class MasterNode {
         int addedWorker = 0;
 
         for (InetAddress addr : workerAddrs) {
-            machineMap.add(addr);
+            if (MPIUtils.inMPIEnv())
+                machineMap.add(addr, addressWorkerIdMap.get(addr));
+            else
+                machineMap.add(addr);
             addedWorker++;
             if (addedWorker >= workerNodeNum)
                 break;

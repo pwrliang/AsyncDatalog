@@ -22,7 +22,6 @@ import socialite.visitors.VisitorImpl;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicIntegerArray;
@@ -42,6 +41,7 @@ public class DistAsyncRuntime extends AsyncRuntimeBase {
     private ReceiveThread[] receiveThreads;
     private CheckerThread checkerThread;
     private volatile boolean stop;//notify computing threads to stop
+
     public DistAsyncRuntime(int workerId, int workerNum, int threadNum) {
         this.workerId = workerId;
         this.workerNum = workerNum;
@@ -57,17 +57,9 @@ public class DistAsyncRuntime extends AsyncRuntimeBase {
         L.info(String.format("Worker %d all threads started.", workerId));
     }
 
-    Map<Integer, Integer> myIdxWorkerIdMap;
 
     private void initData() {
-        byte[] data = new byte[4096];
-        MPI.COMM_WORLD.Sendrecv(new int[]{SRuntimeWorker.getInst().getWorkerAddrMap().myIndex(), workerId}, 0, 2, MPI.INT, AsyncMaster.ID, MsgType.REPORT_IDX_WORKERID.ordinal(),
-                data, 0, data.length, MPI.BYTE, AsyncMaster.ID, MsgType.FEEDBACK_IDX_WORKERID.ordinal());
-
-        SerializeTool serializeTool = new SerializeTool.Builder().build();
-        myIdxWorkerIdMap = new HashMap<>();
-        myIdxWorkerIdMap = serializeTool.fromBytes(data, myIdxWorkerIdMap.getClass());
-
+        MPI.COMM_WORLD.Recv(new byte[1], 0, 1, MPI.BYTE, AsyncMaster.ID, MsgType.NOTIFY_INIT.ordinal());
         //init keys
         distAsyncTable = new DistAsyncTable(workerNum, workerId, INIT_ASYNC_TABLE_SIZE, INIT_MESSAGE_TABLE_SIZE);
         TableInstRegistry tableInstRegistry = SRuntimeWorker.getInst().getTableRegistry();
@@ -75,7 +67,6 @@ public class DistAsyncRuntime extends AsyncRuntimeBase {
         Table initTable = tableMap.get("Middle");
         distAsyncTable.setTableId(initTable.id());
         distAsyncTable.setSliceMap(SRuntimeWorker.getInst().getSliceMap());
-        distAsyncTable.setMyIdxWorkerIdMap(myIdxWorkerIdMap);
 
 
         TableInst[] tableInsts = tableInstRegistry.getTableInstArray(initTable.id());

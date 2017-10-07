@@ -31,12 +31,8 @@ public class DistAsyncTable extends BaseDistAsyncTable {
     private TIntList extra;
     private AtomicIntegerArray messageTableSelector;
     private MessageTable[][] messageTableList;
-    Map<Integer, Integer> myIdxWorkerIdMap;
     private int myWorkerId;
 
-    public void setMyIdxWorkerIdMap(Map<Integer, Integer> myIdxWorkerIdMap) {
-        this.myIdxWorkerIdMap = myIdxWorkerIdMap;
-    }
 
     public DistAsyncTable(int workerNum, int myWorkerId, int initSize, int initBufferTableSize) {
         this.workerNum = workerNum;
@@ -101,8 +97,7 @@ public class DistAsyncTable extends BaseDistAsyncTable {
 
     // should same as InitCarrier.getWorkerId
     public int getWorkerId(int key, int workerNum) {
-        int myIdx = sliceMap.machineIndexFor(tableId, key);
-        return myIdxWorkerIdMap.get(myIdx);
+        return sliceMap.machineIndexFor(tableId, key);
     }
 
     @Override

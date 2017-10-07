@@ -86,19 +86,13 @@ public class DistAsyncEngine implements Runnable {
     }
 
     private void loadData() {
-        String tableSig = "Middle(int Key:0..4847571, double initD, int degree, (int adj)).";
+        String tableSig = "Middle(int Key:0..875713, double initD, int degree, (int adj)).";
         clientEngine.run(tableSig);
         clientEngine.run("Middle(key, r, degree, adj) :- Rank(key, r), Edge(key, adj), EdgeCnt(key, degree).");
 
-        Map<Integer, Integer> myIdxWorkerIdMap = new HashMap<>();
-        IntStream.rangeClosed(1, workerNum).forEach(dest -> {
-            int[] myIdxRank = new int[2];
-            MPI.COMM_WORLD.Recv(myIdxRank, 0, 2, MPI.INT, dest, MsgType.REPORT_IDX_WORKERID.ordinal());
-            myIdxWorkerIdMap.put(myIdxRank[0], myIdxRank[1]);
-        });
-        SerializeTool serializeTool = new SerializeTool.Builder().build();
-        byte[] bytes = serializeTool.toBytes(myIdxWorkerIdMap);
-        IntStream.rangeClosed(1, workerNum).forEach(dest -> MPI.COMM_WORLD.Send(bytes, 0, bytes.length, MPI.BYTE, dest, MsgType.FEEDBACK_IDX_WORKERID.ordinal()));
+        IntStream.rangeClosed(1, workerNum).forEach(dest ->
+            MPI.COMM_WORLD.Send(new byte[1], 0, 1, MPI.BYTE, dest, MsgType.NOTIFY_INIT.ordinal())
+        );
     }
 
     private class FeedBackThread extends Thread {
