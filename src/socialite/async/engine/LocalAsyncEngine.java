@@ -62,9 +62,10 @@ public class LocalAsyncEngine {
         //waiting all workers online
         new AsyncConfig.Builder()
                 .setCheckInterval(1500)
-//                .setCheckerType(AsyncConfig.CheckerType.DELTA)
-                .setCheckerType(AsyncConfig.CheckerType.VALUE)
-                .setCheckerCond(AsyncConfig.Cond.E)
+                .setCheckerType(AsyncConfig.CheckerType.DELTA)
+//                .setCheckerType(AsyncConfig.CheckerType.VALUE)
+//                .setCheckerCond(AsyncConfig.Cond.E)
+                .setCheckerCond(AsyncConfig.Cond.LE)
                 .setThreshold(0)
                 .setDynamic(true)
 //                .setDebugging(true)

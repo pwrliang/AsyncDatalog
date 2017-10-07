@@ -6,16 +6,22 @@ package socialite.async.codegen;
 public class AsyncTable extends BaseAsyncTable{
     private static final Log L = LogFactory.getLog(AsyncTable.class);
     <!只有静态且key为int才可以keyAsIndex!>
-    <if(dynamic || !IsKeyAsIndex.(keyType))>private <KeyIndMap.(keyType)> keyIndMap;<endif>
+    <if(dynamic || !IsKeyAsIndex.(keyType))>
+        private <KeyIndMap.(keyType)> keyIndMap;
+        <if(IsPairKey.(keyType))>
+            private TIntObjectHashMap\<Pair> indKeyMap;
+        <else>
+            private <IndKeyMap.(keyType)> indKeyMap; //using in iterate method
+        <endif>
+    <endif>
 
     <if(IsPairKey.(keyType))>
-        private TIntObjectHashMap\<Pair> indKeyMap;//动态添加取主键，与col1AdjacenciesMap连接
         private TIntObjectHashMap\<<PrimitiveMap.(keyType)>\> col1AdjacenciesMap;
     <elseif(dynamic)>
-        private <IndKeyMap.(keyType)> indKeyMap;
         private <PrimitiveObjectMap.(keyType)>\<<PrimitiveMap.(keyType)>\> col1AdjacenciesMap;
         <if(weightType)>private <PrimitiveObjectMap.(keyType)>\<<PrimitiveMap.(weightType)>\> col1WeightsMap;<endif>
     <endif>
+
 
     private <PrimitiveMap.(valueType)> valueList;
     private List\<<TypeAtomicMap.(deltaType)>\> deltaList;
@@ -41,23 +47,28 @@ public class AsyncTable extends BaseAsyncTable{
     private int size;
 
     public AsyncTable(int initSize){
-        <if(dynamic || !IsKeyAsIndex.(keyType))>keyIndMap = new <KeyIndMap.(keyType)>(size);<endif>
+        <if(dynamic || !IsKeyAsIndex.(keyType))>
+            keyIndMap = new <KeyIndMap.(keyType)>(initSize);
+            <if(IsPairKey.(keyType))>
+                indKeyMap = new TIntObjectHashMap\<>(initSize);
+            <else>
+                indKeyMap = new <IndKeyMap.(keyType)>(initSize); //using in iterate method
+            <endif>
+        <endif>
 
         <if(IsPairKey.(keyType))>
-            indKeyMap = new TIntObjectHashMap\<Pair>(size);//动态添加做连接用
-            col1AdjacenciesMap = new TIntObjectHashMap\<<PrimitiveMap.(keyType)>\>(size);
+            col1AdjacenciesMap = new TIntObjectHashMap\<<PrimitiveMap.(keyType)>\>(initSize);
         <elseif(dynamic)>
-            indKeyMap = new <IndKeyMap.(keyType)>(size);
-            col1AdjacenciesMap = new <PrimitiveObjectMap.(keyType)>\<<PrimitiveMap.(keyType)>\>(size);
-            <if(weightType)>col1WeightsMap = new <PrimitiveObjectMap.(keyType)>\<<PrimitiveMap.(weightType)>\>(size);<endif>
+            col1AdjacenciesMap = new <PrimitiveObjectMap.(keyType)>\<<PrimitiveMap.(keyType)>\>(initSize);
+            <if(weightType)>col1WeightsMap = new <PrimitiveObjectMap.(keyType)>\<<PrimitiveMap.(weightType)>\>(initSize);<endif>
         <endif>
 
        valueList = new <PrimitiveMap.(valueType)>(initSize);
        deltaList = new ArrayList\<>(initSize);
-       adjacenciesList = new ArrayList\<>(size);
+       adjacenciesList = new ArrayList\<>(initSize);
        <if(!IsBoolean.(valueType))>
-           <if(weightType)> weightsList = new ArrayList\<>(size);<endif>
-           <if(extraType)> extraList = new <PrimitiveMap.(extraType)>(size);<endif>
+           <if(weightType)> weightsList = new ArrayList\<>(initSize);<endif>
+           <if(extraType)> extraList = new <PrimitiveMap.(extraType)>(initSize);<endif>
        <endif>
        <if(IsBoolean.(valueType))>sentFlagList = new ArrayList\<>();<endif>
     }
@@ -127,8 +138,7 @@ public class AsyncTable extends BaseAsyncTable{
                         adjacentLocalInd = keyIndMap.get(adjacency);
                     else{
                         <if(IsPairKey.(keyType))>
-                        <keyType> key = indKeyMap.get(localInd);
-                        adjacentLocalInd = addEntry(key.v0, adjacency.v1, IDENTITY_ELEMENT, IDENTITY_ELEMENT);
+                        adjacentLocalInd = addEntry(adjacency.v0, adjacency.v1, IDENTITY_ELEMENT, IDENTITY_ELEMENT);
                         <elseif(IsBoolean.(valueType))>
                         adjacentLocalInd = addEntry(adjacency, false, IDENTITY_ELEMENT);
                         <else>
