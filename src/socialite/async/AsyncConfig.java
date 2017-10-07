@@ -1,7 +1,11 @@
 package socialite.async;
 
+import socialite.async.util.TextUtils;
 import socialite.util.Assert;
 import socialite.util.SociaLiteException;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class AsyncConfig {
     private static AsyncConfig asyncConfig;
@@ -11,6 +15,9 @@ public class AsyncConfig {
     private Cond cond;
     private boolean dynamic;
     private boolean debugging;
+    private int threadNum;
+    private EngineType engineType;
+    private String datalogProg;
 
     public static AsyncConfig get() {
         if (asyncConfig == null) {
@@ -48,6 +55,18 @@ public class AsyncConfig {
         return null;
     }
 
+    public int getThreadNum() {
+        return threadNum;
+    }
+
+    public EngineType getEngineType() {
+        return engineType;
+    }
+
+    public String getDatalogProg() {
+        return datalogProg;
+    }
+
     public boolean isDynamic() {
         return dynamic;
     }
@@ -64,6 +83,10 @@ public class AsyncConfig {
         VALUE, DELTA
     }
 
+    public enum EngineType {
+        DIST, STANDALONE
+    }
+
     public static class Builder {
         private int checkInterval = -1;
         private Double threshold = null;
@@ -71,6 +94,9 @@ public class AsyncConfig {
         private Cond cond;
         private boolean dynamic;
         private boolean debugging;
+        private int threadNum;
+        private EngineType engineType;
+        private String datalogProg;
 
         public Builder setCheckerType(CheckerType checkType) {
             this.checkType = checkType;
@@ -92,13 +118,28 @@ public class AsyncConfig {
             return this;
         }
 
-        public Builder setDynamic(boolean dynamic){
+        public Builder setDynamic(boolean dynamic) {
             this.dynamic = dynamic;
             return this;
         }
 
-        public Builder setDebugging(boolean debugging){
+        public Builder setDebugging(boolean debugging) {
             this.debugging = debugging;
+            return this;
+        }
+
+        public Builder setThreadNum(int threadNum) {
+            this.threadNum = threadNum;
+            return this;
+        }
+
+        public Builder setEngineType(EngineType engineType) {
+            this.engineType = engineType;
+            return this;
+        }
+
+        public Builder setDatalogProg(String datalogProg) {
+            this.datalogProg = datalogProg;
             return this;
         }
 
@@ -116,10 +157,112 @@ public class AsyncConfig {
             asyncConfig.cond = cond;
             asyncConfig.dynamic = dynamic;
             asyncConfig.debugging = debugging;
-            if(AsyncConfig.asyncConfig!=null)
+            asyncConfig.threadNum = threadNum;
+            asyncConfig.engineType = engineType;
+            asyncConfig.datalogProg = datalogProg;
+            if (AsyncConfig.asyncConfig != null)
                 throw new SociaLiteException("AsyncConfig already built");
             AsyncConfig.asyncConfig = asyncConfig;
             return asyncConfig;
         }
+    }
+
+    public static void parse(String configContent) {
+        Map<String, String> configMap = new LinkedHashMap<>();
+        StringBuilder prog = new StringBuilder();
+        configContent = configContent.trim();
+        String splitter = configContent.contains("\r\n") ? "\r\n" : "\n";
+        List<String> lines = new ArrayList<>();
+        lines.addAll(Arrays.asList(configContent.split(splitter)));
+        lines = lines.stream().map(String::trim).filter(s -> s.length() > 0 && !s.startsWith("#")).collect(Collectors.toList());
+        int lineNo;
+        for (lineNo = 0; lineNo < lines.size(); lineNo++) {
+            String line = lines.get(lineNo);
+            if (line.startsWith("RULE:")) {
+                lineNo++;
+                break;
+            }
+            String[] tmp = line.split("\\s+=\\s+");
+            configMap.put(tmp[0], tmp[1]);
+        }
+        while (lineNo<lines.size()){
+            prog.append(lines.get(lineNo++)).append("\n");
+        }
+        AsyncConfig.Builder asyncConfig = new AsyncConfig.Builder();
+        configMap.forEach((key, val) -> {
+            switch (key) {
+                case "CHECK_INTERVAL":
+                    asyncConfig.setCheckInterval(Integer.parseInt(val));
+                    break;
+                case "CHECK_TYPE":
+                    switch (val) {
+                        case "VALUE":
+                            asyncConfig.setCheckerType(CheckerType.VALUE);
+                            break;
+                        case "DELTA":
+                            asyncConfig.setCheckerType(CheckerType.DELTA);
+                            break;
+                        default:
+                            throw new SociaLiteException("unknown check type: " + val);
+                    }
+                    break;
+                case "CHECK_COND":
+                    switch (val) {
+                        case "G":
+                            asyncConfig.setCheckerCond(Cond.G);
+                            break;
+                        case "GE":
+                            asyncConfig.setCheckerCond(Cond.GE);
+                            break;
+                        case "E":
+                            asyncConfig.setCheckerCond(Cond.E);
+                            break;
+                        case "LE":
+                            asyncConfig.setCheckerCond(Cond.LE);
+                            break;
+                        case "L":
+                            asyncConfig.setCheckerCond(Cond.L);
+                            break;
+                        default:
+                            throw new SociaLiteException("unknown check condition: " + val);
+                    }
+                    break;
+                case "CHECK_THRESHOLD":
+                    asyncConfig.setThreshold(Double.parseDouble(val));
+                    break;
+                case "DYNAMIC":
+                    if (val.equals("TRUE"))
+                        asyncConfig.setDynamic(true);
+                    else if (val.equals("FALSE"))
+                        asyncConfig.setDynamic(false);
+                    else throw new SociaLiteException("unknown val: " + val);
+                    break;
+                case "THREAD_NUM":
+                    asyncConfig.setThreadNum(Integer.parseInt(val));
+                    break;
+                case "ENGINE":
+                    if (val.equals("DIST"))
+                        asyncConfig.setEngineType(EngineType.DIST);
+                    else if (val.equals("STANDALONE"))
+                        asyncConfig.setEngineType(EngineType.STANDALONE);
+                    else throw new SociaLiteException("unknown val: " + val);
+                    break;
+                case "DEBUGGING":
+                    if (val.equals("TRUE"))
+                        asyncConfig.setDebugging(true);
+                    else if (val.equals("FALSE"))
+                        asyncConfig.setDebugging(false);
+                    else throw new SociaLiteException("unknown val: " + val);
+                    break;
+                default:
+                    throw new SociaLiteException("unknown option:" + key);
+            }
+        });
+        asyncConfig.setDatalogProg(prog.toString());
+        asyncConfig.build();
+    }
+
+    public static void main(String[] args) {
+        AsyncConfig.parse(TextUtils.readText(args[0]));
     }
 }

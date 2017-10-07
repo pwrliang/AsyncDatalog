@@ -60,18 +60,9 @@ public class LocalAsyncEngine {
     public static void main(String[] args) throws InterruptedException {
         //worker number depends on ClusterConf
         //waiting all workers online
-        new AsyncConfig.Builder()
-                .setCheckInterval(1500)
-                .setCheckerType(AsyncConfig.CheckerType.DELTA)
-//                .setCheckerType(AsyncConfig.CheckerType.VALUE)
-//                .setCheckerCond(AsyncConfig.Cond.E)
-                .setCheckerCond(AsyncConfig.Cond.LE)
-                .setThreshold(0)
-                .setDynamic(true)
-//                .setDebugging(true)
-                .build();
+        AsyncConfig.parse(TextUtils.readText(args[0]));
         //prog9 volatile problem
-        LocalAsyncEngine localAsyncEngine = new LocalAsyncEngine(TextUtils.readText(args[0]));
+        LocalAsyncEngine localAsyncEngine = new LocalAsyncEngine(AsyncConfig.get().getDatalogProg());
         localAsyncEngine.run();
     }
 
@@ -106,12 +97,20 @@ public class LocalAsyncEngine {
         if (!AsyncConfig.get().isDebugging()) {
             initStats.forEach(initStat -> localEngine.run(initStat));
             run(new MyVisitorImpl() {
+
+                @Override
+                public boolean visit(int a1, double a2, double a3) {
+                    System.out.println(a1 + " " + a2 + " " + a3);
+                    return true;
+                }
+
                 //CC
                 @Override
                 public boolean visit(int a1, int a2, int a3) {
                     System.out.println(a1 + " " + a2 + " " + a3);
                     return true;
                 }
+
                 //COUNT PATH IN DAG
                 @Override
                 public boolean visit(Object a1, int a2, int a3) {

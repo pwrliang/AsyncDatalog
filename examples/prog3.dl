@@ -1,9 +1,16 @@
+CHECK_INTERVAL = 1500
+CHECK_TYPE = DELTA
+CHECK_COND = E
+CHECK_THRESHOLD = 0
+DYNAMIC = FALSE
+THREAD_NUM = 4
+ENGINE = STANDALONE
+RULE:
 Edge(int src:0..4, (int dst)).
 CC(int node:0..4, int tag).
 Node(int node:0..4).
-
-Edge(s, t) :- l=$read("E:\\socialite-before-yarn\\examples\\prog3_edge.txt"), (s1,s2)=$split(l, "	"),
+Edge(s, t) :- l=$read("G:\\MyProject\\Java\\socialite-before-yarn\\examples\\prog3_edge.txt"), (s1,s2)=$split(l, "	"),
              s=$toInt(s1), t=$toInt(s2).
-Node(n) :- l=$read("E:\\socialite-before-yarn\\examples\\prog3_node.txt"), n=$toInt(l).
+Node(n) :- l=$read("G:\\MyProject\\Java\\socialite-before-yarn\\examples\\prog3_node.txt"), n=$toInt(l).
 CC(X, X) :- Node(X).
 CC(Y, $dmin(V)) :- CC(X, V), Edge(X, Y), V1 = V.
