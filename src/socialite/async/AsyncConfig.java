@@ -16,6 +16,9 @@ public class AsyncConfig {
     private boolean dynamic;
     private boolean debugging;
     private int threadNum;
+    private int initSize;
+    private int messageTableInitSize;
+    private int messageTableUpdateThreshold;
     private EngineType engineType;
     private String datalogProg;
 
@@ -38,21 +41,26 @@ public class AsyncConfig {
         return checkType;
     }
 
-    public String getCond() {
-        switch (cond) {
-            case G:
-                return ">";
-            case GE:
-                return ">=";
-            case E:
-                return "==";
-            case LE:
-                return "<=";
-            case L:
-                return "<";
-        }
-        Assert.impossible();
-        return null;
+//    public String getCond() {
+//        switch (cond) {
+//            case G:
+//                return ">";
+//            case GE:
+//                return ">=";
+//            case E:
+//                return "==";
+//            case LE:
+//                return "<=";
+//            case L:
+//                return "<";
+//        }
+//        Assert.impossible();
+//        return null;
+//    }
+
+
+    public Cond getCond() {
+        return cond;
     }
 
     public int getThreadNum() {
@@ -61,6 +69,18 @@ public class AsyncConfig {
 
     public EngineType getEngineType() {
         return engineType;
+    }
+
+    public int getInitSize() {
+        return initSize;
+    }
+
+    public int getMessageTableInitSize() {
+        return messageTableInitSize;
+    }
+
+    public int getMessageTableUpdateThreshold() {
+        return messageTableUpdateThreshold;
     }
 
     public String getDatalogProg() {
@@ -96,6 +116,9 @@ public class AsyncConfig {
         private boolean debugging;
         private int threadNum;
         private EngineType engineType;
+        private int initSize;
+        private int messageTableInitSize;
+        private int messageTableUpdateThreshold;
         private String datalogProg;
 
         public Builder setCheckerType(CheckerType checkType) {
@@ -138,6 +161,21 @@ public class AsyncConfig {
             return this;
         }
 
+        public Builder setInitSize(int initSize) {
+            this.initSize = initSize;
+            return this;
+        }
+
+        public Builder setMessageTableInitSize(int messageTableInitSize) {
+            this.messageTableInitSize = messageTableInitSize;
+            return this;
+        }
+
+        public Builder setMessageTableUpdateThreshold(int messageTableUpdateThreshold) {
+            this.messageTableUpdateThreshold = messageTableUpdateThreshold;
+            return this;
+        }
+
         public Builder setDatalogProg(String datalogProg) {
             this.datalogProg = datalogProg;
             return this;
@@ -159,6 +197,9 @@ public class AsyncConfig {
             asyncConfig.debugging = debugging;
             asyncConfig.threadNum = threadNum;
             asyncConfig.engineType = engineType;
+            asyncConfig.initSize = initSize;
+            asyncConfig.messageTableInitSize = messageTableInitSize;
+            asyncConfig.messageTableUpdateThreshold = messageTableUpdateThreshold;
             asyncConfig.datalogProg = datalogProg;
             if (AsyncConfig.asyncConfig != null)
                 throw new SociaLiteException("AsyncConfig already built");
@@ -185,7 +226,7 @@ public class AsyncConfig {
             String[] tmp = line.split("\\s*=\\s*");
             configMap.put(tmp[0], tmp[1]);
         }
-        while (lineNo<lines.size()){
+        while (lineNo < lines.size()) {
             prog.append(lines.get(lineNo++)).append("\n");
         }
         AsyncConfig.Builder asyncConfig = new AsyncConfig.Builder();
@@ -246,6 +287,19 @@ public class AsyncConfig {
                     else if (val.equals("STANDALONE"))
                         asyncConfig.setEngineType(EngineType.STANDALONE);
                     else throw new SociaLiteException("unknown val: " + val);
+                    break;
+                case "INIT_SIZE":
+                    asyncConfig.setInitSize(Integer.parseInt(val));
+                    break;
+                case "MESSAGE_TABLE_INIT_SIZE":
+                    if (asyncConfig.engineType != EngineType.DIST)
+                        throw new SociaLiteException("invalid option " + key);
+                    asyncConfig.setMessageTableInitSize(Integer.parseInt(val));
+                    break;
+                case "MESSAGE_TABLE_UPDATE_THRESHOLD":
+                    if (asyncConfig.engineType != EngineType.DIST)
+                        throw new SociaLiteException("invalid option " + key);
+                    asyncConfig.setMessageTableUpdateThreshold(Integer.parseInt(val));
                     break;
                 case "DEBUGGING":
                     if (val.equals("TRUE"))

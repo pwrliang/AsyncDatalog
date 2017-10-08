@@ -4,7 +4,7 @@ import socialite.async.AsyncConfig;
 import socialite.async.analysis.AsyncAnalysis;
 import socialite.async.analysis.MyVisitorImpl;
 import socialite.async.codegen.AsyncCodeGenMain;
-import socialite.async.codegen.AsyncRuntimeBase;
+import socialite.async.codegen.AsyncRuntime;
 import socialite.async.codegen.BaseAsyncTable;
 import socialite.async.util.TextUtils;
 import socialite.codegen.Analysis;
@@ -19,7 +19,6 @@ import socialite.tables.TableInst;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.stream.Collectors;
 
 public class LocalAsyncEngine {
@@ -78,17 +77,28 @@ public class LocalAsyncEngine {
         TableInstRegistry registry = localEngine.getRuntime().getTableRegistry();
         TableInst[] recInst = registry.getTableInstArray(an.getTableMap().get("InitTable").id());
         TableInst[] edgeInst = registry.getTableInstArray(an.getTableMap().get(asyncAnalysis.getEdgePName()).id());
-        Class<?> klass = asyncCodeGenMain.getRuntimeClass();
+
+        Class<?> klass = asyncCodeGenMain.getAsyncTable();
         try {
-            TableInst[] insts = new TableInst[0];
-            Constructor<?> constructor = klass.getDeclaredConstructor(localEngine.getClass(), insts.getClass(), insts.getClass());
-            AsyncRuntimeBase asyncRuntime = (AsyncRuntimeBase) constructor.newInstance(localEngine, recInst, edgeInst);
+            Constructor<?> constructor = klass.getConstructor(int.class);
+            BaseAsyncTable asyncTable = (BaseAsyncTable) constructor.newInstance(AsyncConfig.get().getInitSize());
+            AsyncRuntime asyncRuntime = new AsyncRuntime(asyncTable, recInst, edgeInst);
             asyncRuntime.run();
-            BaseAsyncTable asyncTable = asyncRuntime.getAsyncTable();
             asyncTable.iterate(myVisitor);
-        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
             e.printStackTrace();
         }
+
+//        try {
+//            TableInst[] insts = new TableInst[0];
+//            Constructor<?> constructor = klass.getDeclaredConstructor(localEngine.getClass(), insts.getClass(), insts.getClass());
+//            AsyncRuntimeBase asyncRuntime = (AsyncRuntimeBase) constructor.newInstance(localEngine, recInst, edgeInst);
+//            asyncRuntime.run();
+//            BaseAsyncTable asyncTable = asyncRuntime.getAsyncTable();
+//            asyncTable.iterate(myVisitor);
+//        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+//            e.printStackTrace();
+//        }
     }
 
     public void run() {

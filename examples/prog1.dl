@@ -5,7 +5,7 @@ CHECK_THRESHOLD = 1
 DYNAMIC = TRUE
 THREAD_NUM = 4
 ENGINE = STANDALONE
-DEBUGGING = TRUE
+DEBUGGING = FALSE
 RULE:
 edge(int src:0..3, (int dst, int weight)).
 sssp(int node:0..3, int dist).

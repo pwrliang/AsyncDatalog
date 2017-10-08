@@ -8,7 +8,7 @@ import org.apache.commons.logging.LogFactory;
 import socialite.async.AsyncConfig;
 import socialite.async.analysis.AsyncAnalysis;
 import socialite.async.codegen.AsyncCodeGenMain;
-import socialite.async.dist.ds.MsgType;
+import socialite.async.dist.MsgType;
 import socialite.async.util.TextUtils;
 import socialite.codegen.Analysis;
 import socialite.engine.LocalEngine;

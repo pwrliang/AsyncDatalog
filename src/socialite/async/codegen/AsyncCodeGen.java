@@ -83,26 +83,4 @@ public class AsyncCodeGen {
         st.add("expr", asyncAn.getsExpr());
         return st.render();
     }
-
-    public String generateAsyncRuntime() {
-        STGroup stg = new MySTGroupFile(AsyncCodeGen.class.getResource("AsyncRuntime.stg"),
-                "UTF-8", '<', '>');
-        stg.load();
-        ST st = stg.getInstanceOf("AsyncRuntime");
-        st.add("initSize", asyncAn.getInitSize());
-        st.add("threadNum", asyncConfig.getThreadNum());// standalone
-        st.add("dynamic", asyncConfig.isDynamic());
-        st.add("threshold", asyncConfig.getThreshold());
-        st.add("cond", asyncConfig.getCond());
-        st.add("checkerInterval", asyncConfig.getCheckInterval());
-        if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DELTA)
-            st.add("checkType", "CheckDelta");
-        else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.VALUE)
-            st.add("checkType", "CheckValue");
-        else
-            Assert.not_supported();
-        String code = st.render();
-        stg.unload();
-        return code;
-    }
 }

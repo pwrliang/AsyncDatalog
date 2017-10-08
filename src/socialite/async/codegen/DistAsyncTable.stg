@@ -39,8 +39,8 @@ public class DistAsyncTable extends BaseDistAsyncTable{
     public static final <deltaType> IDENTITY_ELEMENT = <DoubleIdentityElement.(aggrType)>;
     <endif>
 
-    public DistAsyncTable(int workerNum, int myWorkerId, DistTableSliceMap sliceMap, int indexForTableId, int base, int initSize, int messageTableUpdateThreshold, int initBufferTableSize) {
-        super(workerNum, myWorkerId, sliceMap, indexForTableId, base, initBufferTableSize, messageTableUpdateThreshold);
+    public DistAsyncTable(Class\<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId, int base) {
+        super(messageTableClass, sliceMap, indexForTableId, base);
         <if(dynamic || !IsKeyAsIndex.(keyType))>
             keyIndMap = new <KeyIndMap.(keyType)>(initSize);
             indKeyMap = new <IndKeyMap.(keyType)>(initSize); //using in iterate method

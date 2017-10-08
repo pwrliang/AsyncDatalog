@@ -2,6 +2,8 @@
   <dictionary name="pwrli">
     <words>
       <w>adjacencies</w>
+      <w>datalog</w>
+      <w>prog</w>
       <w>sendable</w>
     </words>
   </dictionary>

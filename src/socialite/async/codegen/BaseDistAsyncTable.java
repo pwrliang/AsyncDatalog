@@ -1,42 +1,53 @@
 package socialite.async.codegen;
 
 
+import mpi.MPI;
+import socialite.async.AsyncConfig;
 import socialite.async.analysis.MyVisitorImpl;
-import socialite.async.dist.ds.MessageTable;
 import socialite.async.util.SerializeTool;
+import socialite.engine.Config;
 import socialite.resource.DistTableSliceMap;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 public abstract class BaseDistAsyncTable extends BaseAsyncTable {
     private AtomicIntegerArray messageTableSelector;
     private MessageTableBase[][] messageTableList;
-    int workerNum;
-    int myWorkerId;
+    final int workerNum;
+    final int myWorkerId;
     final DistTableSliceMap sliceMap;
     final int indexForTableId;
     final int base;
     final int messageTableUpdateThreshold;
-
-    public BaseDistAsyncTable(int workerNum, int myWorkerId, DistTableSliceMap sliceMap, int indexForTableId,  int base, int messageTableUpdateThreshold,int initBufferTableSize) {
-        this.workerNum = workerNum;
-        this.myWorkerId = myWorkerId;
+    final int initSize;
+    public BaseDistAsyncTable(Class<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId, int base) {
+        this.workerNum = Config.getWorkerNodeNum();
+        this.myWorkerId = MPI.COMM_WORLD.Rank()-1;
         this.sliceMap = sliceMap;
         this.indexForTableId = indexForTableId;
         this.base = base;
-        this.messageTableUpdateThreshold = messageTableUpdateThreshold;
+        this.messageTableUpdateThreshold = AsyncConfig.get().getMessageTableUpdateThreshold();
+        this.initSize = AsyncConfig.get().getInitSize();
+        int messageTableInitSize = AsyncConfig.get().getMessageTableInitSize();
+
 
         messageTableSelector = new AtomicIntegerArray(workerNum);
-        messageTableList = new MessageTable[workerNum][2];
-        for (int wid = 0; wid < workerNum; wid++) {
-            if (wid == myWorkerId) continue;//for worker i, it have 0,1,...,i-1,null,i+1,...n-1 buffer table
-            messageTableList[wid][0] = new MessageTable(initBufferTableSize);
-            messageTableList[wid][1] = new MessageTable(initBufferTableSize);
+        messageTableList = new MessageTableBase[workerNum][2];
+        try {
+            Constructor constructor = messageTableClass.getConstructor(int.class);
+
+            for (int wid = 0; wid < workerNum; wid++) {
+                if (wid == myWorkerId) continue;//for worker i, it have 0,1,...,i-1,null,i+1,...n-1 buffer table
+                messageTableList[wid][0] = (MessageTableBase) constructor.newInstance(messageTableInitSize);
+                messageTableList[wid][1] = (MessageTableBase) constructor.newInstance(messageTableInitSize);
+            }
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
+            e.printStackTrace();
         }
 
-        this.workerNum = workerNum;
-        this.myWorkerId = myWorkerId;
     }
 
     public MessageTableBase[] getMessageTables(int workerId) {

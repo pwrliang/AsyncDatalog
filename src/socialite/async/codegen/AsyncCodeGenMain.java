@@ -15,7 +15,9 @@ public class AsyncCodeGenMain {
     public static final String PACKAGE_NAME = AsyncCodeGenMain.class.getPackage().getName();
     private static final Log L = LogFactory.getLog(AsyncCodeGenMain.class);
     private AsyncAnalysis asyncAn;
-    private Class<?> runtimeClass;
+    private Class<?> asyncTable;
+    private Class<?>  messageTable;
+    private Class<?> distAsyncTable;
     private List<String> initStats;
 
     public AsyncCodeGenMain(AsyncAnalysis asyncAn) {
@@ -26,7 +28,6 @@ public class AsyncCodeGenMain {
         genInitTableStats();
         compileAsyncTable();
         L.info("AsyncTable compiled");
-        compileRuntime();
         L.info("AsyncRuntime compiled");
     }
 
@@ -52,6 +53,9 @@ public class AsyncCodeGenMain {
             msg += " " + c.getErrorMsg();
             throw new SociaLiteException(msg);
         }
+        messageTable = Loader.forName(PACKAGE_NAME + "." + className);
+        if (messageTable == null)
+            throw new SociaLiteException("Load MessageTable Fail!!!");
     }
 
     public void compileDistAsyncTable() {
@@ -69,6 +73,9 @@ public class AsyncCodeGenMain {
             msg += " " + c.getErrorMsg();
             throw new SociaLiteException(msg);
         }
+        distAsyncTable = Loader.forName(PACKAGE_NAME + "." + className);
+        if (distAsyncTable == null)
+            throw new SociaLiteException("Load DistAsyncTable Fail!!!");
     }
 
     public void genInitTableStats() {
@@ -93,36 +100,24 @@ public class AsyncCodeGenMain {
             msg += " " + c.getErrorMsg();
             throw new SociaLiteException(msg);
         }
-    }
-
-    private void compileRuntime() {
-        AsyncCodeGen asyncCodeGen = new AsyncCodeGen(asyncAn);
-        String runtimeCode = asyncCodeGen.generateAsyncRuntime();
-        String className = "AsyncRuntime";
-        Compiler c = new Compiler();
-        boolean success = c.compile(PACKAGE_NAME + "." + className, runtimeCode);
-        if (c.getCompiledClasses().size() == 0) {
-            L.warn(PACKAGE_NAME + "." + className + " already compiled");
-        }
-        if (!success) {
-            String msg = "Compilation error for " + className;
-            msg += " " + c.getErrorMsg();
-            throw new SociaLiteException(msg);
-        }
-        runtimeClass = Loader.forName(PACKAGE_NAME + "." + className);
-        if (runtimeClass == null)
-            throw new SociaLiteException("Load Runtime Fail!!!");
-    }
-
-    private void compileDistRuntime() {
-
+        asyncTable = Loader.forName(PACKAGE_NAME + "." + className);
+        if (asyncTable == null)
+            throw new SociaLiteException("Load AsyncTable Fail!!!");
     }
 
     public List<String> getInitStats() {
         return initStats;
     }
 
-    public Class<?> getRuntimeClass() {
-        return runtimeClass;
+    public Class<?> getAsyncTable() {
+        return asyncTable;
+    }
+
+    public Class<?> getMessageTable() {
+        return messageTable;
+    }
+
+    public Class<?> getDistAsyncTable() {
+        return distAsyncTable;
     }
 }

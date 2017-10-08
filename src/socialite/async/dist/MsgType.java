@@ -1,4 +1,4 @@
-package socialite.async.dist.ds;
+package socialite.async.dist;
 
 public enum MsgType {
     NOTIFY_INIT,

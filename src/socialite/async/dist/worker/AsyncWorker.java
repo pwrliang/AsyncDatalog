@@ -13,7 +13,7 @@ public class AsyncWorker {
         this.workerId = workerId;
         while (SRuntimeWorker.getInst() == null)
             Thread.sleep(100);
-        distAsyncRuntime = new DistAsyncRuntime(workerId, workerNum, threadNum);
+//        distAsyncRuntime = new DistAsyncRuntime(workerId, workerNum, threadNum);
 
     }
 

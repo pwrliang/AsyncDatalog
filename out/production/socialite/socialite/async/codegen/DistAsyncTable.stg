@@ -39,8 +39,8 @@ public class DistAsyncTable extends BaseDistAsyncTable{
     public static final <deltaType> IDENTITY_ELEMENT = <DoubleIdentityElement.(aggrType)>;
     <endif>
 
-    public DistAsyncTable(int workerNum, int myWorkerId, DistTableSliceMap sliceMap, int indexForTableId, int base, int initSize, int messageTableUpdateThreshold, int initBufferTableSize) {
-        super(workerNum, myWorkerId, sliceMap, indexForTableId, base, initBufferTableSize, messageTableUpdateThreshold);
+    public DistAsyncTable(DistTableSliceMap sliceMap, int indexForTableId, int base) {
+        super(sliceMap, indexForTableId, base);
         <if(dynamic || !IsKeyAsIndex.(keyType))>
             keyIndMap = new <KeyIndMap.(keyType)>(initSize);
             indKeyMap = new <IndKeyMap.(keyType)>(initSize); //using in iterate method
@@ -120,7 +120,7 @@ public class DistAsyncTable extends BaseDistAsyncTable{
                 <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
             } else {
                 MessageTable messageTable = (MessageTable)getWritableMessageTable(belongToWorkerId);
-                messageTable.apply(adjacency, newDelta);
+                messageTable.apply(adjacency<if(!IsCount.(aggrType))>, newDelta<endif>);
             }
         }
     }
@@ -145,7 +145,7 @@ public class DistAsyncTable extends BaseDistAsyncTable{
             <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(delta.get());<endif>
             <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(delta.get(), Math::max);<endif>
             <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(delta.get(), Math::min);<endif>
-            <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+            <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(delta.get());<endif>
         });
     }
 
