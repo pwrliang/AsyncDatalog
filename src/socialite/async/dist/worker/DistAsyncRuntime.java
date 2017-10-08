@@ -12,14 +12,20 @@ import socialite.async.codegen.MessageTableBase;
 import socialite.async.dist.MsgType;
 import socialite.async.dist.master.AsyncMaster;
 import socialite.async.util.SerializeTool;
+import socialite.dist.worker.WorkerNode;
 import socialite.engine.Config;
 import socialite.resource.DistTableSliceMap;
+import socialite.resource.SRuntimeWorker;
 import socialite.tables.TableInst;
+import socialite.util.Loader;
 import socialite.visitors.VisitorImpl;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Objects;
 
 public class DistAsyncRuntime implements Runnable {
@@ -34,11 +40,12 @@ public class DistAsyncRuntime implements Runnable {
     private SendThread[] sendThreads;
     private ReceiveThread[] receiveThreads;
     private AsyncConfig asyncConfig;
+    private DistTableSliceMap sliceMap;
     private TableInst[] initTableInstArr;
     private TableInst[] edgeTableInstArr;
 
-    DistAsyncRuntime(BaseDistAsyncTable distAsyncTable, DistTableSliceMap sliceMap, int indexForTableId, int base, TableInst[] recInstArr, TableInst[] edgeInstArr) {
-        this.distAsyncTable = distAsyncTable;
+    DistAsyncRuntime(DistTableSliceMap sliceMap, TableInst[] recInstArr, TableInst[] edgeInstArr) {
+        this.sliceMap = sliceMap;
         this.initTableInstArr = recInstArr;
         this.edgeTableInstArr = edgeInstArr;
         asyncConfig = AsyncConfig.get();
@@ -84,7 +91,34 @@ public class DistAsyncRuntime implements Runnable {
     }
 
     private void loadData() {
+        Status status = MPI.COMM_WORLD.Probe(0, MsgType.NOTIFY_INIT.ordinal());
+        byte[] data = new byte[status.Get_count(MPI.BYTE)];
+        MPI.COMM_WORLD.Recv(data, 0, data.length, MPI.BYTE, 0, MsgType.NOTIFY_INIT.ordinal());
+        SerializeTool serializeTool = new SerializeTool.Builder().build();
+        LinkedHashMap<String, byte[]> byteCodes = new LinkedHashMap<>();
+        byteCodes = serializeTool.fromBytes(data, byteCodes.getClass());
+        Loader.loadFromBytes(byteCodes);
+        Class<?> messageTableClass = Loader.forName("MessageTable");
+        Class<?> distAsyncTableClass = Loader.forName("DistAsyncName");
         try {
+
+            Constructor constructor = distAsyncTableClass.getConstructor(messageTableClass.getClass(), DistTableSliceMap.class, int.class, int.class);
+            Field baseField = initTableInstArr[0].getClass().getDeclaredField("base");
+            baseField.setAccessible(true);
+            //static, int type key
+            int indexForTableid;
+            if(asyncConfig.isDynamic()) {
+                TableInst edgeInst = Arrays.stream(edgeTableInstArr).filter(tableInst -> !tableInst.isEmpty()).findFirst().orElse(null);
+                Method method=edgeInst.getClass().getMethod("tableid");
+                indexForTableid = (Integer) method.invoke(edgeInst);
+            }else {
+                TableInst edgeInst = Arrays.stream(initTableInstArr).filter(tableInst -> !tableInst.isEmpty()).findFirst().orElse(null);
+                Method method=edgeInst.getClass().getMethod("tableid");
+                indexForTableid = (Integer) method.invoke(edgeInst);
+            }
+            int base = baseField.getInt(Arrays.stream(initTableInstArr).filter(tableInst -> !tableInst.isEmpty()).findFirst().orElse(null));
+            //public DistAsyncTable(Class\<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId, int base) {
+            distAsyncTable = (BaseDistAsyncTable) constructor.newInstance(messageTableClass, sliceMap, indexForTableid,base);
             Method method;
             if (asyncConfig.isDynamic()) {
                 //动态算法需要edge做连接，如prog4、9!>
@@ -96,6 +130,7 @@ public class DistAsyncRuntime implements Runnable {
                     }
                 }
             }
+
             method = initTableInstArr[0].getClass().getDeclaredMethod("iterate", VisitorImpl.class);
             for (TableInst tableInst : initTableInstArr) {
                 if (!tableInst.isEmpty()) {
@@ -103,7 +138,7 @@ public class DistAsyncRuntime implements Runnable {
                     //tableInst.clear();
                 }
             }
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException | NoSuchFieldException e) {
             e.printStackTrace();
         }
         L.info("Data Loaded size:" + distAsyncTable.getSize());

@@ -9,14 +9,16 @@ import socialite.async.AsyncConfig;
 import socialite.async.analysis.AsyncAnalysis;
 import socialite.async.codegen.AsyncCodeGenMain;
 import socialite.async.dist.MsgType;
+import socialite.async.util.SerializeTool;
 import socialite.async.util.TextUtils;
 import socialite.codegen.Analysis;
-import socialite.engine.LocalEngine;
+import socialite.engine.ClientEngine;
 import socialite.parser.DeltaRule;
 import socialite.parser.Parser;
 import socialite.parser.Rule;
 import socialite.parser.antlr.TableDecl;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -27,15 +29,13 @@ public class DistAsyncEngine implements Runnable {
     private static final Log L = LogFactory.getLog(DistAsyncEngine.class);
     private int workerNum;
     private StopWatch stopWatch;
-    //        private ClientEngine clientEngine=new ClientEngine();
-    private LocalEngine clientEngine = new LocalEngine();
+    private ClientEngine clientEngine;
     private AsyncAnalysis asyncAnalysis;
     private AsyncCodeGenMain asyncCodeGenMain;
 
-    public DistAsyncEngine(String program, int workerNum) {
-        this.workerNum = workerNum;
-
-//        clientEngine = new ClientEngine();
+    public DistAsyncEngine(String program) {
+        workerNum = MPI.COMM_WORLD.Rank() - 1;
+        clientEngine = new ClientEngine();
         Parser parser = new Parser(program);
         parser.parse(program);
         Analysis tmpAn = new Analysis(parser);
@@ -76,6 +76,7 @@ public class DistAsyncEngine implements Runnable {
 
     @Override
     public void run() {
+        compile();
         loadData();
         FeedBackThread feedBackThread = new FeedBackThread();
         feedBackThread.start();
@@ -87,12 +88,14 @@ public class DistAsyncEngine implements Runnable {
     }
 
     private void loadData() {
-        String tableSig = "Middle(int Key:0..875713, double initD, int degree, (int adj)).";
-        clientEngine.run(tableSig);
-        clientEngine.run("Middle(key, r, degree, adj) :- Rank(key, r), Edge(key, adj), EdgeCnt(key, degree).");
-
+        List<String> initStats = asyncCodeGenMain.getInitStats();
+        if (!AsyncConfig.get().isDebugging())
+            initStats.forEach(initStat -> clientEngine.run(initStat));
+        LinkedHashMap<String, byte[]> compiledClasses = asyncCodeGenMain.getCompiledClasses();
+        SerializeTool serializeTool = new SerializeTool.Builder().build();
+        byte[] data = serializeTool.toBytes(compiledClasses);
         IntStream.rangeClosed(1, workerNum).forEach(dest ->
-                MPI.COMM_WORLD.Send(new byte[1], 0, 1, MPI.BYTE, dest, MsgType.NOTIFY_INIT.ordinal())
+                MPI.COMM_WORLD.Send(data, 0, data.length, MPI.BYTE, dest, MsgType.NOTIFY_INIT.ordinal())
         );
     }
 
@@ -126,12 +129,5 @@ public class DistAsyncEngine implements Runnable {
                 e.printStackTrace();
             }
         }
-    }
-
-
-    public static void main(String[] args) {
-        AsyncConfig.parse(TextUtils.readText(args[0]));
-        DistAsyncEngine distAsyncEngine = new DistAsyncEngine(AsyncConfig.get().getDatalogProg(), 4);
-        distAsyncEngine.compile();
     }
 }

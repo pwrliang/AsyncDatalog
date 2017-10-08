@@ -26,7 +26,7 @@ public class LocalAsyncEngine {
     private AsyncCodeGenMain asyncCodeGenMain;
     private LocalEngine localEngine;
 
-    LocalAsyncEngine(String program) {
+    public LocalAsyncEngine(String program) {
         localEngine = new LocalEngine();
         Parser parser = new Parser(program);
         parser.parse(program);
@@ -56,15 +56,6 @@ public class LocalAsyncEngine {
         }
     }
 
-    public static void main(String[] args) throws InterruptedException {
-        //worker number depends on ClusterConf
-        //waiting all workers online
-        AsyncConfig.parse(TextUtils.readText(args[0]));
-        //prog9 volatile problem
-        LocalAsyncEngine localAsyncEngine = new LocalAsyncEngine(AsyncConfig.get().getDatalogProg());
-        localAsyncEngine.run();
-    }
-
     private void compile() {
         if (asyncAnalysis.analysis()) {
             asyncCodeGenMain = new AsyncCodeGenMain(asyncAnalysis);
@@ -88,17 +79,6 @@ public class LocalAsyncEngine {
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
             e.printStackTrace();
         }
-
-//        try {
-//            TableInst[] insts = new TableInst[0];
-//            Constructor<?> constructor = klass.getDeclaredConstructor(localEngine.getClass(), insts.getClass(), insts.getClass());
-//            AsyncRuntimeBase asyncRuntime = (AsyncRuntimeBase) constructor.newInstance(localEngine, recInst, edgeInst);
-//            asyncRuntime.run();
-//            BaseAsyncTable asyncTable = asyncRuntime.getAsyncTable();
-//            asyncTable.iterate(myVisitor);
-//        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-//            e.printStackTrace();
-//        }
     }
 
     public void run() {

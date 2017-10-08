@@ -8,7 +8,9 @@ import socialite.util.Loader;
 import socialite.util.SociaLiteException;
 
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class AsyncCodeGenMain {
@@ -16,12 +18,12 @@ public class AsyncCodeGenMain {
     private static final Log L = LogFactory.getLog(AsyncCodeGenMain.class);
     private AsyncAnalysis asyncAn;
     private Class<?> asyncTable;
-    private Class<?>  messageTable;
-    private Class<?> distAsyncTable;
     private List<String> initStats;
+    private LinkedHashMap<String, byte[]> compiledClasses;
 
     public AsyncCodeGenMain(AsyncAnalysis asyncAn) {
         this.asyncAn = asyncAn;
+        compiledClasses = new LinkedHashMap<>();
     }
 
     public void generateSharedMem() {
@@ -53,9 +55,7 @@ public class AsyncCodeGenMain {
             msg += " " + c.getErrorMsg();
             throw new SociaLiteException(msg);
         }
-        messageTable = Loader.forName(PACKAGE_NAME + "." + className);
-        if (messageTable == null)
-            throw new SociaLiteException("Load MessageTable Fail!!!");
+        compiledClasses.putAll(c.getCompiledClasses());
     }
 
     public void compileDistAsyncTable() {
@@ -73,9 +73,7 @@ public class AsyncCodeGenMain {
             msg += " " + c.getErrorMsg();
             throw new SociaLiteException(msg);
         }
-        distAsyncTable = Loader.forName(PACKAGE_NAME + "." + className);
-        if (distAsyncTable == null)
-            throw new SociaLiteException("Load DistAsyncTable Fail!!!");
+        compiledClasses.putAll(c.getCompiledClasses());
     }
 
     public void genInitTableStats() {
@@ -113,11 +111,7 @@ public class AsyncCodeGenMain {
         return asyncTable;
     }
 
-    public Class<?> getMessageTable() {
-        return messageTable;
-    }
-
-    public Class<?> getDistAsyncTable() {
-        return distAsyncTable;
+    public LinkedHashMap<String, byte[]> getCompiledClasses() {
+        return compiledClasses;
     }
 }

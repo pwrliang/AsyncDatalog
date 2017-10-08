@@ -4,10 +4,12 @@ import socialite.async.util.TextUtils;
 import socialite.util.Assert;
 import socialite.util.SociaLiteException;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class AsyncConfig {
+public class AsyncConfig implements Serializable{
+
     private static AsyncConfig asyncConfig;
     private int checkInterval = -1;
     private double threshold;

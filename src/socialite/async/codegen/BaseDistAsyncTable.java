@@ -20,15 +20,13 @@ public abstract class BaseDistAsyncTable extends BaseAsyncTable {
     final int myWorkerId;
     final DistTableSliceMap sliceMap;
     final int indexForTableId;
-    final int base;
     final int messageTableUpdateThreshold;
     final int initSize;
-    public BaseDistAsyncTable(Class<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId, int base) {
+    public BaseDistAsyncTable(Class<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId) {
         this.workerNum = Config.getWorkerNodeNum();
         this.myWorkerId = MPI.COMM_WORLD.Rank()-1;
         this.sliceMap = sliceMap;
         this.indexForTableId = indexForTableId;
-        this.base = base;
         this.messageTableUpdateThreshold = AsyncConfig.get().getMessageTableUpdateThreshold();
         this.initSize = AsyncConfig.get().getInitSize();
         int messageTableInitSize = AsyncConfig.get().getMessageTableInitSize();

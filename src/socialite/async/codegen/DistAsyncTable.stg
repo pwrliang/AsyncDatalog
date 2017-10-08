@@ -28,6 +28,7 @@ public class DistAsyncTable extends BaseDistAsyncTable{
     <if(IsBoolean.(valueType))>private List\<Boolean> sentFlagList;<endif>
 
     private int size;
+    private int base;
 
     <if(IsInt.(deltaType))>
     public static final <deltaType> IDENTITY_ELEMENT = <IntegerIdentityElement.(aggrType)>;
@@ -40,7 +41,9 @@ public class DistAsyncTable extends BaseDistAsyncTable{
     <endif>
 
     public DistAsyncTable(Class\<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId, int base) {
-        super(messageTableClass, sliceMap, indexForTableId, base);
+        super(messageTableClass, sliceMap, indexForTableId);
+        this.base = base;
+
         <if(dynamic || !IsKeyAsIndex.(keyType))>
             keyIndMap = new <KeyIndMap.(keyType)>(initSize);
             indKeyMap = new <IndKeyMap.(keyType)>(initSize); //using in iterate method
