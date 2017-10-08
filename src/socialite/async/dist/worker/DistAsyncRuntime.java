@@ -10,12 +10,15 @@ import socialite.async.analysis.MyVisitorImpl;
 import socialite.async.codegen.BaseDistAsyncTable;
 import socialite.async.codegen.MessageTableBase;
 import socialite.async.dist.MsgType;
+import socialite.async.dist.Payload;
 import socialite.async.dist.master.AsyncMaster;
 import socialite.async.util.SerializeTool;
 import socialite.dist.worker.WorkerNode;
 import socialite.engine.Config;
+import socialite.parser.Table;
 import socialite.resource.DistTableSliceMap;
 import socialite.resource.SRuntimeWorker;
+import socialite.resource.TableInstRegistry;
 import socialite.tables.TableInst;
 import socialite.util.Loader;
 import socialite.visitors.VisitorImpl;
@@ -26,6 +29,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public class DistAsyncRuntime implements Runnable {
@@ -40,14 +44,8 @@ public class DistAsyncRuntime implements Runnable {
     private SendThread[] sendThreads;
     private ReceiveThread[] receiveThreads;
     private AsyncConfig asyncConfig;
-    private DistTableSliceMap sliceMap;
-    private TableInst[] initTableInstArr;
-    private TableInst[] edgeTableInstArr;
 
-    DistAsyncRuntime(DistTableSliceMap sliceMap, TableInst[] recInstArr, TableInst[] edgeInstArr) {
-        this.sliceMap = sliceMap;
-        this.initTableInstArr = recInstArr;
-        this.edgeTableInstArr = edgeInstArr;
+    DistAsyncRuntime() {
         asyncConfig = AsyncConfig.get();
         workerNum = Config.getWorkerNodeNum();
         myWorkerId = MPI.COMM_WORLD.Rank() - 1;
@@ -95,12 +93,18 @@ public class DistAsyncRuntime implements Runnable {
         byte[] data = new byte[status.Get_count(MPI.BYTE)];
         MPI.COMM_WORLD.Recv(data, 0, data.length, MPI.BYTE, 0, MsgType.NOTIFY_INIT.ordinal());
         SerializeTool serializeTool = new SerializeTool.Builder().build();
-        LinkedHashMap<String, byte[]> byteCodes = new LinkedHashMap<>();
-        byteCodes = serializeTool.fromBytes(data, byteCodes.getClass());
-        Loader.loadFromBytes(byteCodes);
+        Payload payload = serializeTool.fromBytes(data, Payload.class);
+        Loader.loadFromBytes(payload.getByteCodes());
         Class<?> messageTableClass = Loader.forName("MessageTable");
         Class<?> distAsyncTableClass = Loader.forName("DistAsyncName");
         try {
+            SRuntimeWorker runtimeWorker = SRuntimeWorker.getInst();
+            TableInstRegistry tableInstRegistry = runtimeWorker.getTableRegistry();
+            Map<String, Table> tableMap = runtimeWorker.getTableMap();
+            DistTableSliceMap sliceMap = runtimeWorker.getSliceMap();
+            TableInst[] initTableInstArr = tableInstRegistry.getTableInstArray(tableMap.get("InitTable").id());
+            TableInst[] edgeTableInstArr = tableInstRegistry.getTableInstArray(tableMap.get(payload.getEdgeTableName()).id());
+
 
             Constructor constructor = distAsyncTableClass.getConstructor(messageTableClass.getClass(), DistTableSliceMap.class, int.class, int.class);
             Field baseField = initTableInstArr[0].getClass().getDeclaredField("base");

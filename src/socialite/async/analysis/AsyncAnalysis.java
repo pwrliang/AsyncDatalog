@@ -1,22 +1,24 @@
 package socialite.async.analysis;
 
 import socialite.codegen.Analysis;
+import socialite.collection.SArrayList;
 import socialite.parser.*;
 import socialite.util.Assert;
 import socialite.util.SociaLiteException;
 
+import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class AsyncAnalysis {
+public class AsyncAnalysis{
     private List<MyVariable> srcV;
     private List<MyVariable> dstV;
     private MyVariable extraV;
     /* 附加表 */
     /* 求值表达式 */
     private String sExpr;
-    private Analysis an;
-    private List<Rule> recRules;
+    private transient Analysis an;
+    private transient List<Rule> recRules;
     private MyVariable weightV;
     private String valueType;//value字段类型
     private String deltaType;//delta字段类型，一般valueType==deltaType，但2-step，valueType为boolean
@@ -33,9 +35,9 @@ public class AsyncAnalysis {
 
     public AsyncAnalysis(Analysis analysis) {
         this.an = analysis;
-        srcV = new ArrayList<>();
-        dstV = new ArrayList<>();
-        recRules = new ArrayList<>();
+        srcV = new SArrayList<>();
+        dstV = new SArrayList<>();
+        recRules = new SArrayList<>();
     }
 
     public boolean analysis() {

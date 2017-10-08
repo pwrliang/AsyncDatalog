@@ -1,19 +1,14 @@
 package socialite.async.analysis;
 
-import socialite.parser.Variable;
+import java.io.*;
 
-public class MyVariable extends Variable {
+public class MyVariable implements Serializable {
     private String name;
     private Class type;
 
     public MyVariable(String name, Class type) {
         this.name = name;
         this.type = type;
-    }
-
-    public MyVariable(Variable variable) {
-        name = variable.name;
-        type = variable.type;
     }
 
     @Override
@@ -29,7 +24,6 @@ public class MyVariable extends Variable {
         return type;
     }
 
-    @Override
     public void setType(Class type) {
         this.type = type;
     }

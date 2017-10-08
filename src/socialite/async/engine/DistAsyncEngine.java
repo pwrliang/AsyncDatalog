@@ -9,6 +9,7 @@ import socialite.async.AsyncConfig;
 import socialite.async.analysis.AsyncAnalysis;
 import socialite.async.codegen.AsyncCodeGenMain;
 import socialite.async.dist.MsgType;
+import socialite.async.dist.Payload;
 import socialite.async.util.SerializeTool;
 import socialite.async.util.TextUtils;
 import socialite.codegen.Analysis;
@@ -92,8 +93,10 @@ public class DistAsyncEngine implements Runnable {
         if (!AsyncConfig.get().isDebugging())
             initStats.forEach(initStat -> clientEngine.run(initStat));
         LinkedHashMap<String, byte[]> compiledClasses = asyncCodeGenMain.getCompiledClasses();
+        Payload payload = new Payload(compiledClasses, asyncAnalysis.getEdgePName());
+
         SerializeTool serializeTool = new SerializeTool.Builder().build();
-        byte[] data = serializeTool.toBytes(compiledClasses);
+        byte[] data = serializeTool.toBytes(payload);
         IntStream.rangeClosed(1, workerNum).forEach(dest ->
                 MPI.COMM_WORLD.Send(data, 0, data.length, MPI.BYTE, dest, MsgType.NOTIFY_INIT.ordinal())
         );
