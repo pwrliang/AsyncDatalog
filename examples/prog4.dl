@@ -1,6 +1,14 @@
+CHECK_INTERVAL = 1500
+CHECK_TYPE = DELTA
+CHECK_COND = E
+CHECK_THRESHOLD = 0
+DYNAMIC = TRUE
+THREAD_NUM = 1
+ENGINE = STANDALONE
+RULE:
 edge(int src:0..5, (int dst)).
 cpaths(int src:0..5, (int dst, int count)).
-edge(s, d) :- l=$read("/home/gengl/socialite-before-yarn/examples/prog4_edge.txt"),  (s1,s2)=$split(l, "	"),
+edge(s, d) :- l=$read("E:\\socialite-before-yarn\\examples\\prog4_edge.txt"),  (s1,s2)=$split(l, "	"),
                      s=$toInt(s1), d=$toInt(s2).
 cpaths(x, y, 1) :- edge(x, y).
 cpaths(X, Y, $dcount(C1)) :- cpaths(X, Z, C), edge(Z, Y), C1 = C.

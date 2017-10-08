@@ -39,7 +39,7 @@ PrimitiveMap ::= [
 	"float": "TFloatArrayList",
 	"double": "TDoubleArrayList",
 	"boolean": "ArrayList<Boolean>",
-	default: "ArrayList<Pair>"
+	default: "TIntArrayList"
 ]
 
 KeyIndMap ::= [
@@ -55,14 +55,15 @@ IndKeyMap ::= [
     "long": "TIntLongHashMap",
     "float": "TIntFloatHashMap",
     "double": "TIntDoubleHashMap",
-    default: "TIntObjectHashMap\<Pair>"
+    default: "TIntObjectHashMap<Pair>"
 ]
 
 PrimitiveObjectMap ::= [
     "int": "TIntObjectHashMap",
     "long": "TLongObjectHashMap",
     "float": "TFloatObjectHashMap",
-    "double": "TDoubleObjectHashMap"
+    "double": "TDoubleObjectHashMap",
+    default: "TIntObjectHashMap"
 ]
 
 

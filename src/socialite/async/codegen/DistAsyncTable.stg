@@ -1,265 +1,380 @@
 import "Utils.stg"
-AsyncTableSingle(name, keyType, valueType, aggrType, weightType, extraType, expr) ::= <<
+DistAsyncTable(name, keyType, valueType, dynamic, deltaType, aggrType, weightType, extraType, expr) ::= <<
 package socialite.async.codegen;
-<importForDistTable()>
+<importForTable()>
+//algorithm <name>
+public class DistAsyncTable extends BaseAsyncTable{
+    private static final Log L = LogFactory.getLog(AsyncTable.class);
+    <!只有静态且key为int才可以keyAsIndex!>
+    <if(dynamic || !IsKeyAsIndex.(keyType))>private <KeyIndMap.(keyType)> keyIndMap;<endif>
 
-//this is array table
-//for dynamic added and pair-key algorithms, hash table is needed
-public class DistAsyncTable extends BaseDistAsyncTable {
-   <if(IsInt.(valueType))>
-    public static final <valueType> IDENTITY_ELEMENT = <IntegerIdentityElement.(aggrType)>;
-    <elseif(IsLong.(valueType))>
-    public static final <valueType> IDENTITY_ELEMENT = <LongIdentityElement.(aggrType)>;
-    <elseif(IsFloat.(valueType))>
-    public static final <valueType> IDENTITY_ELEMENT = <FloatIdentityElement.(aggrType)>;
-    <elseif(IsDouble.(valueType))>
-    public static final <valueType> IDENTITY_ELEMENT = <DoubleIdentityElement.(aggrType)>;
+    <if(IsPairKey.(keyType))>
+        private TIntObjectHashMap\<Pair> indKeyMap;//动态添加取主键，与col1AdjacenciesMap连接
+        private TIntObjectHashMap\<<PrimitiveMap.(keyType)>\> col1AdjacenciesMap;
+    <elseif(dynamic)>
+        private <IndKeyMap.(keyType)> indKeyMap;
+        private <PrimitiveObjectMap.(keyType)>\<<PrimitiveMap.(keyType)>\> col1AdjacenciesMap;
+        <if(weightType)>private <PrimitiveObjectMap.(keyType)>\<<PrimitiveMap.(weightType)>\> col1WeightsMap;<endif>
     <endif>
-    private final int workerNum;
-    private <KeyIndMap.(keyType)> keyIndMap; <!T<Key>IntHashMap in template!>
-    private <IndKeyMap.(keyType)> indKeyMap;
+
     private <PrimitiveMap.(valueType)> valueList;
-    private List\<<TypeAtomicMap.(valueType)>\> deltaList;
-    private List\<<PrimitiveMap.(keyType)>\> adjacenciesList;
-    <if(weightType)>private List\<<PrimitiveMap.(weightType)>\> weightsList;<endif>
-    <if(extraType)>private <PrimitiveMap.(extraType)> extraList;<endif>
-    private volatile int size;
+    private List\<<TypeAtomicMap.(deltaType)>\> deltaList;
+    private List\<<PrimitiveMap.(keyType)>\> adjacenciesList; //除了key为int类型的装ind，该字段装邻接点数据
+    <if(!IsBoolean.(valueType))> <!暂时忽略2-step程序的weight和extra!>
+        <!optional dependent on algorithms!>
+        <if(weightType)>private List\<<PrimitiveMap.(weightType)>\> weightsList;<endif>
+        <if(extraType)>private <PrimitiveMap.(extraType)> extraList;<endif>
+    <endif>
+    <if(IsBoolean.(valueType))>private List\<Boolean> sentFlagList;<endif>
 
-    private AtomicIntegerArray messageTableSelector;
-    private DistMsgTable[][] messageTableList;
-    Map\<Integer, Integer> myIdxWorkerIdMap;
-    private int myWorkerId;
 
-    public void setMyIdxWorkerIdMap(Map\<Integer, Integer> myIdxWorkerIdMap) {
-        this.myIdxWorkerIdMap = myIdxWorkerIdMap;
+    <if(IsInt.(deltaType))>
+    public static final <deltaType> IDENTITY_ELEMENT = <IntegerIdentityElement.(aggrType)>;
+    <elseif(IsLong.(deltaType))>
+    public static final <deltaType> IDENTITY_ELEMENT = <LongIdentityElement.(aggrType)>;
+    <elseif(IsFloat.(deltaType))>
+    public static final <deltaType> IDENTITY_ELEMENT = <FloatIdentityElement.(aggrType)>;
+    <elseif(IsDouble.(deltaType))>
+    public static final <deltaType> IDENTITY_ELEMENT = <DoubleIdentityElement.(aggrType)>;
+    <endif>
+
+    private int size;
+
+    public AsyncTable(int initSize){
+        <if(dynamic || !IsKeyAsIndex.(keyType))>keyIndMap = new <KeyIndMap.(keyType)>(size);<endif>
+
+        <if(IsPairKey.(keyType))>
+            indKeyMap = new TIntObjectHashMap\<Pair>(size);//动态添加做连接用
+            col1AdjacenciesMap = new TIntObjectHashMap\<<PrimitiveMap.(keyType)>\>(size);
+        <elseif(dynamic)>
+            indKeyMap = new <IndKeyMap.(keyType)>(size);
+            col1AdjacenciesMap = new <PrimitiveObjectMap.(keyType)>\<<PrimitiveMap.(keyType)>\>(size);
+            <if(weightType)>col1WeightsMap = new <PrimitiveObjectMap.(keyType)>\<<PrimitiveMap.(weightType)>\>(size);<endif>
+        <endif>
+
+       valueList = new <PrimitiveMap.(valueType)>(initSize);
+       deltaList = new ArrayList\<>(initSize);
+       adjacenciesList = new ArrayList\<>(size);
+       <if(!IsBoolean.(valueType))>
+           <if(weightType)> weightsList = new ArrayList\<>(size);<endif>
+           <if(extraType)> extraList = new <PrimitiveMap.(extraType)>(size);<endif>
+       <endif>
+       <if(IsBoolean.(valueType))>sentFlagList = new ArrayList\<>();<endif>
     }
 
-    public DistAsyncTable(int workerNum, int myWorkerId, int initSize, int initBufferTableSize) {
-        this.workerNum = workerNum;
-        this.myWorkerId = myWorkerId;
-
-        keyIndMap = new <KeyIndMap.(keyType)>(initSize);
-        indKeyMap = new <IndKeyMap.(keyType)>(initSize);
-        deltaList = new ArrayList<>(initSize);
-        valueList = new <PrimitiveMap.(valueType)>(initSize);
-        adjacenciesList = new ArrayList<>(initSize);
-
-        <if(weightType)>
-        weightsList = new <PrimitiveMap.(weightType)>(initSize);
-        <endif>
-        <if(extraType)>
-        extraList = new <PrimitiveMap.(extraType)>(initSize);
-        <endif>
-
-        messageTableSelector = new AtomicIntegerArray(workerNum);
-        messageTableList = new MessageTable[workerNum][2];
-        for (int wid = 0; wid \< workerNum; wid++) {
-            if (wid == myWorkerId) continue;//for worker i, it have 0,1,...,i-1,null,i+1,...n-1 buffer table
-            messageTableList[wid][0] = new MessageTable(initBufferTableSize);
-            messageTableList[wid][1] = new MessageTable(initBufferTableSize);
-        }
-    }
-
+    @Override
     public void updateLockFree(int localInd) {
-        <valueType> oldDelta = deltaList.get(localInd).getAndSet(IDENTITY_ELEMENT);
-        if(oldDelta == IDENTITY_ELEMENT)
-            return;
+        <if(IsBoolean.(valueType))>
+            if (sentFlagList.get(localInd)){
+                //L.info("sentFlagList return");
+                return;
+            }
+            <deltaType> oldDelta = deltaList.get(localInd).get();
+            if (eval(oldDelta))
+                valueList.set(localInd, true);
+            if (!valueList.get(localInd)){
+                //L.info("valueList return");
+                return;
+            }
+            <PrimitiveMap.(keyType)> adjacencies = adjacenciesList.get(localInd);
+            <! 遍历每个邻接点 !>
+            for(int i = 0; i \< adjacencies.size(); i++){
+                int adjacentLocalInd;
+                <keyType> adjacency = adjacencies.get(i);
+                <!when use int as key, use key as index!>
+                if(keyIndMap.contains(adjacency))
+                    adjacentLocalInd = keyIndMap.get(adjacency);
+                else {
+                    adjacentLocalInd = addEntry(adjacency, false, IDENTITY_ELEMENT);
+                }
+                <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
+                <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
+                <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
+                <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+            }
+            sentFlagList.set(localInd, true);
+        <else>
+            <deltaType> oldDelta = deltaList.get(localInd).getAndSet(IDENTITY_ELEMENT);
+            if(oldDelta == IDENTITY_ELEMENT)
+                return;
 
-        //aggrType: <aggrType> weightType:<weightType> extraType: <extraType>
-        <valueType> accumulatedValue = <WrappedTypeMap.(valueType)>.<AggrTypeFuncMap.(aggrType)>(valueList.get(localInd), oldDelta);
-        <! 聚集后比原来还小，则不更新 !>
-        <if(IsMax.(aggrType))>if(accumulatedValue \<= valueList.get(localInd))return;
-        <elseif(IsMin.(aggrType))>if(accumulatedValue >= valueList.get(localInd))return;<endif>
-
-        <!Count函数在不准与extra、weight同用，因为语义不明!>
-        <if(!IsCount.(aggrType))>
-        <! 有权值 !>
-        <if(weightType)><PrimitiveMap.(weightType)> weights = weightsList.get(localInd);<endif>
-        <! 有附加值，如图的degree !>
-        <if(extraType)><extraType> extra = extraList.get(localInd);<endif>
-        <endif>
-
-        <! 遍历每个邻接点 !>
-        for(int i = 0; i \< adjacenciesList.size(); i++){
-            <KeyTypeMap.(keyType)> adjacency = adjacenciesList.get(i); //key for adjacent node
-
+            //keyType: <keyType> aggrType: <aggrType> weightType:<weightType> extraType: <extraType>
+            <valueType> accumulatedValue = <WrappedTypeMap.(valueType)>.<AggrTypeFuncMap.(aggrType)>(valueList.get(localInd), oldDelta);
+            <! 聚集后比原来还小，则不更新 !>
+            <if(IsMax.(aggrType))>if(accumulatedValue \<= valueList.get(localInd))return;
+            <elseif(IsMin.(aggrType))>if(accumulatedValue >= valueList.get(localInd))return;<endif>
+            //更新value
+            valueList.set(localInd, accumulatedValue);
+            <!Count函数在不准与extra、weight同用，因为语义不明!>
             <if(!IsCount.(aggrType))>
-            <if(weightType)><weightType> weight = weights.get(i);<endif>
-            <valueType> newDelta = eval(weight, oldDelta);
+                <! 有权值 !>
+                <if(weightType)><PrimitiveMap.(weightType)> weights = weightsList.get(localInd);<endif>
+                <! 有附加值，如图的degree !>
+                <if(extraType)><extraType> extra = extraList.get(localInd);<endif>
             <endif>
 
-            int belongToWorkerId = getWorkerId(adjacency);
-            //on local machine
-            if (belongToWorkerId == myWorkerId) {
-                int adjacentLocalInd = keyIndMap.get(adjacency);
+            <PrimitiveMap.(keyType)> adjacencies = adjacenciesList.get(localInd);
+            <! 遍历每个邻接点 !>
+            for(int i = 0; i \< adjacencies.size(); i++){
+                <if(!IsCount.(aggrType))>
+                <valueType> newDelta = eval(oldDelta <if(weightType)>, weights.get(i)<endif> <if(extraType)>, extra<endif>);
+                <endif>
+                int adjacentLocalInd;
+                <!when use int as key, use key as index!>
+                <if(dynamic || !IsKeyAsIndex.(keyType))>
+                    <keyType> adjacency = adjacencies.get(i);
+                    if(keyIndMap.contains(adjacency))
+                        adjacentLocalInd = keyIndMap.get(adjacency);
+                    else{
+                        <if(IsPairKey.(keyType))>
+                        <keyType> key = indKeyMap.get(localInd);
+                        adjacentLocalInd = addEntry(key.v0, adjacency.v1, IDENTITY_ELEMENT, IDENTITY_ELEMENT);
+                        <elseif(IsBoolean.(valueType))>
+                        adjacentLocalInd = addEntry(adjacency, false, IDENTITY_ELEMENT);
+                        <else>
+                        adjacentLocalInd = addEntry(adjacency, IDENTITY_ELEMENT, IDENTITY_ELEMENT);
+                        <endif>
+                    }
+                <else>
+                    adjacentLocalInd = adjacencies.get(i); //key for adjacent node
+                <endif>
                 <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
-                <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max)<endif>
-                <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min)<endif>
-                <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta, 1)<endif>
-            } else {
-                MessageTable msgTable = messageTableList[belongToWorkerId][messageTableSelector.get(belongToWorkerId)];
-                msgTable.apply(adjacency, newDelta);
+                <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
+                <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
+                <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
             }
+        <endif>
+    }
+
+    <if(IsBoolean.(valueType))>
+    private boolean eval(<deltaType> oldDelta) {
+        return (<expr>);
+    }
+    <else>
+    private <deltaType> eval(<deltaType> oldDelta <if(weightType)>,<weightType> weight<endif> <if(extraType)>, <extraType> extra<endif>) {
+        return (<deltaType>)(<expr>);
+    }
+    <endif>
+
+    <if(dynamic)>
+    private synchronized int addEntry(<if(IsPairKey.(keyType))>int col1OfKey, int col2OfKey<else><keyType> key<endif>, <valueType> value, <deltaType> delta){
+        <if(IsPairKey.(keyType))>
+        Pair key = new Pair(col1OfKey, col2OfKey);
+        <PrimitiveMap.(keyType)> adjacencies = col1AdjacenciesMap.get(col2OfKey);
+        if(adjacencies!=null){
+            for(int i=0;i\<adjacencies.size();i++)
+                adjacencies.set(i, new Pair(col1OfKey, adjacencies.get(i).v1));
         }
+        <else>
+        <PrimitiveMap.(keyType)> adjacencies = col1AdjacenciesMap.get(key);
+        <if(weightType)><PrimitiveMap.(keyType)> weights = col1WeightsMap.get(key);<endif>
+        <endif>
+        keyIndMap.put(key, size);
+        indKeyMap.put(size, key);
+        valueList.add(value);
+        deltaList.add(new <TypeAtomicMap.(deltaType)>(delta));
+        if(adjacencies!=null)
+            adjacenciesList.add(new <PrimitiveMap.(keyType)>(adjacencies));
+        else
+            adjacenciesList.add(new <PrimitiveMap.(keyType)>());
+        <if(weightType)>
+        if(weights!=null)
+            weightsList.add(new <PrimitiveMap.(weightType)>(weights));
+        else
+            weightsList.add(new <PrimitiveMap.(weightType)>());
+        <endif>
+        <if(IsBoolean.(valueType))>sentFlagList.add(false);<endif>
+        return size++;
     }
-
-    /**
-     * 将远程Worker发来的Buffer累积到本地DistAsyncTable
-     *
-     * @param messageTable 远程BufferTable
-     */
-    @Override
-    public void applyBuffer(MessageTable messageTable) {
-        messageTable.getKeyDeltaMap().forEach((key, delta) -> {
-            int localInd = keyIndMap.get(key);
-                                                                    <!Integer/Double          :: sum/max/min!>
-            deltaList.get(localInd).accumulateAndGet(delta.get(), <WrappedTypeMap.(valueType)>::<AggrTypeFuncMap.(aggrType)>);
-        });
-    }
-
-    private int tableId;
-
-    public void setTableId(int tableId) {
-        this.tableId = tableId;
-    }
-
-    // should same as InitCarrier.getWorkerId
-    public int getWorkerId(int key, int workerNum) {
-        int myIdx = sliceMap.machineIndexFor(tableId, key);
-        return myIdxWorkerIdMap.get(myIdx);
-    }
+    <endif>
 
     @Override
-    public Object getValue() {
-        return valueList;
+    public MyVisitorImpl getInitVisitor(){
+        return new MyVisitorImpl(){
+            <if(dynamic)>
+                <if(IsPairKey.(keyType))>
+                    int col1OfKey;
+                    @Override
+                    public boolean visit_0(int col1OfKey){
+                        this.col1OfKey = col1OfKey;
+                        return true;
+                    }
+
+                    @Override
+                    public boolean visit(int col2OfKey, <valueType> delta) {
+                        addEntry(col1OfKey, col2OfKey, IDENTITY_ELEMENT, delta);
+                        return true;
+                    }
+                <elseif(IsBoolean.(valueType))>
+                    @Override
+                    public boolean visit(<keyType> key){
+                        addEntry(key, true, IDENTITY_ELEMENT);
+                        return true;
+                    }
+                <else>
+                    @Override
+                    public boolean visit(<keyType> key, <valueType> delta){
+                        addEntry(key, IDENTITY_ELEMENT, delta);
+                        return true;
+                    }
+                <endif>
+            <else>
+                <PrimitiveMap.(keyType)> adjacencies;
+                <if(weightType)><PrimitiveMap.(weightType)> weights;<endif>
+                @Override
+                public boolean visit_0_1<if(extraType)>_2<endif>(<keyType> key, <deltaType> delta <if(extraType)>, <extraType> extra<endif>){
+                    valueList.add(IDENTITY_ELEMENT);
+                    deltaList.add(new <TypeAtomicMap.(deltaType)>(delta));
+                    adjacencies = new <PrimitiveMap.(keyType)>();
+                    adjacenciesList.add(adjacencies);
+                    <if(extraType)>extraList.add(extra);<endif>
+                    <if(weightType)>
+                    weights = new <PrimitiveMap.(weightType)>();
+                    weightsList.add(weights);
+                    <endif>
+                    size++;
+                    return true;
+                }
+
+                @Override
+                public boolean visit(<keyType> adjacency <if(weightType)>, <weightType> weight<endif>){
+                    adjacencies.add(adjacency);
+                    <if(weightType)>weights.add(weight);<endif>
+                    return true;
+                }
+            <endif>
+        };
     }
 
+    <if(dynamic)>
     @Override
-    public double accumulateValue() {
-        double sum = 0;
-        for (int i = 0; i \< size; i++) {
-            sum += valueList.get(i);
-        }
-        return sum;
-    }
-
-    private double eval(int weight, int extra, double oldDelta) {
-        return (<valueType>)(<expr>);
-    }
-
-    @Override
-    public int getSize() {
-        return size;
-    }
-
-    @Override
-    public void iterate(MyVisitorImpl visitor) {
-        keyIndMap.forEachEntry((key, ind) -> visitor.visit(key, valueList.get(ind), deltaList.get(ind).doubleValue())
-        );
-    }
-
-    //for dynamically algorithms
-    public synchronized void addEntryDynamically(int key, int value, int delta, int extra) {
-
-    }
-
-    @Override
-    public AtomicIntegerArray getMessageTableSelector() {
-        return messageTableSelector;
-    }
-
-    @Override
-    public MessageTable[] getMessageAndBackup(int workerId) {
-        return messageTableList[workerId];
-    }
-
-    private static final Log L = LogFactory.getLog(DistAsyncTable.class);
-
-    /*
-    public void display() {
-        L.info("ind\tkey\tvalue\tDvalue\tadjacent\textra");
-        keyIndMap.forEachEntry((key, ind) -> {
-            double value = valueList.get(ind);
-            double dValue = deltaList.get(ind).doubleValue();
-            TIntList adjacents = dataList.get(ind);
-
-            L.info(String.format("%d\t\t%d\t%f\t%f\t%s\t%d", ind, key, value, dValue, Arrays.toString(adjacents.toArray()), extra.get(ind)));
-            return true;
-        });
-    }
-    */
-
-    DistTableSliceMap sliceMap;
-
-    public void setSliceMap(DistTableSliceMap sliceMap) {
-        this.sliceMap = sliceMap;
-    }
-
-    public MyVisitorImpl getMiddleVisitor() {
+    public MyVisitorImpl getEdgeVisitor(){
         return new MyVisitorImpl() {
-            TIntArrayList adjacents;
-
-            //"Middle(int Key:0..875713, double initD, int degree, (int adj))."
+            <PrimitiveMap.(keyType)> keys;
+            <if(weightType)><PrimitiveMap.(weightType)> weights;<endif>
+            <if(IsPairKey.(keyType))>int col1OfKey;<endif>
             @Override
-            public boolean visit_0_1_2(int a1, double a2, int a3) {
-                keyIndMap.put(a1, size++);
-                valueList.add(IDENTITY_ELEMENT);
-                deltaList.add(new MyAtomicDouble(a2));
-                extra.add(a3);
-                adjacents = new TIntArrayList();
-                dataList.add(adjacents);
+            public boolean visit_0(<if(IsPairKey.(keyType))>int<else><keyType><endif> key) {
+                <if(IsPairKey.(keyType))>col1OfKey = key;<endif>
+                keys = new <PrimitiveMap.(keyType)>();
+                col1AdjacenciesMap.put(key, keys);
+                <if(weightType)>
+                weights = new <PrimitiveMap.(weightType)>();
+                col1WeightsMap.put(key, weights);
+                <endif>
                 return true;
             }
 
             @Override
-            public boolean visit(int a1) {
-                adjacents.add(a1);
+            public boolean visit(<if(IsPairKey.(keyType))>int col2OfKey<else><keyType> col2<endif> <if(weightType)>,<weightType> weight<endif>) {
+                <if(IsPairKey.(keyType))>
+                    keys.add(new Pair(col1OfKey, col2OfKey));
+                <else>
+                    keys.add(col2);
+                <endif>
+                <if(weightType)>weights.add(weight);<endif>
                 return true;
             }
         };
     }
+    <endif>
 
-    public static class MessageTable {
-        <! keyType should be int\long\key !>
-        private Map\<<WrappedTypeMap.(keyType)>, <TypeAtomicMap.(valueType)>\> keyDeltaMap;
-        private transient MyAtomicInteger updateCounter;
+    @Override
+    <if(IsBoolean.(valueType))>
+    public Integer accumulateValue(){
+        int sum = 0;
+        for(int i=0;i\<size;i++)
+            if(valueList.get(i) && !sentFlagList.get(i))//可见性问题，只能这么解决
+                sum++;
+        return sum;
+    }
+    <else>
+    public <WrappedTypeMap.(deltaType)> accumulateValue(){
+        <valueType> sum = 0;
+        for(int i=0;i\<size;i++){
+            <valueType> value = valueList.get(i);
+            if(value != IDENTITY_ELEMENT)
+                sum+=valueList.get(i);
+        }
+        return sum;
+    }
+    <endif>
 
-        private MessageTable(){
-            //constructor for kryo
+    @Override
+    public <WrappedTypeMap.(deltaType)> accumulateDelta(){
+        <deltaType> sum = 0;
+        for(int i=0;i\<size;i++){
+            <deltaType> delta = deltaList.get(i).<deltaType>Value();
+            if(delta != IDENTITY_ELEMENT)
+                sum+=delta;
+        }
+        return sum;
+    }
+
+    @Override
+	public void iterate(MyVisitorImpl visitor) {
+		for (int i=0; i\<size; i++) {
+	        <if(dynamic || !IsKeyAsIndex.(keyType))>
+                <if(IsPairKey.(keyType))>
+                    Pair pair = indKeyMap.get(i);
+                    if (!visitor.visit(pair.toString(), valueList.get(i), deltaList.get(i).<deltaType>Value()))
+                        break;
+                <elseif(IsBoolean.(valueType))>
+                    if(valueList.get(i))
+                        if (!visitor.visit(indKeyMap.get(i)))
+                            break;
+                <else>
+                    if(!visitor.visit(indKeyMap.get(i), valueList.get(i), deltaList.get(i).<deltaType>Value()))
+                        break;
+                <endif>
+            <else>
+                if (!visitor.visit(i, valueList.get(i), deltaList.get(i).<deltaType>Value()))
+                    break;
+		    <endif>
+		}
+	}
+
+    @Override
+    public int getSize(){
+        return size;
+    }
+
+    <if(IsPairKey.(keyType))>
+    private class Pair {
+        final int v0;
+        final int v1;
+        private int hashCode = -1;
+
+        Pair(int v0, int v1) {
+            this.v0 = v0;
+            this.v1 = v1;
         }
 
-        public MessageTable(int initSize) {
-            updateCounter = new MyAtomicInteger(0);
-            keyDeltaMap = new ConcurrentHashMap<>(initSize);
+        @Override
+        public String toString() {
+            return v0 + " " + v1;
         }
 
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
 
-        /**
-         * 累积delta值
-         *
-         * @param key   全局索引
-         * @param delta delta value
-         */
-        public void apply(<WrappedTypeMap.(keyType)> key, <valueType> delta) {
-            <TypeAtomicMap.(valueType)> atomicDelta = keyDeltaMap.putIfAbsent(key, new <TypeAtomicMap.(valueType)>(delta));
-            if (atomicDelta != null) {
-                atomicDelta.accumulateAndGet(delta, <WrappedTypeMap.(valueType)>::<AggrTypeFuncMap.(aggrType)>);
-            }
-            updateCounter.addAndGet(1);
+            Pair pair = (Pair) o;
+
+            if (v0 != pair.v0) return false;
+            return v1 == pair.v1;
         }
 
-        public int getUpdateTimes() {
-            return updateCounter.intValue();
-        }
-
-        public void resetDelta() {
-            keyDeltaMap.values().forEach(delta -> delta.set(DistAsyncTable.IDENTITY_ELEMENT));
-            updateCounter.set(0);
-        }
-
-        public Map\<<WrappedTypeMap.(keyType)> key, <TypeAtomicMap.(valueType)>\> getKeyDeltaMap() {
-            return keyDeltaMap;
+        @Override
+        public int hashCode() {
+            if (hashCode != -1)
+                return hashCode;
+            hashCode = v0;
+            hashCode = 31 * hashCode + v1;
+            return hashCode;
         }
     }
+    <endif>
 }
 >>
