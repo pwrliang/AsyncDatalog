@@ -182,7 +182,7 @@ public class AsyncConfig {
                 lineNo++;
                 break;
             }
-            String[] tmp = line.split("\\s+=\\s+");
+            String[] tmp = line.split("\\s*=\\s*");
             configMap.put(tmp[0], tmp[1]);
         }
         while (lineNo<lines.size()){

@@ -187,7 +187,7 @@ public class DistAsyncRuntime extends AsyncRuntimeBase {
             serializeTool = new SerializeTool.Builder()
                     .setSerializeTransient(true) //!!!!!!!!!!AtomicDouble's value field is transient
                     .build();
-            messageTableAndBackup = distAsyncTable.getMessageAndBackup(sendToWorkerId);
+            messageTableAndBackup = distAsyncTable.getMessageTables(sendToWorkerId);
         }
 
         @Override

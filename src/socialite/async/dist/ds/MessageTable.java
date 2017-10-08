@@ -3,15 +3,16 @@ package socialite.async.dist.ds;
 
 import socialite.async.atomic.MyAtomicDouble;
 import socialite.async.atomic.MyAtomicInteger;
+import socialite.async.codegen.MessageTableBase;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class MessageTable {
+public class MessageTable extends MessageTableBase{
     public Map<Integer, MyAtomicDouble> keyDeltaMap;
     public transient MyAtomicInteger updateCounter;
 
-    private MessageTable(){
+    protected MessageTable(){
         //constructor for kryo
     }
 
@@ -45,7 +46,7 @@ public class MessageTable {
         updateCounter.set(0);
     }
 
-    public Map<Integer, MyAtomicDouble> getKeyDeltaMap() {
+    public Map getKeyDeltaMap() {
         return keyDeltaMap;
     }
 }

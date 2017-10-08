@@ -38,7 +38,7 @@ public class AsyncCodeGen {
         STGroup stg = new MySTGroupFile(AsyncCodeGen.class.getResource("AsyncTable.stg"),
                 "UTF-8", '<', '>');
         stg.load();
-        ST st = stg.getInstanceOf("AsyncTableSingle");
+        ST st = stg.getInstanceOf("AsyncTableSharedMem");
         st.add("name", asyncAn.getResultPName());
         st.add("keyType", asyncAn.getKeyType());
         st.add("deltaType", asyncAn.getDeltaType());

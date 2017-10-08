@@ -1,5 +1,5 @@
 import "Utils.stg"
-AsyncTableSingle(name, keyType, valueType, dynamic, deltaType, aggrType, weightType, extraType, expr) ::= <<
+AsyncTableSharedMem(name, keyType, valueType, dynamic, deltaType, aggrType, weightType, extraType, expr) ::= <<
 package socialite.async.codegen;
 <importForTable()>
 //algorithm <name>
@@ -160,12 +160,7 @@ public class AsyncTable extends BaseAsyncTable{
 
     <if(dynamic)>
     private synchronized int addEntry(<if(IsPairKey.(keyType))>int col1OfKey, int col2OfKey<else><keyType> key<endif>, <valueType> value, <deltaType> delta){
-        <if(IsPairKey.(keyType))>
-        Pair key = new Pair(col1OfKey, col2OfKey);
-        <else>
-        <PrimitiveMap.(keyType)> adjacencies = srcDstListMap.get(key);
-        <if(weightType)><PrimitiveMap.(keyType)> weights = srcWeightListMap.get(key);<endif>
-        <endif>
+        <if(IsPairKey.(keyType))>Pair key = new Pair(col1OfKey, col2OfKey);<endif>
         keyIndMap.put(key, size);
         indKeyMap.put(size, key);
         valueList.add(value);

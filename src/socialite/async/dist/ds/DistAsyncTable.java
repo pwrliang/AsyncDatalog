@@ -9,6 +9,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import socialite.async.analysis.MyVisitorImpl;
 import socialite.async.atomic.MyAtomicDouble;
+import socialite.async.codegen.MessageTableBase;
 import socialite.resource.DistTableSliceMap;
 import socialite.util.SociaLiteException;
 
@@ -80,13 +81,13 @@ public class DistAsyncTable extends BaseDistAsyncTable {
      * @param messageTable 远程BufferTable
      */
     @Override
-    public void applyBuffer(MessageTable messageTable) {
-        messageTable.getKeyDeltaMap().forEach((key, delta) -> {
-            if (!keyIndMap.containsKey(key))
-                throw new SociaLiteException((myWorkerId + 1) + "have not key " + key);
-            int localInd = keyIndMap.get(key);
-            deltaList.get(localInd).accumulateAndGet(delta.get(), Double::sum);
-        });
+    public void applyBuffer(MessageTableBase messageTable) {
+//        messageTable.getKeyDeltaMap().forEach((key, delta) -> {
+//            if (!keyIndMap.containsKey(key))
+//                throw new SociaLiteException((myWorkerId + 1) + "have not key " + key);
+//            int localInd = keyIndMap.get(key);
+//            deltaList.get(localInd).accumulateAndGet(delta.get(), Double::sum);
+//        });
     }
 
     int tableId;
@@ -140,7 +141,7 @@ public class DistAsyncTable extends BaseDistAsyncTable {
     }
 
     @Override
-    public MessageTable[] getMessageAndBackup(int workerId) {
+    public MessageTable[] getMessageTables(int workerId) {
         return messageTableList[workerId];
     }
 

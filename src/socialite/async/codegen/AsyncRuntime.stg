@@ -54,8 +54,8 @@ public class AsyncRuntime extends AsyncRuntimeBase{
     private void arrangeTask() {
         int blockSize = asyncTable.getSize() / THREAD_NUM;
         if (blockSize == 0) {
-            System.err.println("too many threads");
-            System.exit(0);
+            L.warn("too many threads");
+            blockSize = asyncTable.getSize();
         }
         for (int tid = 0; tid \< THREAD_NUM; tid++) {
             int start = tid * blockSize;
