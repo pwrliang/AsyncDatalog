@@ -9,14 +9,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import socialite.async.analysis.MyVisitorImpl;
 import socialite.async.atomic.MyAtomicDouble;
+import socialite.async.codegen.BaseDistAsyncTable;
 import socialite.async.codegen.MessageTableBase;
 import socialite.resource.DistTableSliceMap;
-import socialite.util.SociaLiteException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 //this is array table
@@ -36,6 +35,7 @@ public class DistAsyncTable extends BaseDistAsyncTable {
 
 
     public DistAsyncTable(int workerNum, int myWorkerId, int initSize, int initBufferTableSize) {
+        super(workerNum, myWorkerId, null,0,0,0,initBufferTableSize);
         this.workerNum = workerNum;
         this.myWorkerId = myWorkerId;
 

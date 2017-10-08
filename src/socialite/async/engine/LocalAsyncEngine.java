@@ -69,7 +69,7 @@ public class LocalAsyncEngine {
     private void compile() {
         if (asyncAnalysis.analysis()) {
             asyncCodeGenMain = new AsyncCodeGenMain(asyncAnalysis);
-            asyncCodeGenMain.generate();
+            asyncCodeGenMain.generateSharedMem();
         }
     }
 

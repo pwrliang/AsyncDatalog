@@ -1,25 +1,25 @@
 import "Utils.stg"
-DistAsyncTable(name, keyType, valueType, dynamic, deltaType, aggrType, weightType, extraType, expr) ::= <<
+DistAsyncTable(name, dynamic, keyType, valueType, deltaType, aggrType, weightType, extraType, expr) ::= <<
 package socialite.async.codegen;
-<importForTable()>
+<importForDistTable()>
 //algorithm <name>
-public class DistAsyncTable extends BaseAsyncTable{
-    private static final Log L = LogFactory.getLog(AsyncTable.class);
+public class DistAsyncTable extends BaseDistAsyncTable{
+    private static final Log L = LogFactory.getLog(DistAsyncTable.class);
     <!只有静态且key为int才可以keyAsIndex!>
-    <if(dynamic || !IsKeyAsIndex.(keyType))>private <KeyIndMap.(keyType)> keyIndMap;<endif>
-
-    <if(IsPairKey.(keyType))>
-        private TIntObjectHashMap\<Pair> indKeyMap;//动态添加取主键，与col1AdjacenciesMap连接
-        private TIntObjectHashMap\<<PrimitiveMap.(keyType)>\> col1AdjacenciesMap;
-    <elseif(dynamic)>
-        private <IndKeyMap.(keyType)> indKeyMap;
-        private <PrimitiveObjectMap.(keyType)>\<<PrimitiveMap.(keyType)>\> col1AdjacenciesMap;
-        <if(weightType)>private <PrimitiveObjectMap.(keyType)>\<<PrimitiveMap.(weightType)>\> col1WeightsMap;<endif>
+    <if(dynamic || !IsKeyAsIndex.(keyType))>
+        private <KeyIndMap.(keyType)> keyIndMap;
+        private <IndKeyMap.(keyType)> indKeyMap; //using in iterate method
     <endif>
+
+    <if(dynamic)>
+        private <PrimitiveObjectMap.(keyType)>\<<PrimitiveMap.(keyType)>\> srcDstListMap;
+        <if(weightType)>private <PrimitiveObjectMap.(keyType)>\<<PrimitiveMap.(weightType)>\> srcWeightListMap;<endif>
+    <endif>
+
 
     private <PrimitiveMap.(valueType)> valueList;
     private List\<<TypeAtomicMap.(deltaType)>\> deltaList;
-    private List\<<PrimitiveMap.(keyType)>\> adjacenciesList; //除了key为int类型的装ind，该字段装邻接点数据
+    private List\<<if(IsPairKey.(keyType))>List\<Pair><else><PrimitiveMap.(keyType)><endif>\> adjacenciesList; //除了key为int类型的装ind，该字段装邻接点数据
     <if(!IsBoolean.(valueType))> <!暂时忽略2-step程序的weight和extra!>
         <!optional dependent on algorithms!>
         <if(weightType)>private List\<<PrimitiveMap.(weightType)>\> weightsList;<endif>
@@ -27,6 +27,7 @@ public class DistAsyncTable extends BaseAsyncTable{
     <endif>
     <if(IsBoolean.(valueType))>private List\<Boolean> sentFlagList;<endif>
 
+    private int size;
 
     <if(IsInt.(deltaType))>
     public static final <deltaType> IDENTITY_ELEMENT = <IntegerIdentityElement.(aggrType)>;
@@ -38,97 +39,71 @@ public class DistAsyncTable extends BaseAsyncTable{
     public static final <deltaType> IDENTITY_ELEMENT = <DoubleIdentityElement.(aggrType)>;
     <endif>
 
-    private int size;
+    public DistAsyncTable(int workerNum, int myWorkerId, DistTableSliceMap sliceMap, int indexForTableId, int base, int initSize, int messageTableUpdateThreshold, int initBufferTableSize) {
+        super(workerNum, myWorkerId, sliceMap, indexForTableId, base, initBufferTableSize, messageTableUpdateThreshold);
+        <if(dynamic || !IsKeyAsIndex.(keyType))>
+            keyIndMap = new <KeyIndMap.(keyType)>(initSize);
+            indKeyMap = new <IndKeyMap.(keyType)>(initSize); //using in iterate method
+        <endif>
 
-    public AsyncTable(int initSize){
-        <if(dynamic || !IsKeyAsIndex.(keyType))>keyIndMap = new <KeyIndMap.(keyType)>(size);<endif>
-
-        <if(IsPairKey.(keyType))>
-            indKeyMap = new TIntObjectHashMap\<Pair>(size);//动态添加做连接用
-            col1AdjacenciesMap = new TIntObjectHashMap\<<PrimitiveMap.(keyType)>\>(size);
-        <elseif(dynamic)>
-            indKeyMap = new <IndKeyMap.(keyType)>(size);
-            col1AdjacenciesMap = new <PrimitiveObjectMap.(keyType)>\<<PrimitiveMap.(keyType)>\>(size);
-            <if(weightType)>col1WeightsMap = new <PrimitiveObjectMap.(keyType)>\<<PrimitiveMap.(weightType)>\>(size);<endif>
+        <if(dynamic)>
+            srcDstListMap = new <PrimitiveObjectMap.(keyType)>\<>(initSize);
+            <if(weightType)>srcWeightListMap = new <PrimitiveObjectMap.(keyType)>\<>(initSize);<endif>
         <endif>
 
        valueList = new <PrimitiveMap.(valueType)>(initSize);
        deltaList = new ArrayList\<>(initSize);
-       adjacenciesList = new ArrayList\<>(size);
+       adjacenciesList = new ArrayList\<>(initSize);
        <if(!IsBoolean.(valueType))>
-           <if(weightType)> weightsList = new ArrayList\<>(size);<endif>
-           <if(extraType)> extraList = new <PrimitiveMap.(extraType)>(size);<endif>
+           <if(weightType)> weightsList = new ArrayList\<>(initSize);<endif>
+           <if(extraType)> extraList = new <PrimitiveMap.(extraType)>(initSize);<endif>
        <endif>
        <if(IsBoolean.(valueType))>sentFlagList = new ArrayList\<>();<endif>
     }
 
     @Override
     public void updateLockFree(int localInd) {
-        <if(IsBoolean.(valueType))>
-            if (sentFlagList.get(localInd)){
-                //L.info("sentFlagList return");
-                return;
-            }
-            <deltaType> oldDelta = deltaList.get(localInd).get();
-            if (eval(oldDelta))
-                valueList.set(localInd, true);
-            if (!valueList.get(localInd)){
-                //L.info("valueList return");
-                return;
-            }
-            <PrimitiveMap.(keyType)> adjacencies = adjacenciesList.get(localInd);
-            <! 遍历每个邻接点 !>
-            for(int i = 0; i \< adjacencies.size(); i++){
-                int adjacentLocalInd;
-                <keyType> adjacency = adjacencies.get(i);
-                <!when use int as key, use key as index!>
-                if(keyIndMap.contains(adjacency))
-                    adjacentLocalInd = keyIndMap.get(adjacency);
-                else {
-                    adjacentLocalInd = addEntry(adjacency, false, IDENTITY_ELEMENT);
-                }
-                <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
-                <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
-                <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
-                <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
-            }
-            sentFlagList.set(localInd, true);
-        <else>
-            <deltaType> oldDelta = deltaList.get(localInd).getAndSet(IDENTITY_ELEMENT);
-            if(oldDelta == IDENTITY_ELEMENT)
-                return;
+        <deltaType> oldDelta = deltaList.get(localInd).getAndSet(IDENTITY_ELEMENT);
+        if(oldDelta == IDENTITY_ELEMENT)
+            return;
 
-            //keyType: <keyType> aggrType: <aggrType> weightType:<weightType> extraType: <extraType>
-            <valueType> accumulatedValue = <WrappedTypeMap.(valueType)>.<AggrTypeFuncMap.(aggrType)>(valueList.get(localInd), oldDelta);
-            <! 聚集后比原来还小，则不更新 !>
-            <if(IsMax.(aggrType))>if(accumulatedValue \<= valueList.get(localInd))return;
-            <elseif(IsMin.(aggrType))>if(accumulatedValue >= valueList.get(localInd))return;<endif>
-            //更新value
-            valueList.set(localInd, accumulatedValue);
-            <!Count函数在不准与extra、weight同用，因为语义不明!>
+        //keyType: <keyType> aggrType: <aggrType> weightType:<weightType> extraType: <extraType>
+        <valueType> accumulatedValue = <WrappedTypeMap.(valueType)>.<AggrTypeFuncMap.(aggrType)>(valueList.get(localInd), oldDelta);
+        <! 聚集后比原来还小，则不更新 !>
+        <if(IsMax.(aggrType))>if(accumulatedValue \<= valueList.get(localInd))return;
+        <elseif(IsMin.(aggrType))>if(accumulatedValue >= valueList.get(localInd))return;<endif>
+        //更新value
+        valueList.set(localInd, accumulatedValue);
+        <!Count函数在不准与extra、weight同用，因为语义不明!>
+        <if(!IsCount.(aggrType))>
+            <! 有权值 !>
+            <if(weightType)><PrimitiveMap.(weightType)> weights = weightsList.get(localInd);<endif>
+            <! 有附加值，如图的degree !>
+            <if(extraType)><extraType> extra = extraList.get(localInd);<endif>
+        <endif>
+
+        <if(IsPairKey.(keyType))>List\<Pair><else><PrimitiveMap.(keyType)><endif> adjacencies = adjacenciesList.get(localInd);
+        <! 遍历每个邻接点 !>
+        if(adjacencies==null)return;
+        for(int i = 0; i \< adjacencies.size(); i++){
             <if(!IsCount.(aggrType))>
-                <! 有权值 !>
-                <if(weightType)><PrimitiveMap.(weightType)> weights = weightsList.get(localInd);<endif>
-                <! 有附加值，如图的degree !>
-                <if(extraType)><extraType> extra = extraList.get(localInd);<endif>
+            <valueType> newDelta = eval(oldDelta <if(weightType)>, weights.get(i)<endif> <if(extraType)>, extra<endif>);
             <endif>
-
-            <PrimitiveMap.(keyType)> adjacencies = adjacenciesList.get(localInd);
-            <! 遍历每个邻接点 !>
-            for(int i = 0; i \< adjacencies.size(); i++){
-                <if(!IsCount.(aggrType))>
-                <valueType> newDelta = eval(oldDelta <if(weightType)>, weights.get(i)<endif> <if(extraType)>, extra<endif>);
-                <endif>
+            <keyType> adjacency = adjacencies.get(i);
+            <if(IsPairKey.(keyType))>
+            int belongToWorkerId = sliceMap.machineIndexFor(indexForTableId, adjacency.getV0());
+            <else>
+            int belongToWorkerId = sliceMap.machineIndexFor(indexForTableId, adjacency);
+            <endif>
+            if(belongToWorkerId == myWorkerId){
                 int adjacentLocalInd;
                 <!when use int as key, use key as index!>
                 <if(dynamic || !IsKeyAsIndex.(keyType))>
-                    <keyType> adjacency = adjacencies.get(i);
                     if(keyIndMap.contains(adjacency))
                         adjacentLocalInd = keyIndMap.get(adjacency);
                     else{
                         <if(IsPairKey.(keyType))>
-                        <keyType> key = indKeyMap.get(localInd);
-                        adjacentLocalInd = addEntry(key.v0, adjacency.v1, IDENTITY_ELEMENT, IDENTITY_ELEMENT);
+                        adjacentLocalInd = addEntry(adjacency.v0, adjacency.v1, IDENTITY_ELEMENT, IDENTITY_ELEMENT);
                         <elseif(IsBoolean.(valueType))>
                         adjacentLocalInd = addEntry(adjacency, false, IDENTITY_ELEMENT);
                         <else>
@@ -136,14 +111,42 @@ public class DistAsyncTable extends BaseAsyncTable{
                         <endif>
                     }
                 <else>
-                    adjacentLocalInd = adjacencies.get(i); //key for adjacent node
+                    adjacentLocalInd = adjacency - base; //key as index
                 <endif>
+
                 <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
                 <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
                 <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
                 <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+            } else {
+                MessageTable messageTable = (MessageTable)getWritableMessageTable(belongToWorkerId);
+                messageTable.apply(adjacency, newDelta);
             }
-        <endif>
+        }
+    }
+
+    @Override
+    public void applyBuffer(MessageTableBase messageTable) {
+        messageTable.get<WrappedTypeMap.(keyType)><WrappedTypeMap.(deltaType)>Map().forEach((key, delta) -> {
+            int adjacentLocalInd;
+            <if(dynamic || !IsKeyAsIndex.(keyType))>
+                if(keyIndMap.contains(key))
+                    adjacentLocalInd = keyIndMap.get(key);
+                else {
+                    <if(IsPairKey.(keyType))>
+                    adjacentLocalInd = addEntry(key.getV0(), key.getV1(), IDENTITY_ELEMENT, IDENTITY_ELEMENT);
+                    <else>
+                    adjacentLocalInd = addEntry(key, IDENTITY_ELEMENT, IDENTITY_ELEMENT);
+                    <endif>
+                }
+            <else>
+                adjacentLocalInd = key - base; //key as Index
+            <endif>
+            <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(delta.get());<endif>
+            <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(delta.get(), Math::max);<endif>
+            <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(delta.get(), Math::min);<endif>
+            <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+        });
     }
 
     <if(IsBoolean.(valueType))>
@@ -158,33 +161,32 @@ public class DistAsyncTable extends BaseAsyncTable{
 
     <if(dynamic)>
     private synchronized int addEntry(<if(IsPairKey.(keyType))>int col1OfKey, int col2OfKey<else><keyType> key<endif>, <valueType> value, <deltaType> delta){
-        <if(IsPairKey.(keyType))>
-        Pair key = new Pair(col1OfKey, col2OfKey);
-        <PrimitiveMap.(keyType)> adjacencies = col1AdjacenciesMap.get(col2OfKey);
-        if(adjacencies!=null){
-            for(int i=0;i\<adjacencies.size();i++)
-                adjacencies.set(i, new Pair(col1OfKey, adjacencies.get(i).v1));
-        }
-        <else>
-        <PrimitiveMap.(keyType)> adjacencies = col1AdjacenciesMap.get(key);
-        <if(weightType)><PrimitiveMap.(keyType)> weights = col1WeightsMap.get(key);<endif>
-        <endif>
+        <if(IsPairKey.(keyType))>Pair key = new Pair(col1OfKey, col2OfKey);<endif>
         keyIndMap.put(key, size);
         indKeyMap.put(size, key);
         valueList.add(value);
         deltaList.add(new <TypeAtomicMap.(deltaType)>(delta));
-        if(adjacencies!=null)
-            adjacenciesList.add(new <PrimitiveMap.(keyType)>(adjacencies));
-        else
-            adjacenciesList.add(new <PrimitiveMap.(keyType)>());
+        adjacenciesList.add(join(<if(IsPairKey.(keyType))>col1OfKey, col2OfKey<else>key<endif>));
         <if(weightType)>
-        if(weights!=null)
-            weightsList.add(new <PrimitiveMap.(weightType)>(weights));
-        else
-            weightsList.add(new <PrimitiveMap.(weightType)>());
+        weightsList.add(srcWeightListMap.get(key));
         <endif>
         <if(IsBoolean.(valueType))>sentFlagList.add(false);<endif>
         return size++;
+    }
+
+    private synchronized <if(IsPairKey.(keyType))>List\<Pair><else><PrimitiveMap.(keyType)><endif> join(<if(IsPairKey.(keyType))>int col1OfKey, int col2OfKey<else><keyType> key<endif>){
+        <if(IsPairKey.(keyType))>
+            <PrimitiveMap.(keyType)> dstList = srcDstListMap.get(col2OfKey);
+            if(dstList==null) return null;
+            List\<Pair> adjacencies = new ArrayList\<>();
+            for(int i=0;i\<dstList.size();i++){
+                Pair pair = new Pair(col1OfKey, dstList.get(i));
+                adjacencies.add(pair);
+            }
+            return adjacencies;
+        <else>
+            return srcDstListMap.get(key);
+        <endif>
     }
     <endif>
 
@@ -250,29 +252,23 @@ public class DistAsyncTable extends BaseAsyncTable{
     @Override
     public MyVisitorImpl getEdgeVisitor(){
         return new MyVisitorImpl() {
-            <PrimitiveMap.(keyType)> keys;
-            <if(weightType)><PrimitiveMap.(weightType)> weights;<endif>
-            <if(IsPairKey.(keyType))>int col1OfKey;<endif>
+            <PrimitiveMap.(keyType)> dstList;
+            <if(weightType)><PrimitiveMap.(weightType)> weightList;<endif>
             @Override
             public boolean visit_0(<if(IsPairKey.(keyType))>int<else><keyType><endif> key) {
-                <if(IsPairKey.(keyType))>col1OfKey = key;<endif>
-                keys = new <PrimitiveMap.(keyType)>();
-                col1AdjacenciesMap.put(key, keys);
+                dstList = new <PrimitiveMap.(keyType)>();
+                srcDstListMap.put(key, dstList);
                 <if(weightType)>
-                weights = new <PrimitiveMap.(weightType)>();
-                col1WeightsMap.put(key, weights);
+                weightList = new <PrimitiveMap.(weightType)>();
+                srcWeightListMap.put(key, weightList);
                 <endif>
                 return true;
             }
 
             @Override
-            public boolean visit(<if(IsPairKey.(keyType))>int col2OfKey<else><keyType> col2<endif> <if(weightType)>,<weightType> weight<endif>) {
-                <if(IsPairKey.(keyType))>
-                    keys.add(new Pair(col1OfKey, col2OfKey));
-                <else>
-                    keys.add(col2);
-                <endif>
-                <if(weightType)>weights.add(weight);<endif>
+            public boolean visit(<if(IsPairKey.(keyType))>int<else><keyType><endif> dst <if(weightType)>,<weightType> weight<endif>) {
+                dstList.add(dst);
+                <if(weightType)>weightList.add(weight);<endif>
                 return true;
             }
         };
@@ -340,41 +336,7 @@ public class DistAsyncTable extends BaseAsyncTable{
     }
 
     <if(IsPairKey.(keyType))>
-    private class Pair {
-        final int v0;
-        final int v1;
-        private int hashCode = -1;
 
-        Pair(int v0, int v1) {
-            this.v0 = v0;
-            this.v1 = v1;
-        }
-
-        @Override
-        public String toString() {
-            return v0 + " " + v1;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            Pair pair = (Pair) o;
-
-            if (v0 != pair.v0) return false;
-            return v1 == pair.v1;
-        }
-
-        @Override
-        public int hashCode() {
-            if (hashCode != -1)
-                return hashCode;
-            hashCode = v0;
-            hashCode = 31 * hashCode + v1;
-            return hashCode;
-        }
-    }
     <endif>
 }
 >>

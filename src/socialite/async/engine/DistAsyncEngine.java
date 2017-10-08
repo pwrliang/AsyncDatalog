@@ -7,20 +7,17 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import socialite.async.AsyncConfig;
 import socialite.async.analysis.AsyncAnalysis;
-import socialite.async.codegen.DistAsyncCodeGen;
+import socialite.async.codegen.AsyncCodeGenMain;
 import socialite.async.dist.ds.MsgType;
-import socialite.async.util.SerializeTool;
 import socialite.async.util.TextUtils;
 import socialite.codegen.Analysis;
-import socialite.engine.ClientEngine;
+import socialite.engine.LocalEngine;
 import socialite.parser.DeltaRule;
 import socialite.parser.Parser;
 import socialite.parser.Rule;
 import socialite.parser.antlr.TableDecl;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -30,11 +27,10 @@ public class DistAsyncEngine implements Runnable {
     private static final Log L = LogFactory.getLog(DistAsyncEngine.class);
     private int workerNum;
     private StopWatch stopWatch;
-        private ClientEngine clientEngine=new ClientEngine();
-//    private LocalEngine clientEngine=new LocalEngine();
+    //        private ClientEngine clientEngine=new ClientEngine();
+    private LocalEngine clientEngine = new LocalEngine();
     private AsyncAnalysis asyncAnalysis;
-    private DistAsyncCodeGen distAsyncCodeGen;
-
+    private AsyncCodeGenMain asyncCodeGenMain;
 
     public DistAsyncEngine(String program, int workerNum) {
         this.workerNum = workerNum;
@@ -50,27 +46,32 @@ public class DistAsyncEngine implements Runnable {
         List<Rule> rules = tmpAn.getEpochs().stream().flatMap(epoch -> epoch.getRules().stream()).filter(rule -> !(rule instanceof DeltaRule)
                 && !rule.toString().contains("Remote_")).collect(Collectors.toList()); //get rid of DeltaRule and Remote_rule
         //由socialite执行表创建和非递归规则
-        decls.forEach(clientEngine::run);
+        if (!AsyncConfig.get().isDebugging())
+            decls.forEach(clientEngine::run);
+
+        boolean existLeftRec = rules.stream().anyMatch(Rule::isLeftRec);
         for (Rule rule : rules) {
-            L.info("exec: " + rule);
-            if (!rule.isLeftRec()) {
-                clientEngine.run(rule.getRuleText());
-            } else {//process recursive rules
+            boolean added = false;
+            if (existLeftRec) {
+                if (rule.isLeftRec()) {
+                    asyncAnalysis.addRecRule(rule);
+                    added = true;
+                }
+            } else if (rule.inScc()) {
                 asyncAnalysis.addRecRule(rule);
+                added = true;
             }
+            if (!AsyncConfig.get().isDebugging())
+                if (!added)
+                    clientEngine.run(rule.getRuleText());
         }
-        asyncAnalysis.analysis();
-        distAsyncCodeGen = new DistAsyncCodeGen(asyncAnalysis);
-        for (String initRule : distAsyncCodeGen.generateInitStat()) {
-            L.info("exec: " + initRule);
-            clientEngine.run(initRule);
+    }
+
+    private void compile() {
+        if (asyncAnalysis.analysis()) {
+            asyncCodeGenMain = new AsyncCodeGenMain(asyncAnalysis);
+            asyncCodeGenMain.generateDist();
         }
-//        clientEngine.run("?- AsyncTableSingle_sssp_mid(x, r, d, y).", new QueryVisitor() {
-//            @Override
-//            public boolean visit(Tuple _0) {
-//                return super.visit(_0);
-//            }
-//        });
     }
 
     @Override
@@ -91,7 +92,7 @@ public class DistAsyncEngine implements Runnable {
         clientEngine.run("Middle(key, r, degree, adj) :- Rank(key, r), Edge(key, adj), EdgeCnt(key, degree).");
 
         IntStream.rangeClosed(1, workerNum).forEach(dest ->
-            MPI.COMM_WORLD.Send(new byte[1], 0, 1, MPI.BYTE, dest, MsgType.NOTIFY_INIT.ordinal())
+                MPI.COMM_WORLD.Send(new byte[1], 0, 1, MPI.BYTE, dest, MsgType.NOTIFY_INIT.ordinal())
         );
     }
 
@@ -129,12 +130,8 @@ public class DistAsyncEngine implements Runnable {
 
 
     public static void main(String[] args) {
-        AsyncConfig asyncConfig = new AsyncConfig.Builder()
-//                .setCheckInterval(1500)
-                .setCheckerType(AsyncConfig.CheckerType.DELTA)
-                .setCheckerCond(AsyncConfig.Cond.LE)
-                .setThreshold(0.00001)
-                .build();
-        DistAsyncEngine distAsyncEngine = new DistAsyncEngine(TextUtils.readText(args[0]), 4);
+        AsyncConfig.parse(TextUtils.readText(args[0]));
+        DistAsyncEngine distAsyncEngine = new DistAsyncEngine(AsyncConfig.get().getDatalogProg(), 4);
+        distAsyncEngine.compile();
     }
 }

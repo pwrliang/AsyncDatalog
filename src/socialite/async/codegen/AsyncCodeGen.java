@@ -4,9 +4,14 @@ import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import socialite.async.AsyncConfig;
 import socialite.async.analysis.AsyncAnalysis;
+import socialite.async.atomic.MyAtomicDouble;
 import socialite.engine.Config;
 import socialite.util.Assert;
+import socialite.util.AtomicDouble;
 import socialite.util.MySTGroupFile;
+
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 
 public class AsyncCodeGen {
     private AsyncAnalysis asyncAn;
@@ -34,6 +39,17 @@ public class AsyncCodeGen {
         return st.render();
     }
 
+    String generateMessageTable(){
+        STGroup stg = new MySTGroupFile(AsyncCodeGen.class.getResource("MessageTable.stg"),
+                "UTF-8", '<', '>');
+        stg.load();
+        ST st = stg.getInstanceOf("MessageTable");
+        st.add("keyType", asyncAn.getKeyType());
+        st.add("deltaType", asyncAn.getDeltaType());
+        st.add("aggrType", asyncAn.getAggrName());
+        return st.render();
+    }
+
     String generateAsyncTable() {
         STGroup stg = new MySTGroupFile(AsyncCodeGen.class.getResource("AsyncTable.stg"),
                 "UTF-8", '<', '>');
@@ -48,6 +64,23 @@ public class AsyncCodeGen {
         st.add("extraType", asyncAn.getExtraType());
         st.add("expr", asyncAn.getsExpr());
         st.add("dynamic", asyncConfig.isDynamic());
+        return st.render();
+    }
+
+    String generateDistAsyncTable(){
+        STGroup stg = new MySTGroupFile(AsyncCodeGen.class.getResource("AsyncTable.stg"),
+                "UTF-8", '<', '>');
+        stg.load();
+        ST st = stg.getInstanceOf("DistAsyncTable");
+        st.add("name", asyncAn.getResultPName());
+        st.add("dynamic", asyncConfig.isDynamic());
+        st.add("keyType", asyncAn.getKeyType());
+        st.add("valueType", asyncAn.getValueType());
+        st.add("deltaType", asyncAn.getDeltaType());
+        st.add("aggrType", asyncAn.getAggrName());
+        st.add("weightType", asyncAn.getWeightType());
+        st.add("extraType", asyncAn.getExtraType());
+        st.add("expr", asyncAn.getsExpr());
         return st.render();
     }
 

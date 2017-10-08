@@ -12,3 +12,7 @@ edge(s, d) :- l=$read("E:\\socialite-before-yarn\\examples\\prog4_edge.txt"),  (
                      s=$toInt(s1), d=$toInt(s2).
 cpaths(x, y, 1) :- edge(x, y).
 cpaths(X, Y, $dcount(C1)) :- cpaths(X, Z, C), edge(Z, Y), C1 = C.
+
+#dist
+#cpaths(int src, (int dst:0..5, int count)).
+#cpaths(X, Y, $dcount(C1)) :- cpaths(Z, X, C), edge(Z, Y), C1 = C.

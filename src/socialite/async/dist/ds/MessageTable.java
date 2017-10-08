@@ -46,7 +46,7 @@ public class MessageTable extends MessageTableBase{
         updateCounter.set(0);
     }
 
-    public Map getKeyDeltaMap() {
+    public Map<Integer, MyAtomicDouble> getKeyDeltaMap() {
         return keyDeltaMap;
     }
 }

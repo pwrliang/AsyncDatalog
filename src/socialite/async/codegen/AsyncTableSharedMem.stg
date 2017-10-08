@@ -27,6 +27,7 @@ public class AsyncTable extends BaseAsyncTable{
     <endif>
     <if(IsBoolean.(valueType))>private List\<Boolean> sentFlagList;<endif>
 
+    private int size;
 
     <if(IsInt.(deltaType))>
     public static final <deltaType> IDENTITY_ELEMENT = <IntegerIdentityElement.(aggrType)>;
@@ -38,7 +39,6 @@ public class AsyncTable extends BaseAsyncTable{
     public static final <deltaType> IDENTITY_ELEMENT = <DoubleIdentityElement.(aggrType)>;
     <endif>
 
-    private int size;
 
     public AsyncTable(int initSize){
         <if(dynamic || !IsKeyAsIndex.(keyType))>
@@ -65,14 +65,12 @@ public class AsyncTable extends BaseAsyncTable{
     public void updateLockFree(int localInd) {
         <if(IsBoolean.(valueType))>
             if (sentFlagList.get(localInd)){
-                //L.info("sentFlagList return");
                 return;
             }
             <deltaType> oldDelta = deltaList.get(localInd).get();
             if (eval(oldDelta))
                 valueList.set(localInd, true);
             if (!valueList.get(localInd)){
-                //L.info("valueList return");
                 return;
             }
             <PrimitiveMap.(keyType)> adjacencies = adjacenciesList.get(localInd);
@@ -87,6 +85,7 @@ public class AsyncTable extends BaseAsyncTable{
                     else {
                         adjacentLocalInd = addEntry(adjacency, false, IDENTITY_ELEMENT);
                     }
+                    <!BUG!!!!!!!!!!!!!!!!!!>
                     <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
                     <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
                     <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
@@ -116,34 +115,31 @@ public class AsyncTable extends BaseAsyncTable{
 
             <if(IsPairKey.(keyType))>List\<Pair><else><PrimitiveMap.(keyType)><endif> adjacencies = adjacenciesList.get(localInd);
             <! 遍历每个邻接点 !>
-            if(adjacencies!=null){
-                for(int i = 0; i \< adjacencies.size(); i++){
-                    <if(!IsCount.(aggrType))>
-                    <valueType> newDelta = eval(oldDelta <if(weightType)>, weights.get(i)<endif> <if(extraType)>, extra<endif>);
-                    <endif>
-                    int adjacentLocalInd;
-                    <!when use int as key, use key as index!>
-                    <if(dynamic || !IsKeyAsIndex.(keyType))>
-                        <keyType> adjacency = adjacencies.get(i);
-                        if(keyIndMap.contains(adjacency))
-                            adjacentLocalInd = keyIndMap.get(adjacency);
-                        else{
-                            <if(IsPairKey.(keyType))>
-                            adjacentLocalInd = addEntry(adjacency.v0, adjacency.v1, IDENTITY_ELEMENT, IDENTITY_ELEMENT);
-                            <elseif(IsBoolean.(valueType))>
-                            adjacentLocalInd = addEntry(adjacency, false, IDENTITY_ELEMENT);
-                            <else>
-                            adjacentLocalInd = addEntry(adjacency, IDENTITY_ELEMENT, IDENTITY_ELEMENT);
-                            <endif>
-                        }
-                    <else>
-                        adjacentLocalInd = adjacencies.get(i); //key for adjacent node
-                    <endif>
-                    <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
-                    <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
-                    <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
-                    <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
-                }
+            if(adjacencies==null)return;
+            for(int i = 0; i \< adjacencies.size(); i++){
+                <if(!IsCount.(aggrType))>
+                <valueType> newDelta = eval(oldDelta <if(weightType)>, weights.get(i)<endif> <if(extraType)>, extra<endif>);
+                <endif>
+                int adjacentLocalInd;
+                <!when use int as key, use key as index!>
+                <if(dynamic || !IsKeyAsIndex.(keyType))>
+                    <keyType> adjacency = adjacencies.get(i);
+                    if(keyIndMap.contains(adjacency))
+                        adjacentLocalInd = keyIndMap.get(adjacency);
+                    else{
+                        <if(IsPairKey.(keyType))>
+                        adjacentLocalInd = addEntry(adjacency.getV0(), adjacency.getV1(), IDENTITY_ELEMENT, IDENTITY_ELEMENT);
+                        <else>
+                        adjacentLocalInd = addEntry(adjacency, IDENTITY_ELEMENT, IDENTITY_ELEMENT);
+                        <endif>
+                    }
+                <else>
+                    adjacentLocalInd = adjacencies.get(i); //key for adjacent node
+                <endif>
+                <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
+                <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
+                <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
+                <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
             }
         <endif>
     }
@@ -333,43 +329,5 @@ public class AsyncTable extends BaseAsyncTable{
     public int getSize(){
         return size;
     }
-
-    <if(IsPairKey.(keyType))>
-    private class Pair {
-        final int v0;
-        final int v1;
-        private int hashCode = -1;
-
-        Pair(int v0, int v1) {
-            this.v0 = v0;
-            this.v1 = v1;
-        }
-
-        @Override
-        public String toString() {
-            return v0 + " " + v1;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            Pair pair = (Pair) o;
-
-            if (v0 != pair.v0) return false;
-            return v1 == pair.v1;
-        }
-
-        @Override
-        public int hashCode() {
-            if (hashCode != -1)
-                return hashCode;
-            hashCode = v0;
-            hashCode = 31 * hashCode + v1;
-            return hashCode;
-        }
-    }
-    <endif>
 }
 >>

@@ -8,7 +8,6 @@ import socialite.util.Loader;
 import socialite.util.SociaLiteException;
 
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,22 +22,63 @@ public class AsyncCodeGenMain {
         this.asyncAn = asyncAn;
     }
 
-    public void generate() {
-        generateInitTableStats();
-        genAsyncTable();
+    public void generateSharedMem() {
+        genInitTableStats();
+        compileAsyncTable();
         L.info("AsyncTable compiled");
-        genRuntime();
+        compileRuntime();
         L.info("AsyncRuntime compiled");
     }
 
-    public void generateInitTableStats(){
-        AsyncCodeGen asyncCodeGen = new AsyncCodeGen(asyncAn);
-        String stats = asyncCodeGen.generateInitTable();
-        String[] statArr = stats.replace("\r","").replace("\n","").split("\\$");
-        initStats= Arrays.stream(statArr).map(String::trim).collect(Collectors.toList());
+    public void generateDist() {
+        compileMessageTable();
+        L.info("MessageTable compiled");
+        compileDistAsyncTable();
+        L.info("DistAsyncTable compiled");
     }
 
-    public void genAsyncTable() {
+    public void compileMessageTable() {
+        AsyncCodeGen asyncCodeGen = new AsyncCodeGen(asyncAn);
+        String messageTableCode = asyncCodeGen.generateMessageTable();
+        String className = "MessageTable";
+        Compiler c = new Compiler();
+        boolean success = c.compile(PACKAGE_NAME + "." + className, messageTableCode);
+        if (c.getCompiledClasses().size() == 0) {
+            L.warn(PACKAGE_NAME + "." + className + " already compiled");
+
+        }
+        if (!success) {
+            String msg = "Compilation error for " + className;
+            msg += " " + c.getErrorMsg();
+            throw new SociaLiteException(msg);
+        }
+    }
+
+    public void compileDistAsyncTable() {
+        AsyncCodeGen asyncCodeGen = new AsyncCodeGen(asyncAn);
+        String distAsyncTableCode = asyncCodeGen.generateDistAsyncTable();
+        String className = "DistAsyncTable";
+        Compiler c = new Compiler();
+        boolean success = c.compile(PACKAGE_NAME + "." + className, distAsyncTableCode);
+        if (c.getCompiledClasses().size() == 0) {
+            L.warn(PACKAGE_NAME + "." + className + " already compiled");
+
+        }
+        if (!success) {
+            String msg = "Compilation error for " + className;
+            msg += " " + c.getErrorMsg();
+            throw new SociaLiteException(msg);
+        }
+    }
+
+    public void genInitTableStats() {
+        AsyncCodeGen asyncCodeGen = new AsyncCodeGen(asyncAn);
+        String stats = asyncCodeGen.generateInitTable();
+        String[] statArr = stats.replace("\r", "").replace("\n", "").split("\\$");
+        initStats = Arrays.stream(statArr).map(String::trim).collect(Collectors.toList());
+    }
+
+    private void compileAsyncTable() {
         AsyncCodeGen asyncCodeGen = new AsyncCodeGen(asyncAn);
         String asyncTableCode = asyncCodeGen.generateAsyncTable();
         String className = "AsyncTable";
@@ -55,7 +95,7 @@ public class AsyncCodeGenMain {
         }
     }
 
-    public void genRuntime() {
+    private void compileRuntime() {
         AsyncCodeGen asyncCodeGen = new AsyncCodeGen(asyncAn);
         String runtimeCode = asyncCodeGen.generateAsyncRuntime();
         String className = "AsyncRuntime";
@@ -72,6 +112,10 @@ public class AsyncCodeGenMain {
         runtimeClass = Loader.forName(PACKAGE_NAME + "." + className);
         if (runtimeClass == null)
             throw new SociaLiteException("Load Runtime Fail!!!");
+    }
+
+    private void compileDistRuntime() {
+
     }
 
     public List<String> getInitStats() {

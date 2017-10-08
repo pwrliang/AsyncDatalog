@@ -21,20 +21,20 @@ public class MessageTable extends MessageTableBase {
 
     public MessageTable(int initSize) {
         updateCounter = new MyAtomicInteger(0);
-        keyDeltaMap = new ConcurrentHashMap<>(initSize);
+        keyDeltaMap = new ConcurrentHashMap\<>(initSize);
     }
 
-    public void apply(<WrappedTypeMap.(keyType)> key, <deltaType> delta) {
+    public void apply(<WrappedTypeMap.(keyType)> key<if(!IsCount.(aggrType))>, <deltaType> delta<endif>) {
         <TypeAtomicMap.(deltaType)> atomicDelta = keyDeltaMap.putIfAbsent(key, new <TypeAtomicMap.(deltaType)>(delta));
         if (atomicDelta != null) {
-            <if(IsSum.(aggrType)) )>
+            <if(IsSum.(aggrType))>
             atomicDelta.accumulateAndGet(delta, <WrappedTypeMap.(deltaType)>::sum);
             <elseif(IsMax.(aggrType))>
             atomicDelta.accumulateAndGet(delta, <WrappedTypeMap.(deltaType)>::max);
             <elseif(IsMin.(aggrType))>
             atomicDelta.accumulateAndGet(delta, <WrappedTypeMap.(deltaType)>::min);
             <elseif(IsCount.(aggrType))>
-            atomicDelta.accumulateAndGet(delta, <WrappedTypeMap.(deltaType)>::sum);
+            atomicDelta.addAndGet(1);
             <endif>
         }
         updateCounter.addAndGet(1);
@@ -47,8 +47,9 @@ public class MessageTable extends MessageTableBase {
     }
 
     @Override
-    public Map\<<WrappedTypeMap.(keyType)> key, <TypeAtomicMap.(deltaType)>\> getKeyDeltaMap() {
+    public Map\<<WrappedTypeMap.(keyType)>, <TypeAtomicMap.(deltaType)>\> get<WrappedTypeMap.(keyType)><WrappedTypeMap.(deltaType)>Map() {
         return keyDeltaMap;
     }
+
 }
 >>
