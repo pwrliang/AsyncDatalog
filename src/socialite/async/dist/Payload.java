@@ -10,6 +10,7 @@ public class Payload {
     private AsyncConfig asyncConfig;
     private Payload(){}
     public Payload(AsyncConfig asyncConfig, LinkedHashMap<String, byte[]> byteCodes, String edgeTableName){
+        this.asyncConfig = asyncConfig;
         this.byteCodes=byteCodes;
         this.edgeTableName=edgeTableName;
     }

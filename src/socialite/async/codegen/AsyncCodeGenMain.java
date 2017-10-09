@@ -34,6 +34,7 @@ public class AsyncCodeGenMain {
     }
 
     public void generateDist() {
+        genInitTableStats();
         compileMessageTable();
         L.info("MessageTable compiled");
         compileDistAsyncTable();

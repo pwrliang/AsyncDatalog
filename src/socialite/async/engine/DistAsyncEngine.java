@@ -63,8 +63,10 @@ public class DistAsyncEngine implements Runnable {
                 added = true;
             }
             if (!AsyncConfig.get().isDebugging())
-                if (!added)
+                if (!added) {
+                    L.info("exec rule "+rule.getRuleText());
                     clientEngine.run(rule.getRuleText());
+                }
         }
     }
 

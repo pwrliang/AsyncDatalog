@@ -1,12 +1,21 @@
 package socialite.async.codegen;
 
 
-import socialite.async.atomic.*;
+import socialite.async.atomic.MyAtomicDouble;
+import socialite.async.atomic.MyAtomicFloat;
+import socialite.async.atomic.MyAtomicInteger;
+import socialite.async.atomic.MyAtomicLong;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
 import java.util.Map;
 
 public abstract class MessageTableBase {
-    transient MyAtomicInteger updateCounter;
+    protected transient MyAtomicInteger updateCounter;
+
+    protected MessageTableBase() {
+        updateCounter = new MyAtomicInteger(0);
+    }
+
 
     public int getUpdateTimes() {
         return updateCounter.intValue();

@@ -16,12 +16,12 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 public abstract class BaseDistAsyncTable extends BaseAsyncTable {
     private AtomicIntegerArray messageTableSelector;
     private MessageTableBase[][] messageTableList;
-    final int workerNum;
-    final int myWorkerId;
-    final DistTableSliceMap sliceMap;
-    final int indexForTableId;
-    final int messageTableUpdateThreshold;
-    final int initSize;
+    protected final int workerNum;
+    protected final int myWorkerId;
+    protected final DistTableSliceMap sliceMap;
+    protected final int indexForTableId;
+    protected final int messageTableUpdateThreshold;
+    protected final int initSize;
     public BaseDistAsyncTable(Class<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId) {
         this.workerNum = Config.getWorkerNodeNum();
         this.myWorkerId = MPI.COMM_WORLD.Rank()-1;

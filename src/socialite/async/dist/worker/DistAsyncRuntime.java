@@ -50,11 +50,20 @@ public class DistAsyncRuntime implements Runnable {
     @Override
     public void run() {
         waitingCmd();
-//        loadData();
-//        createThreads();
-//        arrangeTask();
-//        startThreads();
-        L.info(String.format("Worker %d all threads started.", myWorkerId));
+        if (loadData()) {//this worker is idle, stop
+            createThreads();
+            arrangeTask();
+            startThreads();
+            L.info(String.format("Worker %d all threads started.", myWorkerId));
+        } else {//this worker is idle, only start checker
+            checkerThread = new CheckerThread();
+            checkerThread.start();
+            try {
+                checkerThread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void waitingCmd() {
@@ -68,10 +77,10 @@ public class DistAsyncRuntime implements Runnable {
         threadNum = AsyncConfig.get().getThreadNum();
     }
 
-    private void loadData() {
+    private boolean loadData() {
         Loader.loadFromBytes(payload.getByteCodes());
-        Class<?> messageTableClass = Loader.forName("MessageTable");
-        Class<?> distAsyncTableClass = Loader.forName("DistAsyncName");
+        Class<?> messageTableClass = Loader.forName("socialite.async.codegen.MessageTable");
+        Class<?> distAsyncTableClass = Loader.forName("socialite.async.codegen.DistAsyncTable");
         try {
             SRuntimeWorker runtimeWorker = SRuntimeWorker.getInst();
             TableInstRegistry tableInstRegistry = runtimeWorker.getTableRegistry();
@@ -84,7 +93,10 @@ public class DistAsyncRuntime implements Runnable {
             int indexForTableid;
             if (AsyncConfig.get().isDynamic()) {
                 TableInst edgeInst = Arrays.stream(edgeTableInstArr).filter(tableInst -> !tableInst.isEmpty()).findFirst().orElse(null);
-                assert edgeInst != null;
+                if (edgeInst == null) {
+                    L.warn("worker " + myWorkerId + " has no job");
+                    return false;
+                }
                 Method method = edgeInst.getClass().getMethod("tableid");
                 indexForTableid = (Integer) method.invoke(edgeInst);
                 //public DistAsyncTable(Class\<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId) {
@@ -99,9 +111,13 @@ public class DistAsyncRuntime implements Runnable {
                     }
                 }
             } else {
-                TableInst edgeInst = Arrays.stream(initTableInstArr).filter(tableInst -> !tableInst.isEmpty()).findFirst().orElse(null);
-                Method method = edgeInst.getClass().getMethod("tableid");
-                indexForTableid = (Integer) method.invoke(edgeInst);
+                TableInst initTableInst = Arrays.stream(initTableInstArr).filter(tableInst -> !tableInst.isEmpty()).findFirst().orElse(null);
+                if (initTableInst == null) {
+                    L.warn("worker " + myWorkerId + " has no job");
+                    return false;
+                }
+                Method method = initTableInst.getClass().getMethod("tableid");
+                indexForTableid = (Integer) method.invoke(initTableInst);
                 Field baseField = initTableInstArr[0].getClass().getDeclaredField("base");
                 baseField.setAccessible(true);
                 int base = baseField.getInt(Arrays.stream(initTableInstArr).filter(tableInst -> !tableInst.isEmpty()).findFirst().orElse(null));
@@ -110,6 +126,7 @@ public class DistAsyncRuntime implements Runnable {
                 distAsyncTable = (BaseDistAsyncTable) constructor.newInstance(messageTableClass, sliceMap, indexForTableid, base);
             }
 
+
             Method method = initTableInstArr[0].getClass().getDeclaredMethod("iterate", VisitorImpl.class);
             for (TableInst tableInst : initTableInstArr) {
                 if (!tableInst.isEmpty()) {
@@ -117,10 +134,12 @@ public class DistAsyncRuntime implements Runnable {
                     //tableInst.clear();
                 }
             }
+
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException | NoSuchFieldException e) {
             e.printStackTrace();
         }
         L.info("Data Loaded size:" + distAsyncTable.getSize());
+        return true;
     }
 
     private void createThreads() {
@@ -266,27 +285,29 @@ public class DistAsyncRuntime implements Runnable {
 
         @Override
         public void run() {
-            while (!stop) {
+            while (true) {
                 MPI.COMM_WORLD.Recv(new byte[1], 0, 1, MPI.BYTE, AsyncMaster.ID, MsgType.REQUIRE_TERM_CHECK.ordinal());
                 double sum = 0;
-                if (AsyncConfig.get().getCheckType() == AsyncConfig.CheckerType.DELTA) {
-                    if (distAsyncTable.accumulateDelta() instanceof Integer)
-                        sum = ((Integer) distAsyncTable.accumulateDelta()) + 0.0d;
-                    else if (distAsyncTable.accumulateDelta() instanceof Long)
-                        sum = ((Long) distAsyncTable.accumulateDelta()) + 0.0d;
-                    else if (distAsyncTable.accumulateDelta() instanceof Float)
-                        sum = ((Float) distAsyncTable.accumulateDelta()) + 0.0d;
-                    else if (distAsyncTable.accumulateDelta() instanceof Double)
-                        sum = ((Double) distAsyncTable.accumulateDelta()) + 0.0d;
-                } else if (AsyncConfig.get().getCheckType() == AsyncConfig.CheckerType.VALUE) {
-                    if (distAsyncTable.accumulateValue() instanceof Integer)
-                        sum = ((Integer) distAsyncTable.accumulateValue()) + 0.0d;
-                    else if (distAsyncTable.accumulateValue() instanceof Long)
-                        sum = ((Long) distAsyncTable.accumulateValue()) + 0.0d;
-                    else if (distAsyncTable.accumulateValue() instanceof Float)
-                        sum = ((Float) distAsyncTable.accumulateValue()) + 0.0d;
-                    else if (distAsyncTable.accumulateValue() instanceof Double)
-                        sum = ((Double) distAsyncTable.accumulateValue()) + 0.0d;
+                if (distAsyncTable != null) {//null indicate this worker is idle
+                    if (AsyncConfig.get().getCheckType() == AsyncConfig.CheckerType.DELTA) {
+                        if (distAsyncTable.accumulateDelta() instanceof Integer)
+                            sum = ((Integer) distAsyncTable.accumulateDelta()) + 0.0d;
+                        else if (distAsyncTable.accumulateDelta() instanceof Long)
+                            sum = ((Long) distAsyncTable.accumulateDelta()) + 0.0d;
+                        else if (distAsyncTable.accumulateDelta() instanceof Float)
+                            sum = ((Float) distAsyncTable.accumulateDelta()) + 0.0d;
+                        else if (distAsyncTable.accumulateDelta() instanceof Double)
+                            sum = ((Double) distAsyncTable.accumulateDelta()) + 0.0d;
+                    } else if (AsyncConfig.get().getCheckType() == AsyncConfig.CheckerType.VALUE) {
+                        if (distAsyncTable.accumulateValue() instanceof Integer)
+                            sum = ((Integer) distAsyncTable.accumulateValue()) + 0.0d;
+                        else if (distAsyncTable.accumulateValue() instanceof Long)
+                            sum = ((Long) distAsyncTable.accumulateValue()) + 0.0d;
+                        else if (distAsyncTable.accumulateValue() instanceof Float)
+                            sum = ((Float) distAsyncTable.accumulateValue()) + 0.0d;
+                        else if (distAsyncTable.accumulateValue() instanceof Double)
+                            sum = ((Double) distAsyncTable.accumulateValue()) + 0.0d;
+                    }
                 }
                 partialValue[0] = sum;
                 L.info("Worker " + myWorkerId + " sum of delta: " + sum);
@@ -306,11 +327,35 @@ public class DistAsyncRuntime implements Runnable {
     }
 
     private void saveResult() {
+        if (distAsyncTable == null) return;
+        L.info("worker " + myWorkerId + " saving...");
         distAsyncTable.iterate(new MyVisitorImpl() {
+
             @Override
             public boolean visit(int a1, double a2, double a3) {
-                L.info("machine: " + (myWorkerId + 1) + "\t" + a1 + "\t" + a2 + "\t" + a3);
-                return false;
+                System.out.println(a1 + " " + a2 + " " + a3);
+                return true;
+            }
+
+            //CC
+            @Override
+            public boolean visit(int a1, int a2, int a3) {
+                System.out.println(a1 + " " + a2 + " " + a3);
+                return true;
+            }
+
+            //COUNT PATH IN DAG
+            @Override
+            public boolean visit(Object a1, int a2, int a3) {
+                System.out.println(a1 + " " + a2 + " " + a3);
+                return true;
+            }
+
+            //PARTY
+            @Override
+            public boolean visit(int a1) {
+                System.out.println(a1);
+                return true;
             }
         });
     }
