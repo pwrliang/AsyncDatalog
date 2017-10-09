@@ -11,7 +11,6 @@ import socialite.async.codegen.AsyncCodeGenMain;
 import socialite.async.dist.MsgType;
 import socialite.async.dist.Payload;
 import socialite.async.util.SerializeTool;
-import socialite.async.util.TextUtils;
 import socialite.codegen.Analysis;
 import socialite.engine.ClientEngine;
 import socialite.parser.DeltaRule;
@@ -25,8 +24,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class DistAsyncEngine implements Runnable {
-    public static final double THRESHOLD = 0.9999;
-    public static final int TERM_CHECK_INTERVAL = 2000;
     private static final Log L = LogFactory.getLog(DistAsyncEngine.class);
     private int workerNum;
     private StopWatch stopWatch;
@@ -35,7 +32,7 @@ public class DistAsyncEngine implements Runnable {
     private AsyncCodeGenMain asyncCodeGenMain;
 
     public DistAsyncEngine(String program) {
-        workerNum = MPI.COMM_WORLD.Rank() - 1;
+        workerNum = MPI.COMM_WORLD.Size() - 1;
         clientEngine = new ClientEngine();
         Parser parser = new Parser(program);
         parser.parse(program);
@@ -48,7 +45,10 @@ public class DistAsyncEngine implements Runnable {
                 && !rule.toString().contains("Remote_")).collect(Collectors.toList()); //get rid of DeltaRule and Remote_rule
         //由socialite执行表创建和非递归规则
         if (!AsyncConfig.get().isDebugging())
-            decls.forEach(clientEngine::run);
+            decls.forEach(stat->{
+                L.info(stat);
+                clientEngine.run(stat);
+            });
 
         boolean existLeftRec = rules.stream().anyMatch(Rule::isLeftRec);
         for (Rule rule : rules) {
@@ -78,7 +78,7 @@ public class DistAsyncEngine implements Runnable {
     @Override
     public void run() {
         compile();
-        loadData();
+        sendCmd();
         FeedBackThread feedBackThread = new FeedBackThread();
         feedBackThread.start();
         try {
@@ -88,7 +88,7 @@ public class DistAsyncEngine implements Runnable {
         }
     }
 
-    private void loadData() {
+    private void sendCmd() {
         List<String> initStats = asyncCodeGenMain.getInitStats();
         if (!AsyncConfig.get().isDebugging())
             initStats.forEach(initStat -> clientEngine.run(initStat));
@@ -126,7 +126,7 @@ public class DistAsyncEngine implements Runnable {
                         L.info("TERM_CHECK_DETERMINED_TO_STOP ELAPSED " + stopWatch.getTime());
                         break;
                     }
-                    Thread.sleep(TERM_CHECK_INTERVAL);
+                    Thread.sleep(AsyncConfig.get().getCheckInterval());
                 }
             } catch (MPIException | InterruptedException e) {
                 e.printStackTrace();

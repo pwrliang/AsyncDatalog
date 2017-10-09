@@ -1,0 +1,55 @@
+import "Utils.stg"
+
+MessageTable(keyType, deltaType, aggrType) ::= <<
+package socialite.async.codegen;
+<importForMsgTable()>
+public class MessageTable extends MessageTableBase {
+    <! keyType should be int\long\key !>
+    private Map\<<WrappedTypeMap.(keyType)>, <TypeAtomicMap.(deltaType)>\> keyDeltaMap;
+    <if(IsInt.(deltaType))>
+    public static final <deltaType> IDENTITY_ELEMENT = <IntegerIdentityElement.(aggrType)>;
+    <elseif(IsLong.(deltaType))>
+    public static final <deltaType> IDENTITY_ELEMENT = <LongIdentityElement.(aggrType)>;
+    <elseif(IsFloat.(deltaType))>
+    public static final <deltaType> IDENTITY_ELEMENT = <FloatIdentityElement.(aggrType)>;
+    <elseif(IsDouble.(deltaType))>
+    public static final <deltaType> IDENTITY_ELEMENT = <DoubleIdentityElement.(aggrType)>;
+    <endif>
+    private MessageTable(){
+        //constructor for kryo
+    }
+
+    public MessageTable(int initSize) {
+        updateCounter = new MyAtomicInteger(0);
+        keyDeltaMap = new ConcurrentHashMap\<>(initSize);
+    }
+
+    public void apply(<WrappedTypeMap.(keyType)> key<if(!IsCount.(aggrType))>, <deltaType> delta<endif>) {
+        <TypeAtomicMap.(deltaType)> atomicDelta = keyDeltaMap.putIfAbsent(key, new <TypeAtomicMap.(deltaType)>(delta));
+        if (atomicDelta != null) {
+            <if(IsSum.(aggrType))>
+            atomicDelta.accumulateAndGet(delta, <WrappedTypeMap.(deltaType)>::sum);
+            <elseif(IsMax.(aggrType))>
+            atomicDelta.accumulateAndGet(delta, <WrappedTypeMap.(deltaType)>::max);
+            <elseif(IsMin.(aggrType))>
+            atomicDelta.accumulateAndGet(delta, <WrappedTypeMap.(deltaType)>::min);
+            <elseif(IsCount.(aggrType))>
+            atomicDelta.addAndGet(1);
+            <endif>
+        }
+        updateCounter.addAndGet(1);
+    }
+
+    @Override
+    public void resetDelta() {
+        keyDeltaMap.values().forEach(delta -> delta.set(IDENTITY_ELEMENT));
+        updateCounter.set(0);
+    }
+
+    @Override
+    public Map\<<WrappedTypeMap.(keyType)>, <TypeAtomicMap.(deltaType)>\> get<WrappedTypeMap.(keyType)><WrappedTypeMap.(deltaType)>Map() {
+        return keyDeltaMap;
+    }
+
+}
+>>

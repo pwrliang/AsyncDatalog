@@ -11,9 +11,9 @@ import socialite.tables.Tuple;
 public class ClientTest {
     public static void main(String[] args) throws InterruptedException {
         //-Dsocialite.worker.num=8 -Dsocialite.port=50100 -Dsocialite.master=localhost -Dlog4j.configuration=file:/E:/socialite-dc0d53aa669a1b707d31bdb476c379a2b1ee88be/conf/log4j.properties
-//        MasterNode.startMasterNode();
-//        while (MasterNode.getInstance().getQueryListener().getDistEngine() == null)
-//            Thread.sleep(100);
+        MasterNode.startMasterNode();
+        while (MasterNode.getInstance().getQueryListener().getDistEngine() == null)
+            Thread.sleep(100);
 //        ClientEngine clientEngine = new ClientEngine();
 //        clientEngine.run(TextUtils.readText(args[0]));
 //        clientEngine.run("Middle(int Key, double initD, int adj, int degree).");
@@ -25,8 +25,8 @@ public class ClientTest {
 //            }
 //        },0);
 //        clientEngine.shutdown();
-        LocalEngine localEngine = new LocalEngine();
-        localEngine.run("Test(int Key:0..875713, boolean come).");
-        localEngine.shutdown();
+//        LocalEngine localEngine = new LocalEngine();
+//        localEngine.run("Test(int Key:0..875713, boolean come).");
+//        localEngine.shutdown();
     }
 }

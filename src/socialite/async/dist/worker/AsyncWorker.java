@@ -17,6 +17,7 @@ public class AsyncWorker {
     public AsyncWorker() throws InterruptedException {
         while (SRuntimeWorker.getInst() == null)
             Thread.sleep(100);
+        L.info("Worker ready");
         distAsyncRuntime = new DistAsyncRuntime();
     }
 

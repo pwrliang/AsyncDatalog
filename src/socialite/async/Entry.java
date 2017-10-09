@@ -6,7 +6,6 @@ import org.apache.commons.logging.LogFactory;
 import socialite.async.dist.master.AsyncMaster;
 import socialite.async.dist.worker.AsyncWorker;
 import socialite.async.engine.LocalAsyncEngine;
-import socialite.async.util.MPIUtils;
 import socialite.async.util.TextUtils;
 import socialite.dist.master.MasterNode;
 import socialite.dist.worker.WorkerNode;
@@ -18,7 +17,7 @@ public class Entry {
 
     //-jar /opt/mpj-v0_44/lib/starter.jar -machinesfile /home/gengl/socialite-mod/machines -np 2 -dev niodev -Dlog4j.configuration=file:/home/gengl/socialite-mod/conf/log4j.properties
     public static void main(String[] args) throws InterruptedException {
-        if (MPIUtils.inMPIEnv()) {
+        if (args.length >= 3) {
             MPI.Init(args);
             int machineNum = MPI.COMM_WORLD.Size();
             int machineId = MPI.COMM_WORLD.Rank();
@@ -41,7 +40,7 @@ public class Entry {
             L.info("process " + machineId + " exit.");
             MPI.Finalize();
         } else {
-            AsyncConfig.parse(TextUtils.readText(args[0]));
+            AsyncConfig.parse(TextUtils.readText(args[args.length - 1]));
             AsyncConfig asyncConfig = AsyncConfig.get();
             LocalAsyncEngine localAsyncEngine = new LocalAsyncEngine(asyncConfig.getDatalogProg());
             localAsyncEngine.run();

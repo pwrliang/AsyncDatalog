@@ -50,17 +50,17 @@ public class DistAsyncRuntime implements Runnable {
     @Override
     public void run() {
         waitingCmd();
-        loadData();
-        createThreads();
-        arrangeTask();
-        startThreads();
+//        loadData();
+//        createThreads();
+//        arrangeTask();
+//        startThreads();
         L.info(String.format("Worker %d all threads started.", myWorkerId));
     }
 
     private void waitingCmd() {
         Status status = MPI.COMM_WORLD.Probe(0, MsgType.NOTIFY_INIT.ordinal());
         byte[] data = new byte[status.Get_count(MPI.BYTE)];
-        MPI.COMM_WORLD.Recv(data, 0, data.length, MPI.BYTE, 0, MsgType.NOTIFY_INIT.ordinal());
+        MPI.COMM_WORLD.Recv(data, 0, data.length, MPI.BYTE, AsyncMaster.ID, MsgType.NOTIFY_INIT.ordinal());
         SerializeTool serializeTool = new SerializeTool.Builder().build();
         payload = serializeTool.fromBytes(data, Payload.class);
         AsyncConfig.set(payload.getAsyncConfig());

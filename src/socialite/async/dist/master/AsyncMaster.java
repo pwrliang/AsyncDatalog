@@ -9,6 +9,7 @@ import socialite.async.engine.DistAsyncEngine;
 import socialite.async.util.TextUtils;
 import socialite.dist.master.MasterNode;
 import socialite.dist.worker.WorkerNode;
+import socialite.engine.ClientEngine;
 import socialite.engine.Config;
 import socialite.util.SociaLiteException;
 
@@ -20,11 +21,14 @@ public class AsyncMaster {
     public AsyncMaster(String program) throws InterruptedException {
         while (MasterNode.getInstance().getQueryListener().getEngine()==null)//waiting workers online
             Thread.sleep(100);
-        distAsyncEngine = new DistAsyncEngine(program);
+        L.info("Master ready");
+        ClientEngine clientEngine = new ClientEngine();
+        clientEngine.run("Test(int i, int j).");
+//        distAsyncEngine = new DistAsyncEngine(program);
     }
 
     public void startMaster() {
-        distAsyncEngine.run();
+//        distAsyncEngine.run();
     }
 
 }
