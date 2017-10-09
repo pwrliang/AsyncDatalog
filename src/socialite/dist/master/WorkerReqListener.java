@@ -121,6 +121,7 @@ public class WorkerReqListener implements WorkerRequest {
         master.addRegisteredWorker(Host.getAddr(addr), workerId);
     }
 
+    @Override
     public synchronized void reportIdle(IntWritable _epochId, IntWritable _workerId, IntWritable _time) {
         SRuntimeMaster runtime = SRuntimeMaster.getInst();
         int epochId = _epochId.get();

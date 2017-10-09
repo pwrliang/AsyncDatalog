@@ -187,7 +187,7 @@ public class AsyncAnalysis{
         if (srcV.size() == 1) {
             if (extraP != null) {
                 Column extraC = an.getTableMap().get(extraP.name()).getColumns()[1];//先假定第一列和key同名，第二列存值
-                extraV = new MyVariable(((Variable) extraP.params.get(1)).name, extraC.type());//bug is here
+                extraV = new MyVariable(((Variable) extraP.params.get(1)).name, extraC.type());
             }
         } else {
             //对于顶点对程序，寻找extra变量

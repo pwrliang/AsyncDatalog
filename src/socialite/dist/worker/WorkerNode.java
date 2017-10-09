@@ -188,7 +188,7 @@ public class WorkerNode extends Thread {
     public void reportIdle(int epochId, int ts) {
         SRuntime runtime = SRuntimeWorker.getInst();
         int id = runtime.getWorkerAddrMap().myIndex();
-        request.reportIdle(new IntWritable(epochId), new IntWritable(id), new IntWritable(ts));
+        request.reportIdle(new IntWritable(epochId), new IntWritable(id), new IntWritable(ts));//bug stuck here!!!!!!!!
     }
 
     public boolean connect(String[] workerAddrs) {

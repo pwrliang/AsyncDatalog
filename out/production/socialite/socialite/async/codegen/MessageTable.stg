@@ -24,7 +24,7 @@ public class MessageTable extends MessageTableBase {
         keyDeltaMap = new ConcurrentHashMap\<>(initSize);
     }
 
-    public void apply(<WrappedTypeMap.(keyType)> key<if(!IsCount.(aggrType))>, <deltaType> delta<endif>) {
+    public void apply(<keyType> key<if(!IsCount.(aggrType))>, <deltaType> delta<endif>) {
         <TypeAtomicMap.(deltaType)> atomicDelta = keyDeltaMap.putIfAbsent(key, new <TypeAtomicMap.(deltaType)>(delta));
         if (atomicDelta != null) {
             <if(IsSum.(aggrType))>
