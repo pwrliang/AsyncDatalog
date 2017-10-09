@@ -26,7 +26,8 @@ public class AsyncCodeGen {
                 "UTF-8", '<', '>');
         stg.load();
         ST st = stg.getInstanceOf("InitTableStat");
-        st.add("initSize", asyncAn.getInitSize());
+        st.add("start",asyncAn.getRange()[0]);
+        st.add("end",asyncAn.getRange()[1]);
         st.add("keyType", asyncAn.getKeyType());
         st.add("deltaType", asyncAn.getDeltaType());
         st.add("valueType", asyncAn.getValueType());

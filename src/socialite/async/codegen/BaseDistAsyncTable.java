@@ -11,6 +11,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 public abstract class BaseDistAsyncTable extends BaseAsyncTable {
@@ -20,13 +21,17 @@ public abstract class BaseDistAsyncTable extends BaseAsyncTable {
     protected final int myWorkerId;
     protected final DistTableSliceMap sliceMap;
     protected final int indexForTableId;
+    protected final Map<Integer, Integer> myIdxWorkerIdMap;
+
     protected final int messageTableUpdateThreshold;
     protected final int initSize;
-    public BaseDistAsyncTable(Class<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId) {
+
+    public BaseDistAsyncTable(Class<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId, Map<Integer, Integer> myIdxWorkerIdMap) {
         this.workerNum = Config.getWorkerNodeNum();
-        this.myWorkerId = MPI.COMM_WORLD.Rank()-1;
+        this.myWorkerId = MPI.COMM_WORLD.Rank() - 1;
         this.sliceMap = sliceMap;
         this.indexForTableId = indexForTableId;
+        this.myIdxWorkerIdMap = myIdxWorkerIdMap;
         this.messageTableUpdateThreshold = AsyncConfig.get().getMessageTableUpdateThreshold();
         this.initSize = AsyncConfig.get().getInitSize();
         int messageTableInitSize = AsyncConfig.get().getMessageTableInitSize();

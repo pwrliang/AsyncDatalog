@@ -12,8 +12,9 @@ import socialite.visitors.VisitorImpl;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Objects;
 
-public class AsyncRuntime implements Runnable{
+public class AsyncRuntime implements Runnable {
     private static final Log L = LogFactory.getLog(AsyncRuntime.class);
     private BaseAsyncTable asyncTable;
     private final int threadNum;
@@ -68,6 +69,8 @@ public class AsyncRuntime implements Runnable{
         if (blockSize == 0) {
             L.warn("too many threads");
             blockSize = asyncTable.getSize();
+            computingThreads[0] = new ComputingThread(0, 0, blockSize);
+            return;
         }
         for (int tid = 0; tid < threadNum; tid++) {
             int start = tid * blockSize;
@@ -86,11 +89,13 @@ public class AsyncRuntime implements Runnable{
     @Override
     public void run() {
         checker.start();
-        Arrays.stream(computingThreads).forEach(ComputingThread::start);
+        Arrays.stream(computingThreads).filter(Objects::nonNull).forEach(ComputingThread::start);
         L.info("worker started");
         try {
-            for (ComputingThread worker : computingThreads)
-                worker.join();
+//            for (ComputingThread worker : computingThreads)
+//                if (worker != null)
+//                    worker.join();
+            checker.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -124,7 +129,6 @@ public class AsyncRuntime implements Runnable{
             return String.format("id: %d range: [%d, %d)", tid, start, end);
         }
     }
-
 
 
     private class Checker extends Thread {
@@ -172,7 +176,7 @@ public class AsyncRuntime implements Runnable{
                             sum = ((Double) asyncTable.accumulateValue()) + 0.0d;
                         L.info("sum of delta: " + sum);
                     }
-                    if (eval(sum)){
+                    if (eval(sum)) {
                         done();
                         break;
                     }
@@ -193,13 +197,13 @@ public class AsyncRuntime implements Runnable{
                 case G:
                     return val > threshold;
                 case GE:
-                    return val>=threshold;
+                    return val >= threshold;
                 case E:
-                    return val==threshold;
+                    return val == threshold;
                 case LE:
-                    return val<=threshold;
+                    return val <= threshold;
                 case L:
-                    return val<threshold;
+                    return val < threshold;
             }
             throw new UnsupportedOperationException();
         }

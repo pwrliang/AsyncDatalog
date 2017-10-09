@@ -90,37 +90,6 @@ public class WorkerReqListener implements WorkerRequest {
         master.addRegisteredWorker(Host.getAddr(addr));
     }
 
-    //MPI Environment
-    @Override
-    public synchronized void register(Text workerIp, int workerId) {
-        L.info("register " + workerIp + " workerId " + workerId);
-        Set<InetAddress> otherAddrSet = master.getWorkerAddrs();
-        Text[] otherAddrTexts = new Text[otherAddrSet.size()];
-        int i = 0;
-        for (InetAddress inet : otherAddrSet) {
-            otherAddrTexts[i++] = new Text(inet.getHostAddress());
-        }
-        boolean firstWorker = (i == 0);
-        TextArrayWritable restAddrs = new TextArrayWritable(otherAddrTexts);
-
-        String addr = workerIp.toString();
-        master.addWorkerAddr(addr);
-        WorkerCmd cmd = master.getWorkerCmd(addr);
-        if (firstWorker) {
-            int workerNum;
-            if (Config.systemWorkerNum > 0) {
-                workerNum = Config.systemWorkerNum;
-            } else {
-                workerNum = cmd.getWorkerThreadNum().get();
-            }
-            master.setWorkerConf(Config.dist(workerNum));
-        }
-        Config workerConf = master.getWorkerConf();
-        cmd.setWorkerThreadNum(new IntWritable(workerConf.getWorkerThreadNum()));
-        cmd.makeConnections(restAddrs);
-        master.addRegisteredWorker(Host.getAddr(addr), workerId);
-    }
-
     @Override
     public synchronized void reportIdle(IntWritable _epochId, IntWritable _workerId, IntWritable _time) {
         SRuntimeMaster runtime = SRuntimeMaster.getInst();

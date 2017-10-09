@@ -1,11 +1,9 @@
 package socialite.resource;
 
 
-import mpi.MPI;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import socialite.async.util.MPIUtils;
 import socialite.dist.Host;
 
 import java.io.IOException;
@@ -23,11 +21,7 @@ public class WorkerAddrMap implements Serializable {
     transient int myIdx = -1;
 
     public WorkerAddrMap() {
-        if (MPIUtils.inMPIEnv()) {
-            machineAddrs = new InetAddress[MPI.COMM_WORLD.Size() - 1];
-        } else {
-            machineAddrs = new InetAddress[64];
-        }
+        machineAddrs = new InetAddress[64];
         myIdx = -1;
     }
 

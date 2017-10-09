@@ -1,6 +1,7 @@
 package socialite.async.dist;
 
 public enum MsgType {
+    REPORT_MYIDX,
     NOTIFY_INIT,
     MESSAGE_TABLE, //发送buffer table给worker
     REQUIRE_TERM_CHECK,//Master require all works to compute partial value

@@ -18,8 +18,10 @@ import socialite.parser.Parser;
 import socialite.parser.Rule;
 import socialite.parser.antlr.TableDecl;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -45,7 +47,7 @@ public class DistAsyncEngine implements Runnable {
                 && !rule.toString().contains("Remote_")).collect(Collectors.toList()); //get rid of DeltaRule and Remote_rule
         //由socialite执行表创建和非递归规则
         if (!AsyncConfig.get().isDebugging())
-            decls.forEach(stat->{
+            decls.forEach(stat -> {
                 L.info(stat);
                 clientEngine.run(stat);
             });
@@ -64,7 +66,7 @@ public class DistAsyncEngine implements Runnable {
             }
             if (!AsyncConfig.get().isDebugging())
                 if (!added) {
-                    L.info("exec rule "+rule.getRuleText());
+                    L.info("exec rule " + rule.getRuleText());
                     clientEngine.run(rule.getRuleText());
                 }
         }
@@ -94,8 +96,15 @@ public class DistAsyncEngine implements Runnable {
         List<String> initStats = asyncCodeGenMain.getInitStats();
         if (!AsyncConfig.get().isDebugging())
             initStats.forEach(initStat -> clientEngine.run(initStat));
+        Map<Integer, Integer> myIdxWorkerIdMap = new HashMap<>();
+        IntStream.rangeClosed(1, workerNum).forEach(source -> {
+            int[] buff = new int[2];
+            MPI.COMM_WORLD.Recv(buff, 0, 2, MPI.INT, source, MsgType.REPORT_MYIDX.ordinal());
+            myIdxWorkerIdMap.put(buff[0], buff[1]);
+        });
+
         LinkedHashMap<String, byte[]> compiledClasses = asyncCodeGenMain.getCompiledClasses();
-        Payload payload = new Payload(AsyncConfig.get(), compiledClasses, asyncAnalysis.getEdgePName());
+        Payload payload = new Payload(AsyncConfig.get(), myIdxWorkerIdMap, compiledClasses, asyncAnalysis.getEdgePName());
 
         SerializeTool serializeTool = new SerializeTool.Builder().build();
         byte[] data = serializeTool.toBytes(payload);
@@ -134,19 +143,20 @@ public class DistAsyncEngine implements Runnable {
                 e.printStackTrace();
             }
         }
+
         private boolean eval(double val) {
             double threshold = AsyncConfig.get().getThreshold();
             switch (AsyncConfig.get().getCond()) {
                 case G:
                     return val > threshold;
                 case GE:
-                    return val>=threshold;
+                    return val >= threshold;
                 case E:
-                    return val==threshold;
+                    return val == threshold;
                 case LE:
-                    return val<=threshold;
+                    return val <= threshold;
                 case L:
-                    return val<threshold;
+                    return val < threshold;
             }
             throw new UnsupportedOperationException();
         }

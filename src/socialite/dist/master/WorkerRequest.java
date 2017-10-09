@@ -9,7 +9,6 @@ public interface WorkerRequest extends VersionedProtocol {
 
     public void register(Text selfIp);
 
-    public void register(Text selfIp, int workerId);
 
     public void handleError(IntWritable workerid, IntWritable ruleid, Text errorMsg);
 

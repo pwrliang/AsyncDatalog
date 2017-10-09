@@ -1,27 +1,27 @@
 import "Utils.stg"
-InitTableStat(initSize, dynamic, keyType, valueType, deltaType, weightType, extraType, recPName, edgePName, extraPName) ::=<<
+InitTableStat(start, end, dynamic, keyType, valueType, deltaType, weightType, extraType, recPName, edgePName, extraPName) ::=<<
     <if(dynamic)>
         <if(IsPairKey.(keyType))>
-            InitTable(int col1OfKey:0..<initSize>, (int col2OfKey, <deltaType> delta)).
+            InitTable(int col1OfKey:<start>..<end>, (int col2OfKey, <deltaType> delta)).
             InitTable(col1OfKey, col2OfKey, delta) :- <recPName>(col1OfKey, col2OfKey, delta).
         <elseif(IsBoolean.(valueType))>
-            InitTable(<keyType> key:0..<initSize>).
+            InitTable(<keyType> key:<start>..<end>).
             InitTable(key) :- <recPName>(key).
         <else>
-            InitTable(<keyType> key:0..<initSize>, <deltaType> delta:0..<initSize>).
+            InitTable(<keyType> key:<start>..<end>, <deltaType> delta:).
             InitTable(key, delta) :- <recPName>(key, delta).
         <endif>
     <else>
         <if(IsPairKey.(keyType))>
-            InitTable(int col1OfKey:0..<initSize>, int col2OfKey:0..<initSize>, <deltaType> delta, (int col2OfAdjacency)).
+            InitTable(int col1OfKey:<start>..<end>, int col2OfKey:<start>..<end>, <deltaType> delta, (int col2OfAdjacency)).
             $
             InitTable(col1OfKey, col2OfKey, delta, col2OfAdjacency) :- <recPName>(col1OfKey, col2OfKey, delta), <edgePName>(col2OfKey, col2OfAdjacency).
         <elseif(IsBoolean.(valueType))>
-            InitTable(<keyType> key:0..<initSize>, (<keyType> adjacency)).
+            InitTable(<keyType> key:<start>..<end>, (<keyType> adjacency)).
             $
             InitTable(key, adjacency) :- <recPName>(key), <edgePName>(key, adjacency).
         <else>
-            InitTable(<keyType> key:0..<initSize>, <deltaType> delta <if(extraType)>, <extraType> extra<endif> , (<keyType> adjacency <if(weightType)>, <weightType> weight<endif>)).
+            InitTable(<keyType> key:<start>..<end>, <deltaType> delta <if(extraType)>, <extraType> extra<endif> , (<keyType> adjacency <if(weightType)>, <weightType> weight<endif>)).
             $
             InitTable(key, delta <if(extraType)>, extra<endif>, adjacency <if(weightType)>, weight<endif>) :-
             <recPName>(key, delta), <edgePName>(key, adjacency <if(weightType)>, weight<endif>) <if(extraType)>, <extraPName>(key, extra)<endif>.

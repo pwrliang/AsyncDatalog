@@ -1,6 +1,5 @@
 package socialite.dist.worker;
 
-import mpi.MPI;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -8,7 +7,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.ipc.RPC;
-import socialite.async.util.MPIUtils;
 import socialite.dist.Host;
 import socialite.dist.PortMap;
 import socialite.dist.master.WorkerRequest;
@@ -162,10 +160,7 @@ public class WorkerNode extends Thread {
             L.fatal("Cannot connect to master:" + e);
             L.fatal(ExceptionUtils.getStackTrace(e));
         }
-        if (MPIUtils.inMPIEnv())
-            request.register(new Text(Host.get()), MPI.COMM_WORLD.Rank() - 1);
-        else
-            request.register(new Text(Host.get()));
+        request.register(new Text(Host.get()));
         synchronized (this) { /* make conf visible */}
         assert conf != null;
     }

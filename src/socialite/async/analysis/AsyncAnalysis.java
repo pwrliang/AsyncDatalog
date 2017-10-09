@@ -23,7 +23,7 @@ public class AsyncAnalysis{
     private String valueType;//value字段类型
     private String deltaType;//delta字段类型，一般valueType==deltaType，但2-step，valueType为boolean
     private String aggrName;
-    private int initSize;
+    private int[] range;
     /*  edge属性  */
     private Predicate edgeP;
     private Predicate extraP;
@@ -75,7 +75,7 @@ public class AsyncAnalysis{
             else midRule = recRules.get(0);
         }
         if (tableMap.get(resultRule.getHead().name()).isArrayTable())
-            initSize = tableMap.get(resultRule.getHead().name()).arrayTableSize();
+            range = tableMap.get(resultRule.getHead().name()).getColumn(0).getRange();
         else
             Assert.die("Need to be ArrayTable, Please specify a range.");
         return true;
@@ -269,8 +269,8 @@ public class AsyncAnalysis{
         return sExpr;
     }
 
-    public int getInitSize() {
-        return initSize;
+    public int[] getRange() {
+        return range;
     }
 
     public String getRecPName() {

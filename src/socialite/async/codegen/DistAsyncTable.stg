@@ -41,8 +41,8 @@ public class DistAsyncTable extends BaseDistAsyncTable{
     <endif>
 
 
-    public DistAsyncTable(Class\<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId) {
-        super(messageTableClass, sliceMap, indexForTableId);
+    public DistAsyncTable(Class\<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId, Map\<Integer, Integer> myIdxWorkerIdMap) {
+        super(messageTableClass, sliceMap, indexForTableId, myIdxWorkerIdMap);
 
 
         <if(dynamic || !IsKeyAsIndex.(keyType))>
@@ -65,8 +65,8 @@ public class DistAsyncTable extends BaseDistAsyncTable{
        <if(IsBoolean.(valueType))>sentFlagList = new ArrayList\<>();<endif>
     }
 
-    public DistAsyncTable(Class\<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId, int base) {
-        this(messageTableClass, sliceMap, indexForTableId);
+    public DistAsyncTable(Class\<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId, Map\<Integer, Integer> myIdxWorkerIdMap, int base) {
+        this(messageTableClass, sliceMap, indexForTableId, myIdxWorkerIdMap);
         this.base = base;
     }
 
@@ -100,9 +100,9 @@ public class DistAsyncTable extends BaseDistAsyncTable{
             <endif>
             <keyType> adjacency = adjacencies.get(i);
             <if(IsPairKey.(keyType))>
-            int belongToWorkerId = sliceMap.machineIndexFor(indexForTableId, adjacency.getV0());
+            int belongToWorkerId = myIdxWorkerIdMap.get(sliceMap.machineIndexFor(indexForTableId, adjacency.getV0()));
             <else>
-            int belongToWorkerId = sliceMap.machineIndexFor(indexForTableId, adjacency);
+            int belongToWorkerId = myIdxWorkerIdMap.get(sliceMap.machineIndexFor(indexForTableId, adjacency));
             <endif>
             if(belongToWorkerId == myWorkerId){
                 int adjacentLocalInd;
@@ -333,7 +333,7 @@ public class DistAsyncTable extends BaseDistAsyncTable{
                         break;
                 <endif>
             <else>
-                if (!visitor.visit(i, valueList.get(i), deltaList.get(i).<deltaType>Value()))
+                if (!visitor.visit(i + base, valueList.get(i), deltaList.get(i).<deltaType>Value()))
                     break;
 		    <endif>
 		}

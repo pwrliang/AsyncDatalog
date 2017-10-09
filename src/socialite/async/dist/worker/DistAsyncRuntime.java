@@ -67,9 +67,9 @@ public class DistAsyncRuntime implements Runnable {
     }
 
     private void waitingCmd() {
-        Status status = MPI.COMM_WORLD.Probe(0, MsgType.NOTIFY_INIT.ordinal());
-        byte[] data = new byte[status.Get_count(MPI.BYTE)];
-        MPI.COMM_WORLD.Recv(data, 0, data.length, MPI.BYTE, AsyncMaster.ID, MsgType.NOTIFY_INIT.ordinal());
+        byte[] data = new byte[1024 * 1024];
+        MPI.COMM_WORLD.Sendrecv(new int[]{SRuntimeWorker.getInst().getWorkerAddrMap().myIndex(), myWorkerId}, 0, 2, MPI.INT, AsyncMaster.ID, MsgType.REPORT_MYIDX.ordinal(),
+                data, 0, data.length, MPI.BYTE, AsyncMaster.ID, MsgType.NOTIFY_INIT.ordinal());
         SerializeTool serializeTool = new SerializeTool.Builder().build();
         payload = serializeTool.fromBytes(data, Payload.class);
         AsyncConfig.set(payload.getAsyncConfig());
@@ -100,8 +100,8 @@ public class DistAsyncRuntime implements Runnable {
                 Method method = edgeInst.getClass().getMethod("tableid");
                 indexForTableid = (Integer) method.invoke(edgeInst);
                 //public DistAsyncTable(Class\<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId) {
-                Constructor constructor = distAsyncTableClass.getConstructor(messageTableClass.getClass(), DistTableSliceMap.class, int.class);
-                distAsyncTable = (BaseDistAsyncTable) constructor.newInstance(messageTableClass, sliceMap, indexForTableid);
+                Constructor constructor = distAsyncTableClass.getConstructor(messageTableClass.getClass(), DistTableSliceMap.class, int.class, Map.class);
+                distAsyncTable = (BaseDistAsyncTable) constructor.newInstance(messageTableClass, sliceMap, indexForTableid, payload.getMyIdxWorkerIdMap());
                 //动态算法需要edge做连接，如prog4、9!>
                 method = edgeTableInstArr[0].getClass().getDeclaredMethod("iterate", VisitorImpl.class);
                 for (TableInst tableInst : edgeTableInstArr) {
@@ -122,8 +122,8 @@ public class DistAsyncRuntime implements Runnable {
                 baseField.setAccessible(true);
                 int base = baseField.getInt(Arrays.stream(initTableInstArr).filter(tableInst -> !tableInst.isEmpty()).findFirst().orElse(null));
                 //public DistAsyncTable(Class\<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId, int base) {
-                Constructor constructor = distAsyncTableClass.getConstructor(messageTableClass.getClass(), DistTableSliceMap.class, int.class, int.class);
-                distAsyncTable = (BaseDistAsyncTable) constructor.newInstance(messageTableClass, sliceMap, indexForTableid, base);
+                Constructor constructor = distAsyncTableClass.getConstructor(messageTableClass.getClass(), DistTableSliceMap.class, int.class, Map.class, int.class);
+                distAsyncTable = (BaseDistAsyncTable) constructor.newInstance(messageTableClass, sliceMap, indexForTableid, payload.getMyIdxWorkerIdMap(), base);
             }
 
 
@@ -138,7 +138,7 @@ public class DistAsyncRuntime implements Runnable {
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException | NoSuchFieldException e) {
             e.printStackTrace();
         }
-        L.info("Data Loaded size:" + distAsyncTable.getSize());
+        L.info("WorkerId " + myWorkerId + " Data Loaded size:" + distAsyncTable.getSize());
         return true;
     }
 
@@ -156,7 +156,7 @@ public class DistAsyncRuntime implements Runnable {
     }
 
     private void startThreads() {
-        Arrays.stream(computingThreads).forEach(Thread::start);
+        Arrays.stream(computingThreads).filter(Objects::nonNull).forEach(Thread::start);
         Arrays.stream(receiveThreads).filter(Objects::nonNull).forEach(Thread::start);
         Arrays.stream(sendThreads).filter(Objects::nonNull).forEach(Thread::start);
         checkerThread.start();
@@ -173,7 +173,10 @@ public class DistAsyncRuntime implements Runnable {
         if (blockSize == 0) {
             L.warn("too many threads");
             blockSize = distAsyncTable.getSize();
+            computingThreads[0] = new ComputingThread(0, 0, blockSize);
+            return;
         }
+
         for (int tid = 0; tid < threadNum; tid++) {
             int start = tid * blockSize;
             int end = (tid + 1) * blockSize;
@@ -203,6 +206,7 @@ public class DistAsyncRuntime implements Runnable {
         public void run() {
             while (!stop) {
                 for (int k = start; k < end; k++) {
+//                    L.info("Worker " + myWorkerId + " update " + k);
                     distAsyncTable.updateLockFree(k);
                 }
             }
@@ -241,12 +245,14 @@ public class DistAsyncRuntime implements Runnable {
     private class ReceiveThread extends Thread {
         private SerializeTool serializeTool;
         private int recvFromWorkerId;
+        private Class<?> klass;
 
         private ReceiveThread(int recvFromWorkerId) {
             this.recvFromWorkerId = recvFromWorkerId;
             serializeTool = new SerializeTool.Builder()
                     .setSerializeTransient(true)
                     .build();
+            klass = Loader.forName("socialite.async.codegen.MessageTable");
         }
 
         @Override
@@ -269,7 +275,7 @@ public class DistAsyncRuntime implements Runnable {
 //            L.info("applyBufferToAsyncTable");
             MPI.COMM_WORLD.Recv(data, 0, size, MPI.BYTE, source, MsgType.MESSAGE_TABLE.ordinal());
 //            L.info(String.format("Machine %d <---- %d", workerId + 1, source));
-            MessageTableBase messageTable = serializeTool.fromBytes(data, MessageTableBase.class);
+            MessageTableBase messageTable = (MessageTableBase) serializeTool.fromBytes1(data, klass);
             distAsyncTable.applyBuffer(messageTable);
         }
     }
