@@ -12,11 +12,9 @@ import java.util.Map;
 
 public class AsyncWorker {
     private static final Log L = LogFactory.getLog(AsyncWorker.class);
-    public final int workerId;
     private DistAsyncRuntime distAsyncRuntime;
 
-    public AsyncWorker(int workerId) throws InterruptedException {
-        this.workerId = workerId;
+    public AsyncWorker() throws InterruptedException {
         while (SRuntimeWorker.getInst() == null)
             Thread.sleep(100);
         distAsyncRuntime = new DistAsyncRuntime();

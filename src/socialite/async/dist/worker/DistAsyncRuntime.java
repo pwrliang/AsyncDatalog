@@ -13,8 +13,6 @@ import socialite.async.dist.MsgType;
 import socialite.async.dist.Payload;
 import socialite.async.dist.master.AsyncMaster;
 import socialite.async.util.SerializeTool;
-import socialite.dist.worker.WorkerNode;
-import socialite.engine.Config;
 import socialite.parser.Table;
 import socialite.resource.DistTableSliceMap;
 import socialite.resource.SRuntimeWorker;
@@ -28,7 +26,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -43,24 +40,87 @@ public class DistAsyncRuntime implements Runnable {
     private CheckerThread checkerThread;
     private SendThread[] sendThreads;
     private ReceiveThread[] receiveThreads;
-    private AsyncConfig asyncConfig;
+    private Payload payload;
 
     DistAsyncRuntime() {
-        asyncConfig = AsyncConfig.get();
-        workerNum = Config.getWorkerNodeNum();
+        workerNum = MPI.COMM_WORLD.Size() - 1;
         myWorkerId = MPI.COMM_WORLD.Rank() - 1;
-        threadNum = asyncConfig.getThreadNum();
-
-        createThreads();
     }
 
     @Override
     public void run() {
+        waitingCmd();
         loadData();
         createThreads();
         arrangeTask();
         startThreads();
         L.info(String.format("Worker %d all threads started.", myWorkerId));
+    }
+
+    private void waitingCmd() {
+        Status status = MPI.COMM_WORLD.Probe(0, MsgType.NOTIFY_INIT.ordinal());
+        byte[] data = new byte[status.Get_count(MPI.BYTE)];
+        MPI.COMM_WORLD.Recv(data, 0, data.length, MPI.BYTE, 0, MsgType.NOTIFY_INIT.ordinal());
+        SerializeTool serializeTool = new SerializeTool.Builder().build();
+        payload = serializeTool.fromBytes(data, Payload.class);
+        AsyncConfig.set(payload.getAsyncConfig());
+        L.info("RECV CMD NOTIFY_INIT CONFIG:" + AsyncConfig.get());
+        threadNum = AsyncConfig.get().getThreadNum();
+    }
+
+    private void loadData() {
+        Loader.loadFromBytes(payload.getByteCodes());
+        Class<?> messageTableClass = Loader.forName("MessageTable");
+        Class<?> distAsyncTableClass = Loader.forName("DistAsyncName");
+        try {
+            SRuntimeWorker runtimeWorker = SRuntimeWorker.getInst();
+            TableInstRegistry tableInstRegistry = runtimeWorker.getTableRegistry();
+            Map<String, Table> tableMap = runtimeWorker.getTableMap();
+            DistTableSliceMap sliceMap = runtimeWorker.getSliceMap();
+            TableInst[] initTableInstArr = tableInstRegistry.getTableInstArray(tableMap.get("InitTable").id());
+            TableInst[] edgeTableInstArr = tableInstRegistry.getTableInstArray(tableMap.get(payload.getEdgeTableName()).id());
+
+            //static, int type key
+            int indexForTableid;
+            if (AsyncConfig.get().isDynamic()) {
+                TableInst edgeInst = Arrays.stream(edgeTableInstArr).filter(tableInst -> !tableInst.isEmpty()).findFirst().orElse(null);
+                assert edgeInst != null;
+                Method method = edgeInst.getClass().getMethod("tableid");
+                indexForTableid = (Integer) method.invoke(edgeInst);
+                //public DistAsyncTable(Class\<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId) {
+                Constructor constructor = distAsyncTableClass.getConstructor(messageTableClass.getClass(), DistTableSliceMap.class, int.class);
+                distAsyncTable = (BaseDistAsyncTable) constructor.newInstance(messageTableClass, sliceMap, indexForTableid);
+                //动态算法需要edge做连接，如prog4、9!>
+                method = edgeTableInstArr[0].getClass().getDeclaredMethod("iterate", VisitorImpl.class);
+                for (TableInst tableInst : edgeTableInstArr) {
+                    if (!tableInst.isEmpty()) {
+                        method.invoke(tableInst, distAsyncTable.getEdgeVisitor());
+                        //tableInst.clear();
+                    }
+                }
+            } else {
+                TableInst edgeInst = Arrays.stream(initTableInstArr).filter(tableInst -> !tableInst.isEmpty()).findFirst().orElse(null);
+                Method method = edgeInst.getClass().getMethod("tableid");
+                indexForTableid = (Integer) method.invoke(edgeInst);
+                Field baseField = initTableInstArr[0].getClass().getDeclaredField("base");
+                baseField.setAccessible(true);
+                int base = baseField.getInt(Arrays.stream(initTableInstArr).filter(tableInst -> !tableInst.isEmpty()).findFirst().orElse(null));
+                //public DistAsyncTable(Class\<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId, int base) {
+                Constructor constructor = distAsyncTableClass.getConstructor(messageTableClass.getClass(), DistTableSliceMap.class, int.class, int.class);
+                distAsyncTable = (BaseDistAsyncTable) constructor.newInstance(messageTableClass, sliceMap, indexForTableid, base);
+            }
+
+            Method method = initTableInstArr[0].getClass().getDeclaredMethod("iterate", VisitorImpl.class);
+            for (TableInst tableInst : initTableInstArr) {
+                if (!tableInst.isEmpty()) {
+                    method.invoke(tableInst, distAsyncTable.getInitVisitor());
+                    //tableInst.clear();
+                }
+            }
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException | NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+        L.info("Data Loaded size:" + distAsyncTable.getSize());
     }
 
     private void createThreads() {
@@ -77,10 +137,10 @@ public class DistAsyncRuntime implements Runnable {
     }
 
     private void startThreads() {
+        Arrays.stream(computingThreads).forEach(Thread::start);
         Arrays.stream(receiveThreads).filter(Objects::nonNull).forEach(Thread::start);
         Arrays.stream(sendThreads).filter(Objects::nonNull).forEach(Thread::start);
         checkerThread.start();
-        Arrays.stream(computingThreads).forEach(Thread::start);
         try {
             checkerThread.join();
         } catch (InterruptedException e) {
@@ -88,65 +148,6 @@ public class DistAsyncRuntime implements Runnable {
         }
     }
 
-    private void loadData() {
-        Status status = MPI.COMM_WORLD.Probe(0, MsgType.NOTIFY_INIT.ordinal());
-        byte[] data = new byte[status.Get_count(MPI.BYTE)];
-        MPI.COMM_WORLD.Recv(data, 0, data.length, MPI.BYTE, 0, MsgType.NOTIFY_INIT.ordinal());
-        SerializeTool serializeTool = new SerializeTool.Builder().build();
-        Payload payload = serializeTool.fromBytes(data, Payload.class);
-        Loader.loadFromBytes(payload.getByteCodes());
-        Class<?> messageTableClass = Loader.forName("MessageTable");
-        Class<?> distAsyncTableClass = Loader.forName("DistAsyncName");
-        try {
-            SRuntimeWorker runtimeWorker = SRuntimeWorker.getInst();
-            TableInstRegistry tableInstRegistry = runtimeWorker.getTableRegistry();
-            Map<String, Table> tableMap = runtimeWorker.getTableMap();
-            DistTableSliceMap sliceMap = runtimeWorker.getSliceMap();
-            TableInst[] initTableInstArr = tableInstRegistry.getTableInstArray(tableMap.get("InitTable").id());
-            TableInst[] edgeTableInstArr = tableInstRegistry.getTableInstArray(tableMap.get(payload.getEdgeTableName()).id());
-
-
-            Constructor constructor = distAsyncTableClass.getConstructor(messageTableClass.getClass(), DistTableSliceMap.class, int.class, int.class);
-            Field baseField = initTableInstArr[0].getClass().getDeclaredField("base");
-            baseField.setAccessible(true);
-            //static, int type key
-            int indexForTableid;
-            if(asyncConfig.isDynamic()) {
-                TableInst edgeInst = Arrays.stream(edgeTableInstArr).filter(tableInst -> !tableInst.isEmpty()).findFirst().orElse(null);
-                Method method=edgeInst.getClass().getMethod("tableid");
-                indexForTableid = (Integer) method.invoke(edgeInst);
-            }else {
-                TableInst edgeInst = Arrays.stream(initTableInstArr).filter(tableInst -> !tableInst.isEmpty()).findFirst().orElse(null);
-                Method method=edgeInst.getClass().getMethod("tableid");
-                indexForTableid = (Integer) method.invoke(edgeInst);
-            }
-            int base = baseField.getInt(Arrays.stream(initTableInstArr).filter(tableInst -> !tableInst.isEmpty()).findFirst().orElse(null));
-            //public DistAsyncTable(Class\<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId, int base) {
-            distAsyncTable = (BaseDistAsyncTable) constructor.newInstance(messageTableClass, sliceMap, indexForTableid,base);
-            Method method;
-            if (asyncConfig.isDynamic()) {
-                //动态算法需要edge做连接，如prog4、9!>
-                method = edgeTableInstArr[0].getClass().getDeclaredMethod("iterate", VisitorImpl.class);
-                for (TableInst tableInst : edgeTableInstArr) {
-                    if (!tableInst.isEmpty()) {
-                        method.invoke(tableInst, distAsyncTable.getEdgeVisitor());
-                        //tableInst.clear();
-                    }
-                }
-            }
-
-            method = initTableInstArr[0].getClass().getDeclaredMethod("iterate", VisitorImpl.class);
-            for (TableInst tableInst : initTableInstArr) {
-                if (!tableInst.isEmpty()) {
-                    method.invoke(tableInst, distAsyncTable.getInitVisitor());
-                    //tableInst.clear();
-                }
-            }
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException | NoSuchFieldException e) {
-            e.printStackTrace();
-        }
-        L.info("Data Loaded size:" + distAsyncTable.getSize());
-    }
 
     private void arrangeTask() {
         int blockSize = distAsyncTable.getSize() / threadNum;
@@ -267,7 +268,26 @@ public class DistAsyncRuntime implements Runnable {
         public void run() {
             while (!stop) {
                 MPI.COMM_WORLD.Recv(new byte[1], 0, 1, MPI.BYTE, AsyncMaster.ID, MsgType.REQUIRE_TERM_CHECK.ordinal());
-                double sum = (Double) distAsyncTable.accumulateValue();
+                double sum = 0;
+                if (AsyncConfig.get().getCheckType() == AsyncConfig.CheckerType.DELTA) {
+                    if (distAsyncTable.accumulateDelta() instanceof Integer)
+                        sum = ((Integer) distAsyncTable.accumulateDelta()) + 0.0d;
+                    else if (distAsyncTable.accumulateDelta() instanceof Long)
+                        sum = ((Long) distAsyncTable.accumulateDelta()) + 0.0d;
+                    else if (distAsyncTable.accumulateDelta() instanceof Float)
+                        sum = ((Float) distAsyncTable.accumulateDelta()) + 0.0d;
+                    else if (distAsyncTable.accumulateDelta() instanceof Double)
+                        sum = ((Double) distAsyncTable.accumulateDelta()) + 0.0d;
+                } else if (AsyncConfig.get().getCheckType() == AsyncConfig.CheckerType.VALUE) {
+                    if (distAsyncTable.accumulateValue() instanceof Integer)
+                        sum = ((Integer) distAsyncTable.accumulateValue()) + 0.0d;
+                    else if (distAsyncTable.accumulateValue() instanceof Long)
+                        sum = ((Long) distAsyncTable.accumulateValue()) + 0.0d;
+                    else if (distAsyncTable.accumulateValue() instanceof Float)
+                        sum = ((Float) distAsyncTable.accumulateValue()) + 0.0d;
+                    else if (distAsyncTable.accumulateValue() instanceof Double)
+                        sum = ((Double) distAsyncTable.accumulateValue()) + 0.0d;
+                }
                 partialValue[0] = sum;
                 L.info("Worker " + myWorkerId + " sum of delta: " + sum);
                 MPI.COMM_WORLD.Sendrecv(partialValue, 0, 1, MPI.DOUBLE, AsyncMaster.ID, MsgType.TERM_CHECK_PARTIAL_VALUE.ordinal(),

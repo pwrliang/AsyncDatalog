@@ -23,7 +23,6 @@ public class Entry {
             int machineNum = MPI.COMM_WORLD.Size();
             int machineId = MPI.COMM_WORLD.Rank();
             int workerNum = machineNum - 1;
-            System.setProperty("socialite.worker.num", workerNum + "");
             L.info("Machine " + machineId + " Xmx " + Runtime.getRuntime().maxMemory() / 1024 / 1024);
             if (machineNum - 1 != Config.getWorkerNodeNum())
                 throw new SociaLiteException(String.format("MPI Workers (%d)!= Socialite Workers (%d)", workerNum, Config.getWorkerNodeNum()));
@@ -36,8 +35,7 @@ public class Entry {
             } else {
                 L.info("Worker Started " + machineId);
                 WorkerNode.startWorkerNode();
-                int workerId = machineId - 1;
-                AsyncWorker worker = new AsyncWorker(workerId);
+                AsyncWorker worker = new AsyncWorker();
                 worker.startWorker();
             }
             L.info("process " + machineId + " exit.");

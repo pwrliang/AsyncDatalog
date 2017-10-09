@@ -93,7 +93,7 @@ public class DistAsyncEngine implements Runnable {
         if (!AsyncConfig.get().isDebugging())
             initStats.forEach(initStat -> clientEngine.run(initStat));
         LinkedHashMap<String, byte[]> compiledClasses = asyncCodeGenMain.getCompiledClasses();
-        Payload payload = new Payload(compiledClasses, asyncAnalysis.getEdgePName());
+        Payload payload = new Payload(AsyncConfig.get(), compiledClasses, asyncAnalysis.getEdgePName());
 
         SerializeTool serializeTool = new SerializeTool.Builder().build();
         byte[] data = serializeTool.toBytes(payload);
@@ -107,7 +107,6 @@ public class DistAsyncEngine implements Runnable {
         public void run() {
             try {
                 while (true) {
-                    Thread.sleep(TERM_CHECK_INTERVAL);
                     double accumulateSum =
                             IntStream.rangeClosed(1, workerNum).parallel().mapToDouble(dest -> {
                                 double[] recvBuf = new double[1];
@@ -120,17 +119,34 @@ public class DistAsyncEngine implements Runnable {
                         stopWatch.start();
                     }
                     L.info("TERM_CHECK_VALUE_SUM: " + accumulateSum);
-                    boolean[] termOrNot = new boolean[]{accumulateSum > THRESHOLD};
+                    boolean[] termOrNot = new boolean[]{eval(accumulateSum)};
                     IntStream.rangeClosed(1, workerNum).parallel().forEach(dest -> MPI.COMM_WORLD.Send(termOrNot, 0, 1, MPI.BOOLEAN, dest, MsgType.TERM_CHECK_FEEDBACK.ordinal()));
                     if (termOrNot[0]) {
                         stopWatch.stop();
                         L.info("TERM_CHECK_DETERMINED_TO_STOP ELAPSED " + stopWatch.getTime());
                         break;
                     }
+                    Thread.sleep(TERM_CHECK_INTERVAL);
                 }
             } catch (MPIException | InterruptedException e) {
                 e.printStackTrace();
             }
+        }
+        private boolean eval(double val) {
+            double threshold = AsyncConfig.get().getThreshold();
+            switch (AsyncConfig.get().getCond()) {
+                case G:
+                    return val > threshold;
+                case GE:
+                    return val>=threshold;
+                case E:
+                    return val==threshold;
+                case LE:
+                    return val<=threshold;
+                case L:
+                    return val<threshold;
+            }
+            throw new UnsupportedOperationException();
         }
     }
 }

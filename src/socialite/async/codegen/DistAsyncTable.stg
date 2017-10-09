@@ -40,9 +40,10 @@ public class DistAsyncTable extends BaseDistAsyncTable{
     public static final <deltaType> IDENTITY_ELEMENT = <DoubleIdentityElement.(aggrType)>;
     <endif>
 
-    public DistAsyncTable(Class\<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId, int base) {
+
+    public DistAsyncTable(Class\<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId) {
         super(messageTableClass, sliceMap, indexForTableId);
-        this.base = base;
+
 
         <if(dynamic || !IsKeyAsIndex.(keyType))>
             keyIndMap = new <KeyIndMap.(keyType)>(initSize);
@@ -62,6 +63,11 @@ public class DistAsyncTable extends BaseDistAsyncTable{
            <if(extraType)> extraList = new <PrimitiveMap.(extraType)>(initSize);<endif>
        <endif>
        <if(IsBoolean.(valueType))>sentFlagList = new ArrayList\<>();<endif>
+    }
+
+    public DistAsyncTable(Class\<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId, int base) {
+        this(messageTableClass, sliceMap, indexForTableId);
+        this.base = base;
     }
 
     @Override

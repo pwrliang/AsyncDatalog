@@ -1,15 +1,14 @@
 package socialite.async;
 
+import socialite.async.util.SerializeTool;
 import socialite.async.util.TextUtils;
 import socialite.util.Assert;
 import socialite.util.SociaLiteException;
 
-import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class AsyncConfig implements Serializable{
-
+public class AsyncConfig {
     private static AsyncConfig asyncConfig;
     private int checkInterval = -1;
     private double threshold;
@@ -24,11 +23,50 @@ public class AsyncConfig implements Serializable{
     private EngineType engineType;
     private String datalogProg;
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("CHECK_COND ").append(checkType == CheckerType.DELTA ? "DELTA" : "VALUE").append(getSCond()).append(" ").append(threshold).append(", ");
+        sb.append("CHECK_INTERVAL ").append(checkInterval).append(", ");
+        sb.append(dynamic ? "DYNAMIC" : "STATIC").append(", ");
+        sb.append("THREAD_NUM ").append(threadNum).append(", ");
+        sb.append("INIT_SIZE").append(initSize).append(", ");
+        if (engineType == EngineType.DIST) {
+            sb.append("MESSAGE_INIT_SIZE ").append(messageTableInitSize).append(", ");
+            sb.append("MESSAGE_UPDATE_THRESHOLD ").append(messageTableUpdateThreshold).append(", ");
+            sb.append("ENGINE_TYPE DIST").append(", ");
+        } else
+            sb.append("ENGINE_TYPE SHARED_MEM");
+        return sb.toString();
+    }
+
+
+    public String getSCond() {
+        switch (cond) {
+            case G:
+                return ">";
+            case GE:
+                return ">=";
+            case E:
+                return "==";
+            case LE:
+                return "<=";
+            case L:
+                return "<";
+        }
+        Assert.impossible();
+        return null;
+    }
+
     public static AsyncConfig get() {
         if (asyncConfig == null) {
             throw new SociaLiteException("AsyncConfig is not create");
         }
         return asyncConfig;
+    }
+
+    public static void set(AsyncConfig _asyncConfig) {
+        asyncConfig = _asyncConfig;
     }
 
     public int getCheckInterval() {
@@ -42,24 +80,6 @@ public class AsyncConfig implements Serializable{
     public CheckerType getCheckType() {
         return checkType;
     }
-
-//    public String getCond() {
-//        switch (cond) {
-//            case G:
-//                return ">";
-//            case GE:
-//                return ">=";
-//            case E:
-//                return "==";
-//            case LE:
-//                return "<=";
-//            case L:
-//                return "<";
-//        }
-//        Assert.impossible();
-//        return null;
-//    }
-
 
     public Cond getCond() {
         return cond;
@@ -318,7 +338,11 @@ public class AsyncConfig implements Serializable{
         asyncConfig.build();
     }
 
+
     public static void main(String[] args) {
         AsyncConfig.parse(TextUtils.readText(args[0]));
+        SerializeTool serializeTool = new SerializeTool.Builder().build();
+        AsyncConfig asyncConfig = serializeTool.fromBytes(serializeTool.toBytes(AsyncConfig.get()), AsyncConfig.class);
+        System.out.println();
     }
 }
