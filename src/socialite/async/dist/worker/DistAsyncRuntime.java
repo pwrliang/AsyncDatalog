@@ -266,7 +266,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                         } else if (asyncTable.accumulateValue() instanceof Float) {
                             partialSum = (Float) asyncTable.accumulateValue();
                         } else if (asyncTable.accumulateValue() instanceof Double) {
-                            partialSum = (Double) asyncTable.accumulateDelta();
+                            partialSum = (Double) asyncTable.accumulateValue();
                         }
                         L.info("sum of value: " + new BigDecimal(partialSum));
                     }
@@ -282,46 +282,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                 }
             }
         }
-
-        @Override
-        protected void done() {
-            super.done();
-//            saveResult();
-            System.exit(0);
-        }
     }
 
-    private void saveResult() {
-        if (asyncTable == null) return;
-        L.info("worker " + myWorkerId + " saving...");
-        asyncTable.iterate(new MyVisitorImpl() {
 
-            @Override
-            public boolean visit(int a1, double a2, double a3) {
-                System.out.println(a1 + " " + a2 + " " + a3);
-                return true;
-            }
-
-            //CC
-            @Override
-            public boolean visit(int a1, int a2, int a3) {
-                System.out.println(a1 + " " + a2 + " " + a3);
-                return true;
-            }
-
-            //COUNT PATH IN DAG
-            @Override
-            public boolean visit(Object a1, int a2, int a3) {
-                System.out.println(a1 + " " + a2 + " " + a3);
-                return true;
-            }
-
-            //PARTY
-            @Override
-            public boolean visit(int a1) {
-                System.out.println(a1);
-                return true;
-            }
-        });
-    }
 }

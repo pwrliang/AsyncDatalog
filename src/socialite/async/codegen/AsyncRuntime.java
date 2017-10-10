@@ -110,7 +110,7 @@ public class AsyncRuntime extends BaseAsyncRuntime {
                         } else if (asyncTable.accumulateValue() instanceof Float) {
                             sum = (Float) asyncTable.accumulateValue();
                         } else if (asyncTable.accumulateValue() instanceof Double) {
-                            sum = (Double) asyncTable.accumulateDelta();
+                            sum = (Double) asyncTable.accumulateValue();
                         }
                         L.info("sum of value: " + new BigDecimal(sum));
                     }

@@ -52,6 +52,10 @@ public abstract class BaseAsyncRuntime implements Runnable {
         return stop;
     }
 
+    public BaseAsyncTable getAsyncTable() {
+        return asyncTable;
+    }
+
     protected class ComputingThread extends Thread {
         private volatile int start;
         private volatile int end;
@@ -101,8 +105,6 @@ public abstract class BaseAsyncRuntime implements Runnable {
     }
 
     public static boolean eval(double val) {
-
-
         AsyncConfig asyncConfig = AsyncConfig.get();
         double threshold = asyncConfig.getThreshold();
         switch (asyncConfig.getCond()) {

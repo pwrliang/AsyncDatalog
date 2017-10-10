@@ -30,7 +30,6 @@ import java.util.stream.IntStream;
 public class DistAsyncEngine implements Runnable {
     private static final Log L = LogFactory.getLog(DistAsyncEngine.class);
     private int workerNum;
-    private StopWatch stopWatch;
     private ClientEngine clientEngine;
     private AsyncAnalysis asyncAnalysis;
     private AsyncCodeGenMain asyncCodeGenMain;
@@ -116,6 +115,7 @@ public class DistAsyncEngine implements Runnable {
     }
 
     private class FeedBackThread extends Thread {
+        private StopWatch stopWatch;
         @Override
         public void run() {
             try {

@@ -3,21 +3,21 @@ CHECK_TYPE = VALUE
 CHECK_COND = GE
 CHECK_THRESHOLD = 0.9999
 DYNAMIC = FALSE
-THREAD_NUM = 1
+THREAD_NUM = 32
 RULE:
-Node(int n:0..3).
-Rank(int n:0..3, double rank).
-Edge(int n:0..3, (int t)).
-EdgeCnt(int n:0..3, int cnt).
+Node(int n:0..875712).
+Rank(int n:0..875712, double rank).
+Edge(int n:0..875712, (int t)).
+EdgeCnt(int n:0..875712, int cnt).
 
-Edge(s, t) :- l=$read("hdfs://master:9000/examples/prog2_edge.txt"), (s1,s2)=$split(l, "	"),
+Edge(s, t) :- l=$read("hdfs://examples/prog2_edge.txt"), (s1,s2)=$split(l, "	"),
              s=$toInt(s1), t=$toInt(s2).
 
 EdgeCnt(s, $inc(1)) :- Edge(s, t).
 
-Node(n) :- l=$read("hdfs://master:9000/examples/prog2_edge.txt"), n=$toInt(l).
+Node(n) :- l=$read("/home/gengl/Datasets/PageRank/Google/nodes.txt"), n=$toInt(l).
 
-Rank(n, r) :- Node(n), r = 0.2 / 4.
+Rank(n, r) :- Node(n), r = 0.2 / 875713.
 Rank(y, $dsum(r1)) :- Rank(x, r), Edge(x, y),  EdgeCnt(x, d), r1 = 0.8 * r / d.
 
 # /home/gengl/Datasets/directed/web-Google_fix.txt

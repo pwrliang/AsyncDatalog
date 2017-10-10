@@ -75,7 +75,7 @@ public class LocalAsyncEngine {
             BaseAsyncTable asyncTable = (BaseAsyncTable) constructor.newInstance(AsyncConfig.get().getInitSize());
             AsyncRuntime asyncRuntime = new AsyncRuntime(asyncTable, recInst, edgeInst);
             asyncRuntime.run();
-            asyncTable.iterate(myVisitor);
+//            asyncTable.iterate(myVisitor);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
             e.printStackTrace();
         }
