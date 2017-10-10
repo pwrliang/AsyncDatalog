@@ -1,7 +1,15 @@
-basic(int part:0..50000, long cost).
-assb(int sub:0..50000, (int part, int n)).
-cost(int part:0..50000, long c).
-basic(part, cost) :- l=$read("/home/gengl/Desktop/gengl/Datasets/prog7/basic_50000000.txt"),  (s1,s2)=$split(l, "	"), part=$toInt(s1), cost=$toLong(s2).
-assb(sub, part, n) :- l=$read("/home/gengl/Desktop/gengl/Datasets/prog7/assb_50000000.txt"), (s1, s2, s3)=$split(l, "	"), part=$toInt(s1), sub=$toInt(s2), n=$toInt(s3).
+CHECK_INTERVAL = 1000
+CHECK_TYPE = DELTA
+CHECK_COND = E
+CHECK_THRESHOLD = 0
+DYNAMIC = FALSE
+THREAD_NUM = 1
+RULE:
+basic(int part:0..9999, int cost).
+assb(int sub:0..9999, (int part, int n)).
+cost(int part:0..9999, int c).
+basic(part, cost) :- l=$read("hdfs://master:9000/Datasets/prog7/basic_10000.txt"),  (s1,s2)=$split(l, "	"), part=$toInt(s1), cost=$toInt(s2).
+assb(sub, part, n) :- l=$read("hdfs://master:9000/Datasets/prog7/assb_10000.txt"), (s1, s2, s3)=$split(l, "	"), part=$toInt(s1), sub=$toInt(s2), n=$toInt(s3).
 cost(part, cost) :- basic(part, cost).
 cost(part, $dsum(c1)) :- cost(sub, c), assb(sub, part, n), c1 = c*n.
+#long value type bug
