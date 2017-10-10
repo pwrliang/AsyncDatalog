@@ -15,7 +15,7 @@ Edge(s, t) :- l=$read("hdfs://master:9000/examples/prog2_edge.txt"), (s1,s2)=$sp
 
 EdgeCnt(s, $inc(1)) :- Edge(s, t).
 
-Node(n) :- l=$read("hdfs://master:9000/examples/prog2_edge.txt"), n=$toInt(l).
+Node(n) :- l=$read("hdfs://master:9000/examples/prog2_node.txt"), n=$toInt(l).
 
 Rank(n, r) :- Node(n), r = 0.2 / 4.
 Rank(y, $dsum(r1)) :- Rank(x, r), Edge(x, y),  EdgeCnt(x, d), r1 = 0.8 * r / d.

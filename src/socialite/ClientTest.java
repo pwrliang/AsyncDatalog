@@ -1,17 +1,16 @@
 package socialite;
 
-import socialite.async.util.TextUtils;
-import socialite.dist.master.MasterNode;
-import socialite.engine.ClientEngine;
-import socialite.engine.LocalEngine;
-import socialite.resource.TableInstRegistry;
-import socialite.tables.QueryVisitor;
-import socialite.tables.Tuple;
+import java.io.File;
 
 public class ClientTest {
     public static void main(String[] args) throws InterruptedException {
+        File file = new File("/home/gengl/hadoop/share/hadoop/common/lib");
+        for (String fileName : file.list()) {
+            System.out.println("JAR_PATH=${JAR_PATH}:${HADOOP_COMMON}/lib/" + fileName);
+        }
+
+
         //-Dsocialite.worker.num=8 -Dsocialite.port=50100 -Dsocialite.master=localhost -Dlog4j.configuration=file:-Dsocialite.port=50100 -Dsocialite.master=master -Dlog4j.configuration=file:/home/gengl/socialite-before-yarn/conf/log4j.properties
-        System.out.println(Integer.MAX_VALUE);
 //        MasterNode.startMasterNode();
 //        while (MasterNode.getInstance().getQueryListener().getDistEngine() == null)
 //            Thread.sleep(100);

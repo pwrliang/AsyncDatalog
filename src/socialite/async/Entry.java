@@ -3,6 +3,7 @@ package socialite.async;
 import mpi.MPI;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import socialite.async.analysis.MyVisitorImpl;
 import socialite.async.dist.master.AsyncMaster;
 import socialite.async.dist.worker.AsyncWorker;
 import socialite.async.engine.LocalAsyncEngine;
@@ -46,4 +47,34 @@ public class Entry {
             localAsyncEngine.run();
         }
     }
+
+    public static final MyVisitorImpl myVisitor = new MyVisitorImpl() {
+
+        @Override
+        public boolean visit(int a1, double a2, double a3) {
+            System.out.println(a1 + " " + a2 + " " + a3);
+            return true;
+        }
+
+        //CC
+        @Override
+        public boolean visit(int a1, int a2, int a3) {
+            System.out.println(a1 + " " + a2 + " " + a3);
+            return true;
+        }
+
+        //COUNT PATH IN DAG
+        @Override
+        public boolean visit(Object a1, int a2, int a3) {
+            System.out.println(a1 + " " + a2 + " " + a3);
+            return true;
+        }
+
+        //PARTY
+        @Override
+        public boolean visit(int a1) {
+            System.out.println(a1);
+            return true;
+        }
+    };
 }

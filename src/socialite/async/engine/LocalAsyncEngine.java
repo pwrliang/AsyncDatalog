@@ -1,6 +1,7 @@
 package socialite.async.engine;
 
 import socialite.async.AsyncConfig;
+import socialite.async.Entry;
 import socialite.async.analysis.AsyncAnalysis;
 import socialite.async.analysis.MyVisitorImpl;
 import socialite.async.codegen.AsyncCodeGenMain;
@@ -75,7 +76,7 @@ public class LocalAsyncEngine {
             BaseAsyncTable asyncTable = (BaseAsyncTable) constructor.newInstance(AsyncConfig.get().getInitSize());
             AsyncRuntime asyncRuntime = new AsyncRuntime(asyncTable, recInst, edgeInst);
             asyncRuntime.run();
-//            asyncTable.iterate(myVisitor);
+            asyncTable.iterate(myVisitor);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
             e.printStackTrace();
         }
@@ -86,35 +87,7 @@ public class LocalAsyncEngine {
         List<String> initStats = asyncCodeGenMain.getInitStats();
         if (!AsyncConfig.get().isDebugging()) {
             initStats.forEach(initStat -> localEngine.run(initStat));
-            run(new MyVisitorImpl() {
-
-                @Override
-                public boolean visit(int a1, double a2, double a3) {
-                    System.out.println(a1 + " " + a2 + " " + a3);
-                    return true;
-                }
-
-                //CC
-                @Override
-                public boolean visit(int a1, int a2, int a3) {
-                    System.out.println(a1 + " " + a2 + " " + a3);
-                    return true;
-                }
-
-                //COUNT PATH IN DAG
-                @Override
-                public boolean visit(Object a1, int a2, int a3) {
-                    System.out.println(a1 + " " + a2 + " " + a3);
-                    return true;
-                }
-
-                //PARTY
-                @Override
-                public boolean visit(int a1) {
-                    System.out.println(a1);
-                    return true;
-                }
-            });
+            run(Entry.myVisitor);
         }
         localEngine.shutdown();
     }
