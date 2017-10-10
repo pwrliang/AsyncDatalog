@@ -6,7 +6,6 @@ import mpi.Status;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import socialite.async.AsyncConfig;
-import socialite.async.analysis.MyVisitorImpl;
 import socialite.async.codegen.BaseAsyncRuntime;
 import socialite.async.codegen.BaseDistAsyncTable;
 import socialite.async.codegen.MessageTableBase;
@@ -94,7 +93,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                 TableInst edgeInst = Arrays.stream(edgeTableInstArr).filter(tableInst -> !tableInst.isEmpty()).findFirst().orElse(null);
                 if (edgeInst == null) {
                     L.warn("worker " + myWorkerId + " has no job");
-                    return false;
+//                    return false;
                 }
                 Method method = edgeInst.getClass().getMethod("tableid");
                 indexForTableId = (Integer) method.invoke(edgeInst);
@@ -224,7 +223,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
             byte[] data = new byte[size];
 //            L.info("applyBufferToAsyncTable");
             MPI.COMM_WORLD.Recv(data, 0, size, MPI.BYTE, source, MsgType.MESSAGE_TABLE.ordinal());
-//            L.info(String.format("Machine %d <---- %d", workerId + 1, source));
+            //L.info(String.format("Machine %d <---- %d", myWorkerId + 1, source));
             MessageTableBase messageTable = (MessageTableBase) serializeTool.fromBytes1(data, klass);
             ((BaseDistAsyncTable) asyncTable).applyBuffer(messageTable);
         }
@@ -270,8 +269,10 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                         }
                         L.info("sum of value: " + new BigDecimal(partialSum));
                     }
-                    if (asyncConfig.isDynamic())
+                    if (asyncConfig.isDynamic()) {
+                        L.info("Worker " + myWorkerId + " AsyncTable Size " + asyncTable.getSize());
                         arrangeTask();
+                    }
                 }
 
                 MPI.COMM_WORLD.Sendrecv(new double[]{partialSum}, 0, 1, MPI.DOUBLE, AsyncMaster.ID, MsgType.TERM_CHECK_PARTIAL_VALUE.ordinal(),

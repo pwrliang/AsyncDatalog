@@ -77,7 +77,7 @@ JAR_PATH=${JAR_PATH}:${HADOOP_COMMON}/lib/jets3t-0.9.0.jar
 JAR_PATH=${JAR_PATH}:${HADOOP_COMMON}/lib/xmlenc-0.52.jar
 JAR_PATH=${JAR_PATH}:${HADOOP_COMMON}/lib/paranamer-2.3.jar
 JAR_PATH=${JAR_PATH}:${HADOOP_COMMON}/lib/curator-framework-2.7.1.jar
-JAR_PATH=${JAR_PATH}:${HADOOP_COMMON}/lib/slf4j-api-1.7.10.jar
+#JAR_PATH=${JAR_PATH}:${HADOOP_COMMON}/lib/slf4j-api-1.7.10.jar
 JAR_PATH=${JAR_PATH}:${HADOOP_COMMON}/lib/hamcrest-core-1.3.jar
 JAR_PATH=${JAR_PATH}:${HADOOP_COMMON}/lib/jersey-json-1.9.jar
 JAR_PATH=${JAR_PATH}:${HADOOP_COMMON}/lib/snappy-java-1.0.4.1.jar
@@ -93,7 +93,7 @@ JAR_PATH=${JAR_PATH}:${HADOOP_COMMON}/lib/api-asn1-api-1.0.0-M20.jar
 JAR_PATH=${JAR_PATH}:${HADOOP_COMMON}/lib/junit-4.11.jar
 JAR_PATH=${JAR_PATH}:${HADOOP_COMMON}/lib/jackson-mapper-asl-1.9.13.jar
 JAR_PATH=${JAR_PATH}:${HADOOP_COMMON}/lib/apacheds-i18n-2.0.0-M15.jar
-JAR_PATH=${JAR_PATH}:${HADOOP_COMMON}/lib/slf4j-log4j12-1.7.10.jar
+#JAR_PATH=${JAR_PATH}:${HADOOP_COMMON}/lib/slf4j-log4j12-1.7.10.jar
 JAR_PATH=${JAR_PATH}:${HADOOP_COMMON}/lib/curator-recipes-2.7.1.jar
 JAR_PATH=${JAR_PATH}:${HADOOP_COMMON}/lib/log4j-1.2.17.jar
 JAR_PATH=${JAR_PATH}:${HADOOP_COMMON}/lib/xz-1.0.jar
@@ -112,7 +112,9 @@ JAR_PATH=${JAR_PATH}:${HADOOP_HDFS}/hadoop-hdfs-2.7.2.jar
 
 TEST_CLASSPATH=${SOCIALITE_PREFIX}/out/production/socialite
 #-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 \
+
 mpjrun.sh -Xmx28G \
+-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 \
 -machinesfile ${SOCIALITE_PREFIX}/machines -np 5 -dev niodev \
 -Dsocialite.output.dir=${SOCIALITE_PREFIX}/gen \
 -Dsocialite.worker.num=1 \
@@ -120,6 +122,6 @@ mpjrun.sh -Xmx28G \
 -Dsocialite.master=master \
 -Dlog4j.configuration=file:${SOCIALITE_PREFIX}/conf/log4j.properties \
 -cp ${TEST_CLASSPATH}:${JAR_PATH} \
-socialite.async.Entry ${SOCIALITE_PREFIX}/examples/prog2.dl
+socialite.async.Entry ${SOCIALITE_PREFIX}/examples/prog4_dist.dl
 
 kill -9 $(ps aux|grep '[s]ocialite.async.Entry'|awk '{print $2}')

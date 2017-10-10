@@ -21,5 +21,12 @@ public class AsyncWorker {
         distAsyncRuntime.run();
         L.info("worker " + (MPI.COMM_WORLD.Rank() - 1) + " saving...");
         distAsyncRuntime.getAsyncTable().iterate(Entry.myVisitor);
+//        while (true){
+//            try {
+//                Thread.sleep(100);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
     }
 }

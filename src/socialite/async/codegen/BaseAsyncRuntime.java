@@ -24,7 +24,7 @@ public abstract class BaseAsyncRuntime implements Runnable {
         int size = asyncTable.getSize();
         int blockSize = size / threadNum;
         if (blockSize == 0) {
-            L.warn("too many threads");
+            L.warn("too many threads asynctable size " + size);
             blockSize = size;
         }
 

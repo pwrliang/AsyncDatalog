@@ -87,7 +87,7 @@ public class LocalAsyncEngine {
         List<String> initStats = asyncCodeGenMain.getInitStats();
         if (!AsyncConfig.get().isDebugging()) {
             initStats.forEach(initStat -> localEngine.run(initStat));
-            run(Entry.myVisitor);
+            run(Entry.myVisitor);//save result
         }
         localEngine.shutdown();
     }

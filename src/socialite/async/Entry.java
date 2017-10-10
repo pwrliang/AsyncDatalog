@@ -49,11 +49,11 @@ public class Entry {
     }
 
     public static final MyVisitorImpl myVisitor = new MyVisitorImpl() {
-
+        //PAGERANK
         @Override
         public boolean visit(int a1, double a2, double a3) {
             System.out.println(a1 + " " + a2 + " " + a3);
-            return true;
+            return false;
         }
 
         //CC

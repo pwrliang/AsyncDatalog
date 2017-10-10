@@ -28,7 +28,7 @@ public class MessageTable extends MessageTableBase {
     public void apply(<keyType> key<if(!IsCount.(aggrType))>, <deltaType> delta<endif>) {
         if(flag)
             L.error("MESSAGE TABLE RESTED!!!!!!!");
-        <TypeAtomicMap.(deltaType)> atomicDelta = keyDeltaMap.putIfAbsent(key, new <TypeAtomicMap.(deltaType)>(delta));
+        <TypeAtomicMap.(deltaType)> atomicDelta = keyDeltaMap.putIfAbsent(key, new <TypeAtomicMap.(deltaType)>(<if(!IsCount.(aggrType))>delta<else>1<endif>));
         if (atomicDelta != null) {
             <if(IsSum.(aggrType))>
             atomicDelta.accumulateAndGet(delta, <WrappedTypeMap.(deltaType)>::sum);

@@ -5,11 +5,11 @@ CHECK_THRESHOLD = 0
 DYNAMIC = TRUE
 THREAD_NUM = 1
 RULE:
-edge(int src:0..3, (int dst)).
-cpaths(int src:0..3, (int dst, int count)).
+edge(int src:0..4, (int dst)).
+cpaths(int src:0..4, (int dst, int count)).
 edge(s, d) :- l=$read("hdfs://master:9000/examples/prog4_edge.txt"),  (s1,s2)=$split(l, "	"),
                      s=$toInt(s1), d=$toInt(s2).
-cpaths(x, y, 1) :- edge(x, y).
+cpaths(y, x, 1) :- edge(x, y).
 cpaths(X, Y, $dcount(C1)) :- cpaths(X, Z, C), edge(Z, Y), C1 = C.
 
 #dist

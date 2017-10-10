@@ -114,7 +114,8 @@ public class DistAsyncTable extends BaseDistAsyncTable{
                             adjacentLocalInd = keyIndMap.get(adjacency);
                         else {
                             <if(IsPairKey.(keyType))>
-                            adjacentLocalInd = addEntry(adjacency.v0, adjacency.v1, IDENTITY_ELEMENT, IDENTITY_ELEMENT);
+
+                            adjacentLocalInd = addEntry(indKeyMap.get(localInd).getV1(), adjacency.getV1(), IDENTITY_ELEMENT, IDENTITY_ELEMENT);
                             <elseif(IsBoolean.(valueType))>
                             adjacentLocalInd = addEntry(adjacency, false, IDENTITY_ELEMENT);
                             <else>
