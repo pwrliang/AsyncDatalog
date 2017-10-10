@@ -1,9 +1,12 @@
 package socialite.async.codegen;
 
 public class Pair {
-    final int v0;
-    final int v1;
+    private int v0;
+    private int v1;
     private int hashCode = -1;
+
+    private Pair() {
+    }
 
     public Pair(int v0, int v1) {
         this.v0 = v0;

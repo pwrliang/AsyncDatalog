@@ -92,9 +92,10 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
             if (AsyncConfig.get().isDynamic()) {
                 TableInst edgeInst = Arrays.stream(edgeTableInstArr).filter(tableInst -> !tableInst.isEmpty()).findFirst().orElse(null);
                 if (edgeInst == null) {
+                    edgeInst = edgeTableInstArr[0];
                     L.warn("worker " + myWorkerId + " has no job");
-//                    return false;
                 }
+
                 Method method = edgeInst.getClass().getMethod("tableid");
                 indexForTableId = (Integer) method.invoke(edgeInst);
                 //public DistAsyncTable(Class\<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId) {

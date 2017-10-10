@@ -114,7 +114,6 @@ TEST_CLASSPATH=${SOCIALITE_PREFIX}/out/production/socialite
 #-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 \
 
 mpjrun.sh -Xmx28G \
--agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 \
 -machinesfile ${SOCIALITE_PREFIX}/machines -np 5 -dev niodev \
 -Dsocialite.output.dir=${SOCIALITE_PREFIX}/gen \
 -Dsocialite.worker.num=1 \

@@ -114,8 +114,7 @@ public class DistAsyncTable extends BaseDistAsyncTable{
                             adjacentLocalInd = keyIndMap.get(adjacency);
                         else {
                             <if(IsPairKey.(keyType))>
-
-                            adjacentLocalInd = addEntry(indKeyMap.get(localInd).getV1(), adjacency.getV1(), IDENTITY_ELEMENT, IDENTITY_ELEMENT);
+                            adjacentLocalInd = addEntry(adjacency.getV0(), adjacency.getV1(), IDENTITY_ELEMENT, IDENTITY_ELEMENT);
                             <elseif(IsBoolean.(valueType))>
                             adjacentLocalInd = addEntry(adjacency, false, IDENTITY_ELEMENT);
                             <else>
@@ -191,11 +190,11 @@ public class DistAsyncTable extends BaseDistAsyncTable{
 
     private synchronized <if(IsPairKey.(keyType))>List\<Pair><else><PrimitiveMap.(keyType)><endif> join(<if(IsPairKey.(keyType))>int col1OfKey, int col2OfKey<else><keyType> key<endif>){
         <if(IsPairKey.(keyType))>
-            <PrimitiveMap.(keyType)> dstList = srcDstListMap.get(col2OfKey);
+            <PrimitiveMap.(keyType)> dstList = srcDstListMap.get(col1OfKey);
             if(dstList==null) return null;
             List\<Pair> adjacencies = new ArrayList\<>();
             for(int i=0;i\<dstList.size();i++){
-                Pair pair = new Pair(col1OfKey, dstList.get(i));
+                Pair pair = new Pair(dstList.get(i), col2OfKey);
                 adjacencies.add(pair);
             }
             return adjacencies;
