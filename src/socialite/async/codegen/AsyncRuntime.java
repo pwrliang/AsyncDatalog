@@ -1,7 +1,5 @@
 package socialite.async.codegen;
 
-//AsyncRuntime(initSize, threadNum, dynamic, checkType, checkerInterval, threshold, cond) ::= <<
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import socialite.async.AsyncConfig;
@@ -92,8 +90,6 @@ public class AsyncRuntime extends BaseAsyncRuntime {
             stopWatch.start();
             while (true) {
                 try {
-                    checkerSW.reset();
-                    checkerSW.start();
                     double sum = 0.0d;
                     if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DELTA) {
                         if (asyncTable.accumulateDelta() instanceof Integer) {
@@ -122,8 +118,6 @@ public class AsyncRuntime extends BaseAsyncRuntime {
                         done();
                         break;
                     }
-                    checkerSW.stop();
-                    checkerConsume += checkerSW.getTime();
                     if (asyncConfig.isDynamic())
                         arrangeTask();
                     Thread.sleep(CHECKER_INTERVAL);

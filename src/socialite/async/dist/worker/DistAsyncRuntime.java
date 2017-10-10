@@ -239,12 +239,14 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
 
         @Override
         public void run() {
+            super.run();
             while (true) {
                 boolean[] feedback = new boolean[1];
                 double partialSum = 0;
 
                 MPI.COMM_WORLD.Recv(new byte[1], 0, 1, MPI.BYTE, AsyncMaster.ID, MsgType.REQUIRE_TERM_CHECK.ordinal());
                 if (asyncTable != null) {//null indicate this worker is idle
+
                     if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DELTA) {
                         if (asyncTable.accumulateDelta() instanceof Integer) {
                             partialSum = (Integer) asyncTable.accumulateDelta();
@@ -284,7 +286,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         @Override
         protected void done() {
             super.done();
-            saveResult();
+//            saveResult();
             System.exit(0);
         }
     }

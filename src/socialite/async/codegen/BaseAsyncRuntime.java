@@ -81,19 +81,20 @@ public abstract class BaseAsyncRuntime implements Runnable {
     protected abstract class CheckThread extends Thread {
         protected StopWatch stopWatch;
         protected final int CHECKER_INTERVAL = AsyncConfig.get().getCheckInterval();
-        protected StopWatch checkerSW;
-        protected int checkerConsume;
 
         protected CheckThread() {
             stopWatch = new StopWatch();
-            checkerSW = new StopWatch();
+        }
+
+        @Override
+        public void run() {
+            stopWatch.start();
         }
 
         protected void done() {
             stop = true;
             stopWatch.stop();
             L.info("done elapsed:" + stopWatch.getTime());
-            L.info("checker consumed " + checkerConsume);
             L.info("checker thread exit");
         }
 
