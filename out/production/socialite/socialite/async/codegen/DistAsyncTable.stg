@@ -5,6 +5,7 @@ package socialite.async.codegen;
 //algorithm <name>
 public class DistAsyncTable extends BaseDistAsyncTable{
     private static final Log L = LogFactory.getLog(DistAsyncTable.class);
+    private volatile int size;
     <!只有静态且key为int才可以keyAsIndex!>
     <if(dynamic || !IsKeyAsIndex.(keyType))>
         private <KeyIndMap.(keyType)> keyIndMap;
@@ -27,7 +28,6 @@ public class DistAsyncTable extends BaseDistAsyncTable{
     <endif>
     <if(IsBoolean.(valueType))>private List\<Boolean> sentFlagList;<endif>
 
-    private int size;
     private int base;
 
     <if(IsInt.(deltaType))>
@@ -108,16 +108,18 @@ public class DistAsyncTable extends BaseDistAsyncTable{
                 int adjacentLocalInd;
                 <!when use int as key, use key as index!>
                 <if(dynamic || !IsKeyAsIndex.(keyType))>
-                    if(keyIndMap.contains(adjacency))
-                        adjacentLocalInd = keyIndMap.get(adjacency);
-                    else{
-                        <if(IsPairKey.(keyType))>
-                        adjacentLocalInd = addEntry(adjacency.v0, adjacency.v1, IDENTITY_ELEMENT, IDENTITY_ELEMENT);
-                        <elseif(IsBoolean.(valueType))>
-                        adjacentLocalInd = addEntry(adjacency, false, IDENTITY_ELEMENT);
-                        <else>
-                        adjacentLocalInd = addEntry(adjacency, IDENTITY_ELEMENT, IDENTITY_ELEMENT);
-                        <endif>
+                    synchronized(keyIndMap){
+                        if(keyIndMap.contains(adjacency))
+                            adjacentLocalInd = keyIndMap.get(adjacency);
+                        else {
+                            <if(IsPairKey.(keyType))>
+                            adjacentLocalInd = addEntry(adjacency.v0, adjacency.v1, IDENTITY_ELEMENT, IDENTITY_ELEMENT);
+                            <elseif(IsBoolean.(valueType))>
+                            adjacentLocalInd = addEntry(adjacency, false, IDENTITY_ELEMENT);
+                            <else>
+                            adjacentLocalInd = addEntry(adjacency, IDENTITY_ELEMENT, IDENTITY_ELEMENT);
+                            <endif>
+                        }
                     }
                 <else>
                     adjacentLocalInd = adjacency - base; //key as index
@@ -139,14 +141,16 @@ public class DistAsyncTable extends BaseDistAsyncTable{
         messageTable.get<WrappedTypeMap.(keyType)><WrappedTypeMap.(deltaType)>Map().forEach((key, delta) -> {
             int adjacentLocalInd;
             <if(dynamic || !IsKeyAsIndex.(keyType))>
-                if(keyIndMap.contains(key))
-                    adjacentLocalInd = keyIndMap.get(key);
-                else {
-                    <if(IsPairKey.(keyType))>
-                    adjacentLocalInd = addEntry(key.getV0(), key.getV1(), IDENTITY_ELEMENT, IDENTITY_ELEMENT);
-                    <else>
-                    adjacentLocalInd = addEntry(key, IDENTITY_ELEMENT, IDENTITY_ELEMENT);
-                    <endif>
+                synchronized(keyIndMap){
+                    if(keyIndMap.contains(key))
+                        adjacentLocalInd = keyIndMap.get(key);
+                    else {
+                        <if(IsPairKey.(keyType))>
+                        adjacentLocalInd = addEntry(key.getV0(), key.getV1(), IDENTITY_ELEMENT, IDENTITY_ELEMENT);
+                        <else>
+                        adjacentLocalInd = addEntry(key, IDENTITY_ELEMENT, IDENTITY_ELEMENT);
+                        <endif>
+                    }
                 }
             <else>
                 adjacentLocalInd = key - base; //key as Index
@@ -339,13 +343,13 @@ public class DistAsyncTable extends BaseDistAsyncTable{
 		}
 	}
 
-    @Override
-    public int getSize(){
-        return size;
-    }
-
     <if(IsPairKey.(keyType))>
 
     <endif>
+
+    @Override
+    public synchronized int getSize(){
+        return size;
+    }
 }
 >>

@@ -4,6 +4,8 @@ import socialite.async.analysis.MyVisitorImpl;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public abstract class BaseAsyncTable {
+
+
     public abstract int getSize();
 
     public abstract void iterate(MyVisitorImpl visitor);
@@ -18,7 +20,7 @@ public abstract class BaseAsyncTable {
 
     public abstract MyVisitorImpl getInitVisitor();
 
-    public MyVisitorImpl getEdgeVisitor(){
+    public MyVisitorImpl getEdgeVisitor() {
         throw new NotImplementedException();
     }
 }

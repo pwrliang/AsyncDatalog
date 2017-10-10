@@ -11,12 +11,13 @@ import socialite.tables.Tuple;
 public class ClientTest {
     public static void main(String[] args) throws InterruptedException {
         //-Dsocialite.worker.num=8 -Dsocialite.port=50100 -Dsocialite.master=localhost -Dlog4j.configuration=file:-Dsocialite.port=50100 -Dsocialite.master=master -Dlog4j.configuration=file:/home/gengl/socialite-before-yarn/conf/log4j.properties
-        MasterNode.startMasterNode();
-        while (MasterNode.getInstance().getQueryListener().getDistEngine() == null)
-            Thread.sleep(100);
-        ClientEngine clientEngine = new ClientEngine();
-//        clientEngine.run(TextUtils.readText(args[0]));
-        clientEngine.run("Middle(int Key, double initD, int adj, int degree).");
+        System.out.println(Integer.MAX_VALUE);
+//        MasterNode.startMasterNode();
+//        while (MasterNode.getInstance().getQueryListener().getDistEngine() == null)
+//            Thread.sleep(100);
+//        ClientEngine clientEngine = new ClientEngine();
+////        clientEngine.run(TextUtils.readText(args[0]));
+//        clientEngine.run("Middle(int Key, double initD, int adj, int degree).");
 //        clientEngine.run("Middle(key, r, adj, degree) :- Rank(key, r), Edge(key, adj), EdgeCnt(key, degree).");
 //        clientEngine.run("?- Middle(key, r, adj, degree).", new QueryVisitor() {
 //            @Override

@@ -79,8 +79,6 @@ public abstract class BaseDistAsyncTable extends BaseAsyncTable {
 
     public abstract void applyBuffer(MessageTableBase messageTable);
 
-    public abstract Object accumulateValue();
-
     public MyVisitorImpl getEdgeVisitor() {
         throw new NotImplementedException();
     }

@@ -5,6 +5,7 @@ package socialite.async.codegen;
 //algorithm <name>
 public class AsyncTable extends BaseAsyncTable{
     private static final Log L = LogFactory.getLog(AsyncTable.class);
+    private volatile int size;
     <!只有静态且key为int才可以keyAsIndex!>
     <if(dynamic || !IsKeyAsIndex.(keyType))>
         private <KeyIndMap.(keyType)> keyIndMap;
@@ -26,8 +27,6 @@ public class AsyncTable extends BaseAsyncTable{
         <if(extraType)>private <PrimitiveMap.(extraType)> extraList;<endif>
     <endif>
     <if(IsBoolean.(valueType))>private List\<Boolean> sentFlagList;<endif>
-
-    private int size;
 
     <if(IsInt.(deltaType))>
     public static final <deltaType> IDENTITY_ELEMENT = <IntegerIdentityElement.(aggrType)>;
@@ -124,14 +123,16 @@ public class AsyncTable extends BaseAsyncTable{
                 <!when use int as key, use key as index!>
                 <if(dynamic || !IsKeyAsIndex.(keyType))>
                     <keyType> adjacency = adjacencies.get(i);
-                    if(keyIndMap.contains(adjacency))
-                        adjacentLocalInd = keyIndMap.get(adjacency);
-                    else{
-                        <if(IsPairKey.(keyType))>
-                        adjacentLocalInd = addEntry(adjacency.getV0(), adjacency.getV1(), IDENTITY_ELEMENT, IDENTITY_ELEMENT);
-                        <else>
-                        adjacentLocalInd = addEntry(adjacency, IDENTITY_ELEMENT, IDENTITY_ELEMENT);
-                        <endif>
+                    synchronized(keyIndMap){
+                        if(keyIndMap.contains(adjacency))
+                            adjacentLocalInd = keyIndMap.get(adjacency);
+                        else{
+                            <if(IsPairKey.(keyType))>
+                            adjacentLocalInd = addEntry(adjacency.getV0(), adjacency.getV1(), IDENTITY_ELEMENT, IDENTITY_ELEMENT);
+                            <else>
+                            adjacentLocalInd = addEntry(adjacency, IDENTITY_ELEMENT, IDENTITY_ELEMENT);
+                            <endif>
+                        }
                     }
                 <else>
                     adjacentLocalInd = adjacencies.get(i); //key for adjacent node
@@ -274,19 +275,30 @@ public class AsyncTable extends BaseAsyncTable{
     <if(IsBoolean.(valueType))>
     public Integer accumulateValue(){
         int sum = 0;
+        boolean invalid = true;
         for(int i=0;i\<size;i++)
-            if(valueList.get(i) && !sentFlagList.get(i))//可见性问题，只能这么解决
+            if(valueList.get(i) && !sentFlagList.get(i)){ //可见性问题，只能这么解决
+                invalid = false;
                 sum++;
+            }
+        if(invalid)
+            return <WrappedTypeMap.(deltaType)>.MAX_VALUE;
         return sum;
     }
     <else>
     public <WrappedTypeMap.(deltaType)> accumulateValue(){
         <valueType> sum = 0;
+        boolean invalid = true;
+
         for(int i=0;i\<size;i++){
             <valueType> value = valueList.get(i);
-            if(value != IDENTITY_ELEMENT)
+            if(value != IDENTITY_ELEMENT){
+                invalid = false;
                 sum+=valueList.get(i);
+            }
         }
+        if(invalid)
+            return <WrappedTypeMap.(deltaType)>.MAX_VALUE;
         return sum;
     }
     <endif>
@@ -325,9 +337,9 @@ public class AsyncTable extends BaseAsyncTable{
 		}
 	}
 
-    @Override
-    public int getSize(){
-        return size;
-    }
+	@Override
+	public synchronized int getSize(){
+	    return size;
+	}
 }
 >>
