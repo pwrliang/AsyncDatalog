@@ -152,7 +152,6 @@ public class DistAsyncRuntime implements Runnable {
             sendThreads[wid] = new SendThread(wid);
             receiveThreads[wid] = new ReceiveThread(wid);
         }
-        arrangeTask();
     }
 
     private void startThreads() {
@@ -329,6 +328,7 @@ public class DistAsyncRuntime implements Runnable {
         private void done() {
             stop = true;
             saveResult();
+            System.exit(0);
         }
     }
 

@@ -8,7 +8,7 @@ InitTableStat(start, end, dynamic, keyType, valueType, deltaType, weightType, ex
             InitTable(<keyType> key:<start>..<end>).
             InitTable(key) :- <recPName>(key).
         <else>
-            InitTable(<keyType> key:<start>..<end>, <deltaType> delta:).
+            InitTable(<keyType> key:<start>..<end>, <deltaType> delta).
             InitTable(key, delta) :- <recPName>(key, delta).
         <endif>
     <else>

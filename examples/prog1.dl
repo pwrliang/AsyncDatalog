@@ -1,8 +1,8 @@
 CHECK_INTERVAL = 1500
-CHECK_TYPE = DELTA
+CHECK_TYPE = VALUE
 CHECK_COND = E
-CHECK_THRESHOLD = 0
-DYNAMIC = FALSE
+CHECK_THRESHOLD = 6
+DYNAMIC = TRUE
 THREAD_NUM = 4
 ENGINE = DIST
 DEBUGGING = FALSE
@@ -10,7 +10,7 @@ RULE:
 edge(int src:0..3, (int dst, int weight)).
 sssp(int node:0..3, int dist).
 
-edge(s, t, w) :- l=$read("hdfs://master:9000/examples/prog1_edge.txt"), (s1,s2,s3)=$split(l, "	"),
+edge(s, t, w) :- l=$read("/home/gengl/socialite-before-yarn/examples/prog1_edge.txt"), (s1,s2,s3)=$split(l, "	"),
              s=$toInt(s1), t=$toInt(s2), w=$toInt(s3).
 
 
