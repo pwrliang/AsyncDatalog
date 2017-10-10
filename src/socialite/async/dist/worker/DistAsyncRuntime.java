@@ -8,7 +8,6 @@ import org.apache.commons.logging.LogFactory;
 import socialite.async.AsyncConfig;
 import socialite.async.analysis.MyVisitorImpl;
 import socialite.async.codegen.BaseAsyncRuntime;
-import socialite.async.codegen.BaseAsyncTable;
 import socialite.async.codegen.BaseDistAsyncTable;
 import socialite.async.codegen.MessageTableBase;
 import socialite.async.dist.MsgType;
@@ -27,6 +26,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
@@ -89,7 +89,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
             DistTableSliceMap sliceMap = runtimeWorker.getSliceMap();
 
             //static, int type key
-            int indexForTableid;
+            int indexForTableId;
             if (AsyncConfig.get().isDynamic()) {
                 TableInst edgeInst = Arrays.stream(edgeTableInstArr).filter(tableInst -> !tableInst.isEmpty()).findFirst().orElse(null);
                 if (edgeInst == null) {
@@ -97,10 +97,10 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                     return false;
                 }
                 Method method = edgeInst.getClass().getMethod("tableid");
-                indexForTableid = (Integer) method.invoke(edgeInst);
+                indexForTableId = (Integer) method.invoke(edgeInst);
                 //public DistAsyncTable(Class\<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId) {
                 Constructor constructor = distAsyncTableClass.getConstructor(messageTableClass.getClass(), DistTableSliceMap.class, int.class, Map.class);
-                asyncTable = (BaseDistAsyncTable) constructor.newInstance(messageTableClass, sliceMap, indexForTableid, payload.getMyIdxWorkerIdMap());
+                asyncTable = (BaseDistAsyncTable) constructor.newInstance(messageTableClass, sliceMap, indexForTableId, payload.getMyIdxWorkerIdMap());
                 //动态算法需要edge做连接，如prog4、9!>
                 method = edgeTableInstArr[0].getClass().getDeclaredMethod("iterate", VisitorImpl.class);
                 for (TableInst tableInst : edgeTableInstArr) {
@@ -116,13 +116,13 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                     return false;
                 }
                 Method method = initTableInst.getClass().getMethod("tableid");
-                indexForTableid = (Integer) method.invoke(initTableInst);
+                indexForTableId = (Integer) method.invoke(initTableInst);
                 Field baseField = initTableInstArr[0].getClass().getDeclaredField("base");
                 baseField.setAccessible(true);
                 int base = baseField.getInt(Arrays.stream(initTableInstArr).filter(tableInst -> !tableInst.isEmpty()).findFirst().orElse(null));
                 //public DistAsyncTable(Class\<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId, int base) {
                 Constructor constructor = distAsyncTableClass.getConstructor(messageTableClass.getClass(), DistTableSliceMap.class, int.class, Map.class, int.class);
-                asyncTable = (BaseDistAsyncTable) constructor.newInstance(messageTableClass, sliceMap, indexForTableid, payload.getMyIdxWorkerIdMap(), base);
+                asyncTable = (BaseDistAsyncTable) constructor.newInstance(messageTableClass, sliceMap, indexForTableId, payload.getMyIdxWorkerIdMap(), base);
             }
 
 
@@ -169,7 +169,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
 
 
     private class SendThread extends Thread {
-        private int sendToWorkerId;
+        private final int sendToWorkerId;
         private SerializeTool serializeTool;
 
         private SendThread(int sendToWorkerId) {
@@ -183,7 +183,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         public void run() {
             try {
                 while (!isStop()) {
-                    byte[] data = ((BaseDistAsyncTable)asyncTable).getSendableMessageTableBytes(sendToWorkerId, serializeTool);
+                    byte[] data = ((BaseDistAsyncTable) asyncTable).getSendableMessageTableBytes(sendToWorkerId, serializeTool);
                     MPI.COMM_WORLD.Send(data, 0, data.length, MPI.BYTE, sendToWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal());
                 }
             } catch (Exception e) {
@@ -226,52 +226,53 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
             MPI.COMM_WORLD.Recv(data, 0, size, MPI.BYTE, source, MsgType.MESSAGE_TABLE.ordinal());
 //            L.info(String.format("Machine %d <---- %d", workerId + 1, source));
             MessageTableBase messageTable = (MessageTableBase) serializeTool.fromBytes1(data, klass);
-            ((BaseDistAsyncTable)asyncTable).applyBuffer(messageTable);
+            ((BaseDistAsyncTable) asyncTable).applyBuffer(messageTable);
         }
     }
 
     private class CheckThread extends BaseAsyncRuntime.CheckThread {
         private AsyncConfig asyncConfig;
-        private double[] partialValue;
-        private boolean[] feedback;
 
         private CheckThread() {
             asyncConfig = AsyncConfig.get();
-            partialValue = new double[1];
-            feedback = new boolean[1];
         }
 
         @Override
         public void run() {
             while (true) {
+                boolean[] feedback = new boolean[1];
+                double partialSum = 0;
+
                 MPI.COMM_WORLD.Recv(new byte[1], 0, 1, MPI.BYTE, AsyncMaster.ID, MsgType.REQUIRE_TERM_CHECK.ordinal());
-                double sum = 0;
                 if (asyncTable != null) {//null indicate this worker is idle
                     if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DELTA) {
-                        if (asyncTable.accumulateDelta() instanceof Integer)
-                            sum = ((Integer) asyncTable.accumulateDelta()) + 0.0d;
-                        else if (asyncTable.accumulateDelta() instanceof Long)
-                            sum = ((Long) asyncTable.accumulateDelta()) + 0.0d;
-                        else if (asyncTable.accumulateDelta() instanceof Float)
-                            sum = ((Float) asyncTable.accumulateDelta()) + 0.0d;
-                        else if (asyncTable.accumulateDelta() instanceof Double)
-                            sum = ((Double) asyncTable.accumulateDelta()) + 0.0d;
+                        if (asyncTable.accumulateDelta() instanceof Integer) {
+                            partialSum = (Integer) asyncTable.accumulateDelta();
+                        } else if (asyncTable.accumulateDelta() instanceof Long) {
+                            partialSum = (Long) asyncTable.accumulateDelta();
+                        } else if (asyncTable.accumulateDelta() instanceof Float) {
+                            partialSum = (Float) asyncTable.accumulateDelta();
+                        } else if (asyncTable.accumulateDelta() instanceof Double) {
+                            partialSum = (Double) asyncTable.accumulateDelta();
+                        }
+                        L.info("partialSum of delta: " + new BigDecimal(partialSum));
                     } else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.VALUE) {
-                        if (asyncTable.accumulateValue() instanceof Integer)
-                            sum = ((Integer) asyncTable.accumulateValue()) + 0.0d;
-                        else if (asyncTable.accumulateValue() instanceof Long)
-                            sum = ((Long) asyncTable.accumulateValue()) + 0.0d;
-                        else if (asyncTable.accumulateValue() instanceof Float)
-                            sum = ((Float) asyncTable.accumulateValue()) + 0.0d;
-                        else if (asyncTable.accumulateValue() instanceof Double)
-                            sum = ((Double) asyncTable.accumulateValue()) + 0.0d;
+                        if (asyncTable.accumulateValue() instanceof Integer) {
+                            partialSum = (Integer) asyncTable.accumulateValue();
+                        } else if (asyncTable.accumulateValue() instanceof Long) {
+                            partialSum = (Long) asyncTable.accumulateValue();
+                        } else if (asyncTable.accumulateValue() instanceof Float) {
+                            partialSum = (Float) asyncTable.accumulateValue();
+                        } else if (asyncTable.accumulateValue() instanceof Double) {
+                            partialSum = (Double) asyncTable.accumulateDelta();
+                        }
+                        L.info("sum of value: " + new BigDecimal(partialSum));
                     }
                     if (asyncConfig.isDynamic())
                         arrangeTask();
                 }
-                partialValue[0] = sum;
-                L.info("Worker " + myWorkerId + " sum of delta: " + sum);
-                MPI.COMM_WORLD.Sendrecv(partialValue, 0, 1, MPI.DOUBLE, AsyncMaster.ID, MsgType.TERM_CHECK_PARTIAL_VALUE.ordinal(),
+
+                MPI.COMM_WORLD.Sendrecv(new double[]{partialSum}, 0, 1, MPI.DOUBLE, AsyncMaster.ID, MsgType.TERM_CHECK_PARTIAL_VALUE.ordinal(),
                         feedback, 0, 1, MPI.BOOLEAN, AsyncMaster.ID, MsgType.TERM_CHECK_FEEDBACK.ordinal());
                 if (feedback[0]) {
                     done();

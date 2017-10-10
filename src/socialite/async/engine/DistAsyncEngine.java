@@ -8,6 +8,7 @@ import org.apache.commons.logging.LogFactory;
 import socialite.async.AsyncConfig;
 import socialite.async.analysis.AsyncAnalysis;
 import socialite.async.codegen.AsyncCodeGenMain;
+import socialite.async.codegen.BaseAsyncRuntime;
 import socialite.async.dist.MsgType;
 import socialite.async.dist.Payload;
 import socialite.async.util.SerializeTool;
@@ -18,6 +19,7 @@ import socialite.parser.Parser;
 import socialite.parser.Rule;
 import socialite.parser.antlr.TableDecl;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -118,19 +120,26 @@ public class DistAsyncEngine implements Runnable {
         public void run() {
             try {
                 while (true) {
-                    double accumulateSum =
-                            IntStream.rangeClosed(1, workerNum).parallel().mapToDouble(dest -> {
-                                double[] recvBuf = new double[1];
-                                MPI.COMM_WORLD.Sendrecv(new byte[1], 0, 1, MPI.BYTE, dest, MsgType.REQUIRE_TERM_CHECK.ordinal(),
-                                        recvBuf, 0, 1, MPI.DOUBLE, dest, MsgType.TERM_CHECK_PARTIAL_VALUE.ordinal());//send term check request and receive partial value
-                                return recvBuf[0];
-                            }).reduce(Double::sum).orElse(-1);
+                    boolean[] termOrNot = new boolean[1];
+                    double accumulatedSum = 0;
+
+                    for (int dest = 1; dest <= workerNum; dest++) {
+                        double[] partialValue = new double[1];
+                        MPI.COMM_WORLD.Sendrecv(new byte[1], 0, 1, MPI.BYTE, dest, MsgType.REQUIRE_TERM_CHECK.ordinal(),
+                                partialValue, 0, 1, MPI.DOUBLE, dest, MsgType.TERM_CHECK_PARTIAL_VALUE.ordinal());//send term check request and receive partial value
+                        accumulatedSum += partialValue[0];
+                    }
+
                     if (stopWatch == null) {
                         stopWatch = new StopWatch();
                         stopWatch.start();
                     }
-                    L.info("TERM_CHECK_VALUE_SUM: " + accumulateSum);
-                    boolean[] termOrNot = new boolean[]{eval(accumulateSum)};
+                    termOrNot[0] = BaseAsyncRuntime.eval(accumulatedSum);
+                    if (AsyncConfig.get().getCheckType() == AsyncConfig.CheckerType.VALUE)
+                        L.info("TERM_CHECK_VALUE_SUM: " + new BigDecimal(accumulatedSum));
+                    else
+                        L.info("TERM_CHECK_DELTA_SUM: " + new BigDecimal(accumulatedSum));
+
                     IntStream.rangeClosed(1, workerNum).parallel().forEach(dest -> MPI.COMM_WORLD.Send(termOrNot, 0, 1, MPI.BOOLEAN, dest, MsgType.TERM_CHECK_FEEDBACK.ordinal()));
                     if (termOrNot[0]) {
                         stopWatch.stop();
@@ -144,21 +153,5 @@ public class DistAsyncEngine implements Runnable {
             }
         }
 
-        private boolean eval(double val) {
-            double threshold = AsyncConfig.get().getThreshold();
-            switch (AsyncConfig.get().getCond()) {
-                case G:
-                    return val > threshold;
-                case GE:
-                    return val >= threshold;
-                case E:
-                    return val == threshold;
-                case LE:
-                    return val <= threshold;
-                case L:
-                    return val < threshold;
-            }
-            throw new UnsupportedOperationException();
-        }
     }
 }

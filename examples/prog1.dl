@@ -3,8 +3,11 @@ CHECK_TYPE = DELTA
 CHECK_COND = E
 CHECK_THRESHOLD = 0
 DYNAMIC = FALSE
-THREAD_NUM = 2
+THREAD_NUM = 32
 DEBUGGING = FALSE
+MESSAGE_TABLE_INIT_SIZE = 10000
+MESSAGE_TABLE_UPDATE_THRESHOLD = 0
+MESSAGE_TABLE_WAITING_INTERVAL = 5000
 RULE:
 edge(int src:0..875712, (int dst, int weight)).
 sssp(int node:0..875712, int dist).
@@ -23,3 +26,4 @@ sssp(Y, $dmin(D)) :- sssp(X, D1), edge(X, Y, D2), D = D1 + D2.
 #    livejournal    4847571
 #    google         875713
 #    berkstan       685230
+# NOTE MESSAGE_TABLE_UPDATE_THRESHOLD FOR SSSP CANNOT TOO LOW

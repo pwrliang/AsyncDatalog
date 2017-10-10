@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 public class AsyncConfig {
     private static AsyncConfig asyncConfig;
     private int checkInterval = -1;
+    private int messageTableWaitingInterval = -1;
     private double threshold;
     private CheckerType checkType;
     private Cond cond;
@@ -30,6 +31,9 @@ public class AsyncConfig {
         sb.append(dynamic ? "DYNAMIC" : "STATIC").append(", ");
         sb.append("THREAD_NUM ").append(threadNum).append(", ");
         sb.append("INIT_SIZE").append(initSize).append(", ");
+        sb.append("MESSAGE_INIT_SIZE ").append(messageTableInitSize).append(", ");
+        sb.append("MESSAGE_UPDATE_THRESHOLD ").append(messageTableUpdateThreshold).append(", ");
+        sb.append("MESSAGE_TABLE_WAITING_INTERVAL").append(messageTableWaitingInterval);
         return sb.toString();
     }
 
@@ -94,6 +98,10 @@ public class AsyncConfig {
         return messageTableUpdateThreshold;
     }
 
+    public int getMessageTableWaitingInterval() {
+        return messageTableWaitingInterval;
+    }
+
     public String getDatalogProg() {
         return datalogProg;
     }
@@ -129,6 +137,7 @@ public class AsyncConfig {
         private int initSize;
         private int messageTableInitSize;
         private int messageTableUpdateThreshold;
+        private int messageTableWaitingInterval = -1;
         private String datalogProg;
 
         public Builder setCheckerType(CheckerType checkType) {
@@ -181,6 +190,11 @@ public class AsyncConfig {
             return this;
         }
 
+        public Builder setMessageTableWaitingInterval(int messageTableWaitingInterval) {
+            this.messageTableWaitingInterval = messageTableWaitingInterval;
+            return this;
+        }
+
         public Builder setDatalogProg(String datalogProg) {
             this.datalogProg = datalogProg;
             return this;
@@ -204,6 +218,7 @@ public class AsyncConfig {
             asyncConfig.initSize = initSize;
             asyncConfig.messageTableInitSize = messageTableInitSize;
             asyncConfig.messageTableUpdateThreshold = messageTableUpdateThreshold;
+            asyncConfig.messageTableWaitingInterval = messageTableWaitingInterval;
             asyncConfig.datalogProg = datalogProg;
             if (AsyncConfig.asyncConfig != null)
                 throw new SociaLiteException("AsyncConfig already built");
@@ -293,6 +308,9 @@ public class AsyncConfig {
                     break;
                 case "MESSAGE_TABLE_UPDATE_THRESHOLD":
                     asyncConfig.setMessageTableUpdateThreshold(Integer.parseInt(val));
+                    break;
+                case "MESSAGE_TABLE_WAITING_INTERVAL":
+                    asyncConfig.setMessageTableWaitingInterval(Integer.parseInt(val));
                     break;
                 case "DEBUGGING":
                     if (val.equals("TRUE"))

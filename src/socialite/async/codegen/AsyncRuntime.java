@@ -10,6 +10,7 @@ import socialite.visitors.VisitorImpl;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.util.Arrays;
 
 public class AsyncRuntime extends BaseAsyncRuntime {
@@ -94,47 +95,30 @@ public class AsyncRuntime extends BaseAsyncRuntime {
                     checkerSW.reset();
                     checkerSW.start();
                     double sum = 0.0d;
-                    boolean valid = true;
                     if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DELTA) {
                         if (asyncTable.accumulateDelta() instanceof Integer) {
-                            Integer deltaSum = (Integer) asyncTable.accumulateDelta();
-                            if (deltaSum == Integer.MAX_VALUE) valid = false;
-                            sum = deltaSum;
+                            sum = (Integer) asyncTable.accumulateDelta();
                         } else if (asyncTable.accumulateDelta() instanceof Long) {
-                            Long deltaSum = (Long) asyncTable.accumulateDelta();
-                            if (deltaSum == Long.MAX_VALUE) valid = false;
-                            sum = deltaSum;
+                            sum = (Long) asyncTable.accumulateDelta();
                         } else if (asyncTable.accumulateDelta() instanceof Float) {
-                            Float deltaSum = (Float) asyncTable.accumulateDelta();
-                            if (deltaSum == Long.MAX_VALUE) valid = false;
-                            sum = deltaSum;
+                            sum = (Float) asyncTable.accumulateDelta();
                         } else if (asyncTable.accumulateDelta() instanceof Double) {
-                            Double deltaSum = (Double) asyncTable.accumulateDelta();
-                            if (deltaSum == Double.MAX_VALUE) valid = false;
-                            sum = deltaSum;
+                            sum = (Double) asyncTable.accumulateDelta();
                         }
-                        L.info("sum of value: " + sum);
+                        L.info("sum of delta: " + new BigDecimal(sum));
                     } else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.VALUE) {
                         if (asyncTable.accumulateValue() instanceof Integer) {
-                            Integer deltaSum = (Integer) asyncTable.accumulateValue();
-                            if (deltaSum == Integer.MAX_VALUE) valid = false;
-                            sum = deltaSum;
+                            sum = (Integer) asyncTable.accumulateValue();
                         } else if (asyncTable.accumulateValue() instanceof Long) {
-                            Long deltaSum = (Long) asyncTable.accumulateValue();
-                            if (deltaSum == Long.MAX_VALUE) valid = false;
-                            sum = deltaSum;
+                            sum = (Long) asyncTable.accumulateValue();
                         } else if (asyncTable.accumulateValue() instanceof Float) {
-                            Float deltaSum = (Float) asyncTable.accumulateValue();
-                            if (deltaSum == Long.MAX_VALUE) valid = false;
-                            sum = deltaSum;
+                            sum = (Float) asyncTable.accumulateValue();
                         } else if (asyncTable.accumulateValue() instanceof Double) {
-                            Double deltaSum = (Double) asyncTable.accumulateDelta();
-                            if (deltaSum == Double.MAX_VALUE) valid = false;
-                            sum = deltaSum;
+                            sum = (Double) asyncTable.accumulateDelta();
                         }
-                        L.info("sum of delta: " + sum);
+                        L.info("sum of value: " + new BigDecimal(sum));
                     }
-                    if (valid && eval(sum)) {
+                    if (eval(sum)) {
                         done();
                         break;
                     }

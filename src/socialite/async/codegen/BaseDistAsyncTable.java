@@ -2,6 +2,8 @@ package socialite.async.codegen;
 
 
 import mpi.MPI;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import socialite.async.AsyncConfig;
 import socialite.async.analysis.MyVisitorImpl;
 import socialite.async.util.SerializeTool;
@@ -15,8 +17,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 public abstract class BaseDistAsyncTable extends BaseAsyncTable {
-    private AtomicIntegerArray messageTableSelector;
-    private MessageTableBase[][] messageTableList;
+    private final AtomicIntegerArray messageTableSelector;
+    private final MessageTableBase[][] messageTableList;
     protected final int workerNum;
     protected final int myWorkerId;
     protected final DistTableSliceMap sliceMap;
@@ -65,12 +67,15 @@ public abstract class BaseDistAsyncTable extends BaseAsyncTable {
         return messageTableList[workerId][messageTableSelector.get(workerId)];
     }
 
+    private static final Log L = LogFactory.getLog(BaseDistAsyncTable.class);
+
     public byte[] getSendableMessageTableBytes(int sendToWorkerId, SerializeTool serializeTool) throws InterruptedException {
-        int writingTableInd = messageTableSelector.get(sendToWorkerId);//获取计算线程正在写入的表序号
-        MessageTableBase[] messageTableAndBackup = messageTableList[sendToWorkerId];
-        MessageTableBase sendableMessageTable = messageTableAndBackup[writingTableInd];
-        while (sendableMessageTable.getUpdateTimes() < messageTableUpdateThreshold)
-            Thread.sleep(100);
+        int writingTableInd;
+        writingTableInd = messageTableSelector.get(sendToWorkerId);//获取计算线程正在写入的表序号
+        MessageTableBase sendableMessageTable = messageTableList[sendToWorkerId][writingTableInd];
+        while (sendableMessageTable.getUpdateTimes() < messageTableUpdateThreshold) {
+            Thread.sleep(AsyncConfig.get().getMessageTableWaitingInterval());
+        }
         messageTableSelector.set(sendToWorkerId, writingTableInd == 0 ? 1 : 0);
         byte[] data = serializeTool.toBytes(sendableMessageTable);
         sendableMessageTable.resetDelta();

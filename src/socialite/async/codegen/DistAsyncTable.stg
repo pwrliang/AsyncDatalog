@@ -83,6 +83,7 @@ public class DistAsyncTable extends BaseDistAsyncTable{
         <elseif(IsMin.(aggrType))>if(accumulatedValue >= valueList.get(localInd))return;<endif>
         //更新value
         valueList.set(localInd, accumulatedValue);
+
         <!Count函数在不准与extra、weight同用，因为语义不明!>
         <if(!IsCount.(aggrType))>
             <! 有权值 !>
@@ -293,17 +294,20 @@ public class DistAsyncTable extends BaseDistAsyncTable{
     public Integer accumulateValue(){
         int sum = 0;
         for(int i=0;i\<size;i++)
-            if(valueList.get(i) && !sentFlagList.get(i))//可见性问题，只能这么解决
+            if(valueList.get(i) && !sentFlagList.get(i)){ //可见性问题，只能这么解决
                 sum++;
+            }
         return sum;
     }
     <else>
     public <WrappedTypeMap.(deltaType)> accumulateValue(){
         <valueType> sum = 0;
+
         for(int i=0;i\<size;i++){
             <valueType> value = valueList.get(i);
-            if(value != IDENTITY_ELEMENT)
+            if(value != IDENTITY_ELEMENT){
                 sum+=valueList.get(i);
+            }
         }
         return sum;
     }
@@ -312,10 +316,12 @@ public class DistAsyncTable extends BaseDistAsyncTable{
     @Override
     public <WrappedTypeMap.(deltaType)> accumulateDelta(){
         <deltaType> sum = 0;
+
         for(int i=0;i\<size;i++){
             <deltaType> delta = deltaList.get(i).<deltaType>Value();
-            if(delta != IDENTITY_ELEMENT)
+            if(delta != IDENTITY_ELEMENT){
                 sum+=delta;
+            }
         }
         return sum;
     }

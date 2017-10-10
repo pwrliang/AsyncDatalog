@@ -1,6 +1,8 @@
 package socialite.async.codegen;
 
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import socialite.async.atomic.MyAtomicDouble;
 import socialite.async.atomic.MyAtomicFloat;
 import socialite.async.atomic.MyAtomicInteger;
@@ -10,6 +12,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.util.Map;
 
 public abstract class MessageTableBase {
+    protected static final Log L = LogFactory.getLog(MessageTableBase.class);
     protected transient MyAtomicInteger updateCounter;
 
     protected MessageTableBase() {

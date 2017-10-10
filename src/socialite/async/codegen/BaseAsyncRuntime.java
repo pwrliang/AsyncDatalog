@@ -97,71 +97,26 @@ public abstract class BaseAsyncRuntime implements Runnable {
             L.info("checker thread exit");
         }
 
-//        @Override
-//        public void run() {
-//            stopWatch.start();
-//            while (true) {
-//                try {
-//                    checkerSW.reset();
-//                    checkerSW.start();
-//                    double sum = 0.0d;
-//                    if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DELTA) {
-//                        if (asyncTable.accumulateDelta() instanceof Integer)
-//                            sum = ((Integer) asyncTable.accumulateDelta()) + 0.0d;
-//                        else if (asyncTable.accumulateDelta() instanceof Long)
-//                            sum = ((Long) asyncTable.accumulateDelta()) + 0.0d;
-//                        else if (asyncTable.accumulateDelta() instanceof Float)
-//                            sum = ((Float) asyncTable.accumulateDelta()) + 0.0d;
-//                        else if (asyncTable.accumulateDelta() instanceof Double)
-//                            sum = ((Double) asyncTable.accumulateDelta()) + 0.0d;
-//                        L.info("sum of delta: " + sum);
-//                    } else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.VALUE) {
-//                        if (asyncTable.accumulateValue() instanceof Integer)
-//                            sum = ((Integer) asyncTable.accumulateValue()) + 0.0d;
-//                        else if (asyncTable.accumulateValue() instanceof Long)
-//                            sum = ((Long) asyncTable.accumulateValue()) + 0.0d;
-//                        else if (asyncTable.accumulateValue() instanceof Float)
-//                            sum = ((Float) asyncTable.accumulateValue()) + 0.0d;
-//                        else if (asyncTable.accumulateValue() instanceof Double)
-//                            sum = ((Double) asyncTable.accumulateValue()) + 0.0d;
-//                        L.info("sum of delta: " + sum);
-//                    }
-//                    if (eval(sum)) {
-//                        done();
-//                        break;
-//                    }
-//                    checkerSW.stop();
-//                    checkerConsume += checkerSW.getTime();
-//                    if (asyncConfig.isDynamic())
-//                        arrangeTask();
-//                    Thread.sleep(CHECKER_INTERVAL);
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }
-
-        protected boolean eval(double val) {
-
-
-
-            AsyncConfig asyncConfig = AsyncConfig.get();
-            double threshold = asyncConfig.getThreshold();
-            switch (asyncConfig.getCond()) {
-                case G:
-                    return val > threshold;
-                case GE:
-                    return val >= threshold;
-                case E:
-                    return val == threshold;
-                case LE:
-                    return val <= threshold;
-                case L:
-                    return val < threshold;
-            }
-            throw new UnsupportedOperationException();
-        }
     }
 
+    public static boolean eval(double val) {
+
+
+        AsyncConfig asyncConfig = AsyncConfig.get();
+        double threshold = asyncConfig.getThreshold();
+        switch (asyncConfig.getCond()) {
+            case G:
+                return val > threshold;
+            case GE:
+                return val >= threshold;
+            case E:
+                return val == threshold;
+            case LE:
+                return val <= threshold;
+            case L:
+                return val < threshold;
+        }
+        throw new UnsupportedOperationException();
+    }
 
 }
