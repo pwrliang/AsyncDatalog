@@ -1,7 +1,6 @@
 package socialite.async.dist.worker;
 
 import mpi.MPI;
-import mpi.Request;
 import mpi.Status;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -162,8 +161,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         checkThread.start();
 
         try {
-            for (int i = 0; i < computingThreads.length; i++)
-                computingThreads[i].join();
+            for (ComputingThread computingThread : computingThreads) computingThread.join();
             L.info("Worker " + myWorkerId + " Computing Thread exited.");
             checkThread.join();
         } catch (InterruptedException e) {
@@ -187,11 +185,9 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         public void run() {
             try {
                 while (!isStop()) {
+                    //may stuck here when stop, because no computing thread is writing to MessageTable, but its okay...
                     byte[] data = ((BaseDistAsyncTable) asyncTable).getSendableMessageTableBytes(sendToWorkerId, serializeTool);
-                    Request request = MPI.COMM_WORLD.Isend(data, 0, data.length, MPI.BYTE, sendToWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal());
-                    while (!isStop() && request.Wait() != null) {
-                        Thread.sleep(100);
-                    }
+                    MPI.COMM_WORLD.Send(data, 0, data.length, MPI.BYTE, sendToWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal());
                 }
                 L.info("Worker " + myWorkerId + " SendThread exited.");
             } catch (Exception e) {
@@ -217,26 +213,20 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         public void run() {
             try {
                 while (!isStop()) {
-                    Status status;
-
-
-//                    while (!isStop() &&
-//                            (status = MPI.COMM_WORLD.Iprobe(recvFromWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal())!=null){
-//
-//                    }
-
+                    Status status = MPI.COMM_WORLD.Probe(recvFromWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal());
                     int size = status.Get_count(MPI.BYTE);
                     int source = status.source;
-//            L.info(String.format("worker %d probe %d size %d MB", recvFromWorkerId + 1, source, size / 1024 / 1024));
                     byte[] data = new byte[size];
                     MPI.COMM_WORLD.Recv(data, 0, size, MPI.BYTE, source, MsgType.MESSAGE_TABLE.ordinal());
                     //L.info(String.format("Machine %d <---- %d", myWorkerId + 1, source));
                     MessageTableBase messageTable = (MessageTableBase) serializeTool.fromBytes1(data, klass);
                     ((BaseDistAsyncTable) asyncTable).applyBuffer(messageTable);
                 }
-                L.info("Worker " + myWorkerId + " RecvThread exited.");
+
             } catch (Exception e) {
                 e.printStackTrace();
+            } finally {
+                L.info("Worker " + myWorkerId + " RecvThread exited.");
             }
         }
     }

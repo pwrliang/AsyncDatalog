@@ -11,6 +11,8 @@ import socialite.async.util.TextUtils;
 import socialite.dist.master.MasterNode;
 import socialite.dist.worker.WorkerNode;
 import socialite.engine.Config;
+import socialite.engine.LocalEngine;
+import socialite.tables.*;
 import socialite.util.Assert;
 import socialite.util.SociaLiteException;
 
@@ -41,6 +43,7 @@ public class Entry {
             }
             L.info("process " + machineId + " exit.");
             MPI.Finalize();
+            System.exit(0);
         } else {
             AsyncConfig.parse(TextUtils.readText(args[args.length - 1]));
             AsyncConfig asyncConfig = AsyncConfig.get();
@@ -49,38 +52,39 @@ public class Entry {
         }
     }
 
-    public static final MyVisitorImpl myVisitor = new MyVisitorImpl() {
-        //PAGERANK
-        @Override
-        public boolean visit(int a1, double a2, double a3) {
-            System.out.println(a1 + " " + a2 + " " + a3);
-            return false;
-        }
-
-        //CC
-        @Override
-        public boolean visit(int a1, int a2, int a3) {
-            System.out.println(a1 + " " + a2 + " " + a3);
-            return true;
-        }
-
-        //COUNT PATH IN DAG
-        @Override
-        public boolean visit(Object a1, int a2, int a3) {
-            System.out.println(a1 + " " + a2 + " " + a3);
-            return true;
-        }
-
-        //PARTY
-        @Override
-        public boolean visit(int a1) {
-            System.out.println(a1);
-            return true;
-        }
-
-        public boolean visit(int a1,long a2,long a3) {
-            System.out.println(a1 + " " + a2 + " " + a3);
-            return true;
-        }
-    };
+//    public static final MyVisitorImpl myVisitor = new MyVisitorImpl() {
+//
+//        //PAGERANK
+//        @Override
+//        public boolean visit(int a1, double a2, double a3) {
+//            System.out.println(a1 + " " + a2 + " " + a3);
+//            return false;
+//        }
+//
+//        //CC
+//        @Override
+//        public boolean visit(int a1, int a2, int a3) {
+//            System.out.println(a1 + " " + a2 + " " + a3);
+//            return true;
+//        }
+//
+//        //COUNT PATH IN DAG
+//        @Override
+//        public boolean visit(Object a1, int a2, int a3) {
+//            System.out.println(a1 + " " + a2 + " " + a3);
+//            return true;
+//        }
+//
+//        //PARTY
+//        @Override
+//        public boolean visit(int a1) {
+//            System.out.println(a1);
+//            return true;
+//        }
+//
+//        public boolean visit(int a1,long a2,long a3) {
+//            System.out.println(a1 + " " + a2 + " " + a3);
+//            return true;
+//        }
+//    };
 }

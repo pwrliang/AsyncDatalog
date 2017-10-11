@@ -1,9 +1,7 @@
 package socialite.async.engine;
 
 import socialite.async.AsyncConfig;
-import socialite.async.Entry;
 import socialite.async.analysis.AsyncAnalysis;
-import socialite.async.analysis.MyVisitorImpl;
 import socialite.async.codegen.AsyncCodeGenMain;
 import socialite.async.codegen.AsyncRuntime;
 import socialite.async.codegen.BaseAsyncTable;
@@ -15,12 +13,16 @@ import socialite.parser.Parser;
 import socialite.parser.Rule;
 import socialite.parser.antlr.TableDecl;
 import socialite.resource.TableInstRegistry;
+import socialite.tables.QueryVisitor;
 import socialite.tables.TableInst;
+import socialite.tables.Tuple;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class LocalAsyncEngine {
     private AsyncAnalysis asyncAnalysis;
@@ -64,7 +66,7 @@ public class LocalAsyncEngine {
         }
     }
 
-    private void run(MyVisitorImpl myVisitor) {
+    private void run(QueryVisitor queryVisitor) {
         Analysis an = localEngine.getAn();
         TableInstRegistry registry = localEngine.getRuntime().getTableRegistry();
         TableInst[] recInst = registry.getTableInstArray(an.getTableMap().get("InitTable").id());
@@ -76,18 +78,39 @@ public class LocalAsyncEngine {
             BaseAsyncTable asyncTable = (BaseAsyncTable) constructor.newInstance(AsyncConfig.get().getInitSize());
             AsyncRuntime asyncRuntime = new AsyncRuntime(asyncTable, recInst, edgeInst);
             asyncRuntime.run();
-            asyncTable.iterate(myVisitor);
+            asyncTable.iterateTuple(queryVisitor);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
             e.printStackTrace();
         }
     }
 
     public void run() {
+        AsyncConfig asyncConfig = AsyncConfig.get();
         compile();
         List<String> initStats = asyncCodeGenMain.getInitStats();
-        if (!AsyncConfig.get().isDebugging()) {
+
+        if (!asyncConfig.isDebugging()) {
             initStats.forEach(initStat -> localEngine.run(initStat));
-            run(Entry.myVisitor);//save result
+            String[] tmp = AsyncConfig.get().getSavePath().split("/");
+            StringJoiner stringJoiner = new StringJoiner("/");
+            IntStream.range(0, tmp.length - 1).forEach(i -> stringJoiner.add(tmp[i]));
+            run(new QueryVisitor() {
+
+                TextUtils textUtils = new TextUtils(stringJoiner.toString(), tmp[tmp.length - 1]);
+
+                @Override
+                public boolean visit(Tuple _0) {
+                    if (asyncConfig.isPrintResult())
+                        System.out.println(_0.toString());
+                    textUtils.writeLine(_0.toString());
+                    return true;
+                }
+
+                @Override
+                public void finish() {
+                    textUtils.close();
+                }
+            });//save result
         }
         localEngine.shutdown();
     }

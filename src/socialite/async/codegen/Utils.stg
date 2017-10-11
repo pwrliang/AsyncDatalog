@@ -14,6 +14,15 @@ WrappedTypeMap ::= [
     default: "Pair"
 ]
 
+WrappedTypeForTupleMap ::= [
+   "int": "Int",
+    "long": "Long",
+    "float": "Float",
+    "double": "Double",
+    "boolean": "Boolean" ,
+    default: "Object"
+]
+
 IsKeyAsIndex ::= [
     "int": true,
     default: false
@@ -171,6 +180,7 @@ import socialite.async.atomic.*;
 import socialite.async.*;
 import socialite.async.analysis.*;
 import socialite.async.codegen.*;
+import socialite.tables.*;
 import socialite.util.*;
 import java.util.*;
 import gnu.trove.list.*;
@@ -193,6 +203,7 @@ import socialite.async.atomic.*;
 import socialite.resource.*;
 import socialite.util.SociaLiteException;
 import java.util.concurrent.ConcurrentHashMap;
+import socialite.tables.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.concurrent.atomic.AtomicIntegerArray;

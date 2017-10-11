@@ -1,6 +1,7 @@
 package socialite.async.codegen;
 
 import socialite.async.analysis.MyVisitorImpl;
+import socialite.tables.QueryVisitor;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public abstract class BaseAsyncTable {
@@ -9,6 +10,8 @@ public abstract class BaseAsyncTable {
     public abstract int getSize();
 
     public abstract void iterate(MyVisitorImpl visitor);
+
+    public abstract void iterateTuple(QueryVisitor queryVisitor);
 
     public void updateLockFree(int localInd) {
         throw new NotImplementedException();

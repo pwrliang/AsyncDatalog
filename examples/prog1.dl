@@ -8,6 +8,8 @@ DEBUGGING = FALSE
 MESSAGE_TABLE_INIT_SIZE = 10000
 MESSAGE_TABLE_UPDATE_THRESHOLD = 0
 MESSAGE_TABLE_WAITING_INTERVAL = 100
+SAVE_PATH = "hdfs://master:9000/test"
+PRINT_RESULT = TRUE
 RULE:
 edge(int src:0..3, (int dst, int weight)).
 sssp(int node:0..3, int dist).

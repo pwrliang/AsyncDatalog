@@ -21,6 +21,8 @@ public class AsyncConfig {
     private int initSize;
     private int messageTableInitSize;
     private int messageTableUpdateThreshold;
+    private String savePath;
+    private boolean printResult;
     private String datalogProg;
 
     @Override
@@ -33,12 +35,13 @@ public class AsyncConfig {
         sb.append("INIT_SIZE").append(initSize).append(", ");
         sb.append("MESSAGE_INIT_SIZE ").append(messageTableInitSize).append(", ");
         sb.append("MESSAGE_UPDATE_THRESHOLD ").append(messageTableUpdateThreshold).append(", ");
-        sb.append("MESSAGE_TABLE_WAITING_INTERVAL").append(messageTableWaitingInterval);
+        sb.append("MESSAGE_TABLE_WAITING_INTERVAL").append(messageTableWaitingInterval).append(", ");
+        sb.append("SAVE_PATH").append(savePath);
         return sb.toString();
     }
 
 
-    public String getSCond() {
+    private String getSCond() {
         switch (cond) {
             case G:
                 return ">";
@@ -102,12 +105,20 @@ public class AsyncConfig {
         return messageTableWaitingInterval;
     }
 
+    public String getSavePath() {
+        return savePath;
+    }
+
     public String getDatalogProg() {
         return datalogProg;
     }
 
     public boolean isDynamic() {
         return dynamic;
+    }
+
+    public boolean isPrintResult() {
+        return printResult;
     }
 
     public boolean isDebugging() {
@@ -122,10 +133,6 @@ public class AsyncConfig {
         VALUE, DELTA, DIFF_VALUE, DIFF_DELTA
     }
 
-    public enum EngineType {
-        DIST, STANDALONE
-    }
-
     public static class Builder {
         private int checkInterval = -1;
         private Double threshold = null;
@@ -138,7 +145,9 @@ public class AsyncConfig {
         private int messageTableInitSize;
         private int messageTableUpdateThreshold;
         private int messageTableWaitingInterval = -1;
+        private boolean printResult;
         private String datalogProg;
+        private String savePath;
 
         public Builder setCheckerType(CheckerType checkType) {
             this.checkType = checkType;
@@ -195,6 +204,16 @@ public class AsyncConfig {
             return this;
         }
 
+        public Builder setPrintResult(boolean printResult) {
+            this.printResult = printResult;
+            return this;
+        }
+
+        public Builder setSavePath(String savePath) {
+            this.savePath = savePath;
+            return this;
+        }
+
         public Builder setDatalogProg(String datalogProg) {
             this.datalogProg = datalogProg;
             return this;
@@ -219,6 +238,8 @@ public class AsyncConfig {
             asyncConfig.messageTableInitSize = messageTableInitSize;
             asyncConfig.messageTableUpdateThreshold = messageTableUpdateThreshold;
             asyncConfig.messageTableWaitingInterval = messageTableWaitingInterval;
+            asyncConfig.savePath = savePath;
+            asyncConfig.printResult = printResult;
             asyncConfig.datalogProg = datalogProg;
             if (AsyncConfig.asyncConfig != null)
                 throw new SociaLiteException("AsyncConfig already built");
@@ -303,6 +324,13 @@ public class AsyncConfig {
                         asyncConfig.setDynamic(false);
                     else throw new SociaLiteException("unknown val: " + val);
                     break;
+                case "PRINT_RESULT":
+                    if (val.equals("TRUE"))
+                        asyncConfig.setPrintResult(true);
+                    else if (val.equals("FALSE"))
+                        asyncConfig.setPrintResult(false);
+                    else throw new SociaLiteException("unknown val: " + val);
+                    break;
                 case "THREAD_NUM":
                     asyncConfig.setThreadNum(Integer.parseInt(val));
                     break;
@@ -317,6 +345,10 @@ public class AsyncConfig {
                     break;
                 case "MESSAGE_TABLE_WAITING_INTERVAL":
                     asyncConfig.setMessageTableWaitingInterval(Integer.parseInt(val));
+                    break;
+                case "SAVE_PATH":
+                    val = val.replace("\"","");
+                    asyncConfig.setSavePath(val);
                     break;
                 case "DEBUGGING":
                     if (val.equals("TRUE"))
