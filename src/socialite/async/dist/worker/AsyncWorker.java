@@ -9,9 +9,6 @@ import socialite.resource.SRuntimeWorker;
 import socialite.tables.QueryVisitor;
 import socialite.tables.Tuple;
 
-import java.util.StringJoiner;
-import java.util.stream.IntStream;
-
 public class AsyncWorker {
     private static final Log L = LogFactory.getLog(AsyncWorker.class);
     private DistAsyncRuntime distAsyncRuntime;
@@ -27,23 +24,29 @@ public class AsyncWorker {
         int myWorkerId = MPI.COMM_WORLD.Rank() - 1;
         distAsyncRuntime.run();
         L.info("worker " + myWorkerId + " saving...");
-        String[] tmp = AsyncConfig.get().getSavePath().split("/");
-        StringJoiner stringJoiner = new StringJoiner("/");
-        IntStream.range(0, tmp.length - 1).forEach(i -> stringJoiner.add(tmp[i]));
+
         AsyncConfig asyncConfig = AsyncConfig.get();
+
+        TextUtils textUtils = null;
+        String savePath = asyncConfig.getSavePath();
+        if (savePath.length() > 0)
+            textUtils = new TextUtils(asyncConfig.getSavePath(), "part-" + myWorkerId);
+
+        TextUtils finalTextUtils = textUtils;
         distAsyncRuntime.getAsyncTable().iterateTuple(new QueryVisitor() {
-            TextUtils textUtils = new TextUtils(asyncConfig.getSavePath(), "part-" + myWorkerId);
             @Override
             public boolean visit(Tuple _0) {
                 if (asyncConfig.isPrintResult())
                     System.out.println(_0.toString());
-                textUtils.writeLine(_0.toString());
+                if (finalTextUtils != null)
+                    finalTextUtils.writeLine(_0.toString());
                 return true;
             }
 
             @Override
             public void finish() {
-                textUtils.close();
+                if (finalTextUtils != null)
+                    finalTextUtils.close();
             }
         });//save result
     }

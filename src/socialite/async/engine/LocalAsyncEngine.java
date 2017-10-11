@@ -20,9 +20,7 @@ import socialite.tables.Tuple;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class LocalAsyncEngine {
     private AsyncAnalysis asyncAnalysis;
@@ -91,24 +89,30 @@ public class LocalAsyncEngine {
 
         if (!asyncConfig.isDebugging()) {
             initStats.forEach(initStat -> localEngine.run(initStat));
-            String[] tmp = AsyncConfig.get().getSavePath().split("/");
-            StringJoiner stringJoiner = new StringJoiner("/");
-            IntStream.range(0, tmp.length - 1).forEach(i -> stringJoiner.add(tmp[i]));
+            String savePath = AsyncConfig.get().getSavePath();
+            TextUtils textUtils = null;
+            if (savePath.length() > 0) {
+                String[] tmp = savePath.split("/");
+                String root = savePath.substring(0, savePath.length() - tmp[tmp.length - 1].length() - 1);
+                String fileName = tmp[tmp.length - 1];
+                textUtils = new TextUtils(root, fileName);
+            }
+
+            TextUtils finalTextUtils = textUtils;
             run(new QueryVisitor() {
-
-                TextUtils textUtils = new TextUtils(stringJoiner.toString(), tmp[tmp.length - 1]);
-
                 @Override
                 public boolean visit(Tuple _0) {
                     if (asyncConfig.isPrintResult())
                         System.out.println(_0.toString());
-                    textUtils.writeLine(_0.toString());
+                    if (finalTextUtils != null)
+                        finalTextUtils.writeLine(_0.toString());
                     return true;
                 }
 
                 @Override
                 public void finish() {
-                    textUtils.close();
+                    if (finalTextUtils != null)
+                        finalTextUtils.close();
                 }
             });//save result
         }

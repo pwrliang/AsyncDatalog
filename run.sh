@@ -114,13 +114,13 @@ TEST_CLASSPATH=${SOCIALITE_PREFIX}/out/production/socialite
 #-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 \
 
 mpjrun.sh -Xmx28G \
--machinesfile ${SOCIALITE_PREFIX}/machines -np 5 -dev niodev \
+-machinesfile ${SOCIALITE_PREFIX}/machines -np 6 -dev niodev \
 -Dsocialite.output.dir=${SOCIALITE_PREFIX}/gen \
 -Dsocialite.worker.num=1 \
 -Dsocialite.port=40100 \
 -Dsocialite.master=master \
 -Dlog4j.configuration=file:${SOCIALITE_PREFIX}/conf/log4j.properties \
 -cp ${TEST_CLASSPATH}:${JAR_PATH} \
-socialite.async.Entry ${SOCIALITE_PREFIX}/examples/prog1.dl
+socialite.async.Entry ${SOCIALITE_PREFIX}/examples/PageRank/Google.dl
 
 kill -9 $(ps aux|grep '[s]ocialite.async.Entry'|awk '{print $2}')

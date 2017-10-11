@@ -251,7 +251,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                 if (asyncTable != null) {//null indicate this worker is idle
 
                     if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DELTA) {
-                        accumulated = asyncTable.accumulateValue();
+                        accumulated = asyncTable.accumulateDelta();
                         if (accumulated instanceof Integer) {
                             partialSum = (Integer) accumulated;
                         } else if (accumulated instanceof Long) {

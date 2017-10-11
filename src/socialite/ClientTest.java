@@ -1,14 +1,13 @@
 package socialite;
 
+import socialite.engine.LocalEngine;
+import socialite.tables.QueryVisitor;
+import socialite.tables.Tuple;
+
 import java.io.File;
 
 public class ClientTest {
     public static void main(String[] args) throws InterruptedException {
-        File file = new File("/home/gengl/hadoop/share/hadoop/common/lib");
-        for (String fileName : file.list()) {
-            System.out.println("JAR_PATH=${JAR_PATH}:${HADOOP_COMMON}/lib/" + fileName);
-        }
-
 
         //-Dsocialite.worker.num=8 -Dsocialite.port=50100 -Dsocialite.master=localhost -Dlog4j.configuration=file:-Dsocialite.port=50100 -Dsocialite.master=master -Dlog4j.configuration=file:/home/gengl/socialite-before-yarn/conf/log4j.properties
 //        MasterNode.startMasterNode();
@@ -25,8 +24,22 @@ public class ClientTest {
 //            }
 //        },0);
 //        clientEngine.shutdown();
-//        LocalEngine localEngine = new LocalEngine();
-//        localEngine.run("Test(int Key:0..875713, boolean come).");
-//        localEngine.shutdown();
+        LocalEngine localEngine = new LocalEngine();
+        String stats = "Node(int n:0..875713).\n" +
+                "Rank(int n:0..875713, double rank).\n" +
+                "Edge(int n:0..875713, (int t)).\n" +
+                "EdgeCnt(int n:0..875712, int cnt).\n" +
+                "Edge(s, t) :- l=$read(\"/home/gengl/Datasets/PageRank/Google/sorted.txt\"), (s1,s2)=$split(l, \"\t\"), s=$toInt(s1), t=$toInt(s2).\n" +
+                "Node(n) :- l=$read(\"/home/gengl/Datasets/PageRank/Google/node.txt\"), n=$toInt(l).\n" +
+                "EdgeCnt(s, $inc(1)) :- Edge(s, t).\n" +
+                "Rank(n, r) :- Node(n), r = 0.2 / 875713.\n";
+        localEngine.run(stats);
+        localEngine.run("?- Node(n).", new QueryVisitor() {
+            @Override
+            public boolean visit(Tuple _0) {
+                return super.visit(_0);
+            }
+        });
+        localEngine.shutdown();
     }
 }

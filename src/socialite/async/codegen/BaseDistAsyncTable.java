@@ -74,9 +74,10 @@ public abstract class BaseDistAsyncTable extends BaseAsyncTable {
         writingTableInd = messageTableSelector.get(sendToWorkerId);//获取计算线程正在写入的表序号
         MessageTableBase sendableMessageTable = messageTableList[sendToWorkerId][writingTableInd];
         long startTime = System.currentTimeMillis();
-        while (sendableMessageTable.getUpdateTimes() < messageTableUpdateThreshold ||
-                (System.currentTimeMillis() - startTime) >= AsyncConfig.get().getMessageTableWaitingInterval()) {
-            Thread.sleep(100);
+        while (sendableMessageTable.getUpdateTimes() < messageTableUpdateThreshold) {
+            Thread.sleep(10);
+            if ((System.currentTimeMillis() - startTime) >= AsyncConfig.get().getMessageTableWaitingInterval())
+                break;
         }
         messageTableSelector.set(sendToWorkerId, writingTableInd == 0 ? 1 : 0);
         byte[] data = serializeTool.toBytes(sendableMessageTable);

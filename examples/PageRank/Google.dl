@@ -4,19 +4,25 @@ CHECK_COND = GE
 CHECK_THRESHOLD = 0.9999
 DYNAMIC = FALSE
 THREAD_NUM = 32
+MESSAGE_TABLE_INIT_SIZE = 10000
+MESSAGE_TABLE_UPDATE_THRESHOLD = 10000
+MESSAGE_TABLE_WAITING_INTERVAL = 1000
+THREAD_NUM = 32
+#SAVE_PATH = "hdfs://master:9000/expr/PageRank/Google"
+#PRINT_RESULT = TRUE
 RULE:
 Node(int n:0..875712).
 Rank(int n:0..875712, double rank).
 Edge(int n:0..875712, (int t)).
 EdgeCnt(int n:0..875712, int cnt).
 
-Edge(s, t) :- l=$read("hdfs://examples/prog2_edge.txt"), (s1,s2)=$split(l, "	"),
+Edge(s, t) :- l=$read("hdfs://master:9000/Datasets/PageRank/Google/sorted.txt"), (s1,s2)=$split(l, "	"),
              s=$toInt(s1), t=$toInt(s2).
 
+
+Node(n) :- l=$read("hdfs://master:9000/Datasets/PageRank/Google/node.txt"), n=$toInt(l).
+
 EdgeCnt(s, $inc(1)) :- Edge(s, t).
-
-Node(n) :- l=$read("/home/gengl/Datasets/PageRank/Google/nodes.txt"), n=$toInt(l).
-
 Rank(n, r) :- Node(n), r = 0.2 / 875713.
 Rank(y, $dsum(r1)) :- Rank(x, r), Edge(x, y),  EdgeCnt(x, d), r1 = 0.8 * r / d.
 

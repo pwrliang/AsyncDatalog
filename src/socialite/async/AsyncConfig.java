@@ -106,6 +106,7 @@ public class AsyncConfig {
     }
 
     public String getSavePath() {
+        if (savePath == null) return "";
         return savePath;
     }
 
@@ -347,7 +348,7 @@ public class AsyncConfig {
                     asyncConfig.setMessageTableWaitingInterval(Integer.parseInt(val));
                     break;
                 case "SAVE_PATH":
-                    val = val.replace("\"","");
+                    val = val.replace("\"", "");
                     asyncConfig.setSavePath(val);
                     break;
                 case "DEBUGGING":
