@@ -78,16 +78,14 @@ public class AsyncTable extends BaseAsyncTable{
                 for(int i = 0; i \< adjacencies.size(); i++){
                     int adjacentLocalInd;
                     <keyType> adjacency = adjacencies.get(i);
-                    <!when use int as key, use key as index!>
-                    if(keyIndMap.contains(adjacency))
-                        adjacentLocalInd = keyIndMap.get(adjacency);
-                    else {
-                        adjacentLocalInd = addEntry(adjacency, false, IDENTITY_ELEMENT);
+                    synchronized(keyIndMap) {
+                        if(keyIndMap.contains(adjacency))
+                            adjacentLocalInd = keyIndMap.get(adjacency);
+                        else {
+                            adjacentLocalInd = addEntry(adjacency, false, IDENTITY_ELEMENT);
+                        }
                     }
-                    <!BUG!!!!!!!!!!!!!!!!!!>
-                    <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
-                    <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
-                    <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
+                    <! OTHER AGGREGATE FUNCTIONS IS NOT SUPPORTED !>
                     <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
                 }
             }
@@ -276,7 +274,7 @@ public class AsyncTable extends BaseAsyncTable{
     public Integer accumulateValue(){
         int sum = 0;
         for(int i=0;i\<size;i++)
-            if(valueList.get(i) && !sentFlagList.get(i)){ //可见性问题，只能这么解决
+            if(valueList.get(i)){
                 sum++;
             }
         return sum;

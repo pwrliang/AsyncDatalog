@@ -11,6 +11,7 @@ import socialite.async.util.TextUtils;
 import socialite.dist.master.MasterNode;
 import socialite.dist.worker.WorkerNode;
 import socialite.engine.Config;
+import socialite.util.Assert;
 import socialite.util.SociaLiteException;
 
 public class Entry {
@@ -74,6 +75,11 @@ public class Entry {
         @Override
         public boolean visit(int a1) {
             System.out.println(a1);
+            return true;
+        }
+
+        public boolean visit(int a1,long a2,long a3) {
+            System.out.println(a1 + " " + a2 + " " + a3);
             return true;
         }
     };

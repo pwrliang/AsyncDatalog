@@ -119,7 +119,7 @@ public class AsyncConfig {
     }
 
     public enum CheckerType {
-        VALUE, DELTA
+        VALUE, DELTA, DIFF_VALUE, DIFF_DELTA
     }
 
     public enum EngineType {
@@ -261,6 +261,12 @@ public class AsyncConfig {
                             break;
                         case "DELTA":
                             asyncConfig.setCheckerType(CheckerType.DELTA);
+                            break;
+                        case "DIFF_VALUE":
+                            asyncConfig.setCheckerType(CheckerType.DIFF_VALUE);
+                            break;
+                        case "DIFF_DELTA":
+                            asyncConfig.setCheckerType(CheckerType.DIFF_DELTA);
                             break;
                         default:
                             throw new SociaLiteException("unknown check type: " + val);

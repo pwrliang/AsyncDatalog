@@ -115,11 +115,19 @@ public class DistAsyncEngine implements Runnable {
     }
 
     private class FeedBackThread extends Thread {
+        private AsyncConfig asyncConfig;
         private StopWatch stopWatch;
+        private Double lastSum;
+
+        private FeedBackThread() {
+            asyncConfig = AsyncConfig.get();
+        }
+
         @Override
         public void run() {
             try {
                 while (true) {
+                    boolean skipFirst = false;
                     boolean[] termOrNot = new boolean[1];
                     double accumulatedSum = 0;
 
@@ -134,11 +142,35 @@ public class DistAsyncEngine implements Runnable {
                         stopWatch = new StopWatch();
                         stopWatch.start();
                     }
-                    termOrNot[0] = BaseAsyncRuntime.eval(accumulatedSum);
-                    if (AsyncConfig.get().getCheckType() == AsyncConfig.CheckerType.VALUE)
+
+
+                    if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.VALUE)
                         L.info("TERM_CHECK_VALUE_SUM: " + new BigDecimal(accumulatedSum));
-                    else
+                    else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DELTA)
                         L.info("TERM_CHECK_DELTA_SUM: " + new BigDecimal(accumulatedSum));
+                    else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DIFF_VALUE) {
+                        if (lastSum == null) {
+                            lastSum = accumulatedSum;
+                            skipFirst = true;
+                        } else {
+                            double tmp = accumulatedSum;
+                            accumulatedSum = Math.abs(lastSum - accumulatedSum);
+                            lastSum = tmp;
+                        }
+                        L.info("TERM_CHECK_DIFF_VALUE_SUM: " + new BigDecimal(accumulatedSum));
+                    } else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DIFF_DELTA) {
+                        if (lastSum == null) {
+                            lastSum = accumulatedSum;
+                            skipFirst = true;
+                        } else {
+                            double tmp = accumulatedSum;
+                            accumulatedSum = Math.abs(lastSum - accumulatedSum);
+                            lastSum = tmp;
+                        }
+                        L.info("TERM_CHECK_DIFF_DELTA_SUM: " + new BigDecimal(accumulatedSum));
+                    }
+
+                    termOrNot[0] = !skipFirst && BaseAsyncRuntime.eval(accumulatedSum);
 
                     IntStream.rangeClosed(1, workerNum).parallel().forEach(dest -> MPI.COMM_WORLD.Send(termOrNot, 0, 1, MPI.BOOLEAN, dest, MsgType.TERM_CHECK_FEEDBACK.ordinal()));
                     if (termOrNot[0]) {
