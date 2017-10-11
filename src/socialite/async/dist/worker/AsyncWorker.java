@@ -32,18 +32,18 @@ public class AsyncWorker {
         IntStream.range(0, tmp.length - 1).forEach(i -> stringJoiner.add(tmp[i]));
         AsyncConfig asyncConfig = AsyncConfig.get();
         distAsyncRuntime.getAsyncTable().iterateTuple(new QueryVisitor() {
-//            TextUtils textUtils = new TextUtils(asyncConfig.getSavePath(), "part-" + myWorkerId);
+            TextUtils textUtils = new TextUtils(asyncConfig.getSavePath(), "part-" + myWorkerId);
             @Override
             public boolean visit(Tuple _0) {
                 if (asyncConfig.isPrintResult())
                     System.out.println(_0.toString());
-//                textUtils.writeLine(_0.toString());
+                textUtils.writeLine(_0.toString());
                 return true;
             }
 
             @Override
             public void finish() {
-//                textUtils.close();
+                textUtils.close();
             }
         });//save result
     }

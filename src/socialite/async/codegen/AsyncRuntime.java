@@ -93,37 +93,41 @@ public class AsyncRuntime extends BaseAsyncRuntime {
                 try {
                     double sum = 0.0d;
                     boolean skipFirst = false;
+                    Object accumulated;
                     if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.VALUE) {
-                        if (asyncTable.accumulateValue() instanceof Integer) {
-                            sum = (Integer) asyncTable.accumulateValue();
-                        } else if (asyncTable.accumulateValue() instanceof Long) {
-                            sum = (Long) asyncTable.accumulateValue();
-                        } else if (asyncTable.accumulateValue() instanceof Float) {
-                            sum = (Float) asyncTable.accumulateValue();
-                        } else if (asyncTable.accumulateValue() instanceof Double) {
-                            sum = (Double) asyncTable.accumulateValue();
+                        accumulated = asyncTable.accumulateValue();
+                        if (accumulated instanceof Integer) {
+                            sum = (Integer) accumulated;
+                        } else if (accumulated instanceof Long) {
+                            sum = (Long) accumulated;
+                        } else if (accumulated instanceof Float) {
+                            sum = (Float) accumulated;
+                        } else if (accumulated instanceof Double) {
+                            sum = (Double) accumulated;
                         }
                         L.info("sum of value: " + new BigDecimal(sum));
                     } else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DELTA) {
-                        if (asyncTable.accumulateDelta() instanceof Integer) {
-                            sum = (Integer) asyncTable.accumulateDelta();
-                        } else if (asyncTable.accumulateDelta() instanceof Long) {
-                            sum = (Long) asyncTable.accumulateDelta();
-                        } else if (asyncTable.accumulateDelta() instanceof Float) {
-                            sum = (Float) asyncTable.accumulateDelta();
-                        } else if (asyncTable.accumulateDelta() instanceof Double) {
-                            sum = (Double) asyncTable.accumulateDelta();
+                        accumulated = asyncTable.accumulateDelta();
+                        if (accumulated instanceof Integer) {
+                            sum = (Integer) accumulated;
+                        } else if (accumulated instanceof Long) {
+                            sum = (Long) accumulated;
+                        } else if (accumulated instanceof Float) {
+                            sum = (Float) accumulated;
+                        } else if (accumulated instanceof Double) {
+                            sum = (Double) accumulated;
                         }
                         L.info("sum of delta: " + new BigDecimal(sum));
                     } else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DIFF_VALUE) {
-                        if (asyncTable.accumulateValue() instanceof Integer) {
-                            sum = (Integer) asyncTable.accumulateValue();
-                        } else if (asyncTable.accumulateValue() instanceof Long) {
-                            sum = (Long) asyncTable.accumulateValue();
-                        } else if (asyncTable.accumulateValue() instanceof Float) {
-                            sum = (Float) asyncTable.accumulateValue();
-                        } else if (asyncTable.accumulateValue() instanceof Double) {
-                            sum = (Double) asyncTable.accumulateValue();
+                        accumulated = asyncTable.accumulateValue();
+                        if (accumulated instanceof Integer) {
+                            sum = (Integer) accumulated;
+                        } else if (accumulated instanceof Long) {
+                            sum = (Long) accumulated;
+                        } else if (accumulated instanceof Float) {
+                            sum = (Float) accumulated;
+                        } else if (accumulated instanceof Double) {
+                            sum = (Double) accumulated;
                         }
                         if (lastSum == null) {
                             lastSum = sum;
@@ -135,14 +139,15 @@ public class AsyncRuntime extends BaseAsyncRuntime {
                         }
                         L.info("diff sum of value: " + new BigDecimal(sum));
                     } else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DIFF_DELTA) {
-                        if (asyncTable.accumulateDelta() instanceof Integer) {
-                            sum = (Integer) asyncTable.accumulateDelta();
-                        } else if (asyncTable.accumulateDelta() instanceof Long) {
-                            sum = (Long) asyncTable.accumulateDelta();
-                        } else if (asyncTable.accumulateDelta() instanceof Float) {
-                            sum = (Float) asyncTable.accumulateDelta();
-                        } else if (asyncTable.accumulateDelta() instanceof Double) {
-                            sum = (Double) asyncTable.accumulateDelta();
+                        accumulated = asyncTable.accumulateDelta();
+                        if (accumulated instanceof Integer) {
+                            sum = (Integer) accumulated;
+                        } else if (accumulated instanceof Long) {
+                            sum = (Long) accumulated;
+                        } else if (accumulated instanceof Float) {
+                            sum = (Float) accumulated;
+                        } else if (accumulated instanceof Double) {
+                            sum = (Double) accumulated;
                         }
                         if (lastSum == null) {
                             lastSum = sum;

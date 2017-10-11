@@ -70,6 +70,14 @@ public abstract class BaseAsyncRuntime implements Runnable {
         @Override
         public void run() {
             while (!stop) {
+                //empty thread, sleep to reduce CPU race
+                if (start == end) {
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
                 for (int k = start; k < end; k++) {
                     asyncTable.updateLockFree(k);
                 }

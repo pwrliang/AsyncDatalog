@@ -1,6 +1,7 @@
 package socialite.async.dist.worker;
 
 import mpi.MPI;
+import mpi.MPIException;
 import mpi.Status;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -185,11 +186,9 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         public void run() {
             try {
                 while (!isStop()) {
-                    //may stuck here when stop, because no computing thread is writing to MessageTable, but its okay...
                     byte[] data = ((BaseDistAsyncTable) asyncTable).getSendableMessageTableBytes(sendToWorkerId, serializeTool);
                     MPI.COMM_WORLD.Send(data, 0, data.length, MPI.BYTE, sendToWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal());
                 }
-                L.info("Worker " + myWorkerId + " SendThread exited.");
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -213,21 +212,24 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         public void run() {
             try {
                 while (!isStop()) {
-                    Status status = MPI.COMM_WORLD.Probe(recvFromWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal());
-                    int size = status.Get_count(MPI.BYTE);
-                    int source = status.source;
-                    byte[] data = new byte[size];
-                    MPI.COMM_WORLD.Recv(data, 0, size, MPI.BYTE, source, MsgType.MESSAGE_TABLE.ordinal());
-                    //L.info(String.format("Machine %d <---- %d", myWorkerId + 1, source));
-                    MessageTableBase messageTable = (MessageTableBase) serializeTool.fromBytes1(data, klass);
-                    ((BaseDistAsyncTable) asyncTable).applyBuffer(messageTable);
+                    applyBufferToAsyncTable();
                 }
-
             } catch (Exception e) {
                 e.printStackTrace();
-            } finally {
-                L.info("Worker " + myWorkerId + " RecvThread exited.");
             }
+        }
+
+        private void applyBufferToAsyncTable() throws MPIException, InterruptedException {
+            Status status = MPI.COMM_WORLD.Probe(recvFromWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal());
+            int size = status.Get_count(MPI.BYTE);
+            int source = status.source;
+//            L.info(String.format("worker %d probe %d size %d MB", recvFromWorkerId + 1, source, size / 1024 / 1024));
+            byte[] data = new byte[size];
+//            L.info("applyBufferToAsyncTable");
+            MPI.COMM_WORLD.Recv(data, 0, size, MPI.BYTE, source, MsgType.MESSAGE_TABLE.ordinal());
+            //L.info(String.format("Machine %d <---- %d", myWorkerId + 1, source));
+            MessageTableBase messageTable = (MessageTableBase) serializeTool.fromBytes1(data, klass);
+            ((BaseDistAsyncTable) asyncTable).applyBuffer(messageTable);
         }
     }
 
@@ -244,30 +246,32 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
             while (true) {
                 boolean[] feedback = new boolean[1];
                 double partialSum = 0;
-
+                Object accumulated;
                 MPI.COMM_WORLD.Recv(new byte[1], 0, 1, MPI.BYTE, AsyncMaster.ID, MsgType.REQUIRE_TERM_CHECK.ordinal());
                 if (asyncTable != null) {//null indicate this worker is idle
 
                     if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DELTA) {
-                        if (asyncTable.accumulateDelta() instanceof Integer) {
-                            partialSum = (Integer) asyncTable.accumulateDelta();
-                        } else if (asyncTable.accumulateDelta() instanceof Long) {
-                            partialSum = (Long) asyncTable.accumulateDelta();
-                        } else if (asyncTable.accumulateDelta() instanceof Float) {
-                            partialSum = (Float) asyncTable.accumulateDelta();
-                        } else if (asyncTable.accumulateDelta() instanceof Double) {
-                            partialSum = (Double) asyncTable.accumulateDelta();
+                        accumulated = asyncTable.accumulateValue();
+                        if (accumulated instanceof Integer) {
+                            partialSum = (Integer) accumulated;
+                        } else if (accumulated instanceof Long) {
+                            partialSum = (Long) accumulated;
+                        } else if (accumulated instanceof Float) {
+                            partialSum = (Float) accumulated;
+                        } else if (accumulated instanceof Double) {
+                            partialSum = (Double) accumulated;
                         }
                         L.info("partialSum of delta: " + new BigDecimal(partialSum));
                     } else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.VALUE) {
-                        if (asyncTable.accumulateValue() instanceof Integer) {
-                            partialSum = (Integer) asyncTable.accumulateValue();
-                        } else if (asyncTable.accumulateValue() instanceof Long) {
-                            partialSum = (Long) asyncTable.accumulateValue();
-                        } else if (asyncTable.accumulateValue() instanceof Float) {
-                            partialSum = (Float) asyncTable.accumulateValue();
-                        } else if (asyncTable.accumulateValue() instanceof Double) {
-                            partialSum = (Double) asyncTable.accumulateValue();
+                        accumulated = asyncTable.accumulateValue();
+                        if (accumulated instanceof Integer) {
+                            partialSum = (Integer) accumulated;
+                        } else if (accumulated instanceof Long) {
+                            partialSum = (Long) accumulated;
+                        } else if (accumulated instanceof Float) {
+                            partialSum = (Float) accumulated;
+                        } else if (accumulated instanceof Double) {
+                            partialSum = (Double) accumulated;
                         }
                         L.info("sum of value: " + new BigDecimal(partialSum));
                     }

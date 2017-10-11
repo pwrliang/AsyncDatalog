@@ -170,6 +170,7 @@ public class DistAsyncEngine implements Runnable {
                         L.info("TERM_CHECK_DIFF_DELTA_SUM: " + new BigDecimal(accumulatedSum));
                     }
 
+
                     termOrNot[0] = !skipFirst && BaseAsyncRuntime.eval(accumulatedSum);
 
                     IntStream.rangeClosed(1, workerNum).parallel().forEach(dest -> MPI.COMM_WORLD.Send(termOrNot, 0, 1, MPI.BOOLEAN, dest, MsgType.TERM_CHECK_FEEDBACK.ordinal()));
