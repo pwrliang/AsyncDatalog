@@ -4,6 +4,7 @@ import gnu.trove.map.TIntFloatMap;
 import gnu.trove.map.hash.TIntFloatHashMap;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
+import socialite.async.util.TextUtils;
 import socialite.engine.ClientEngine;
 import socialite.engine.LocalEngine;
 import socialite.tables.QueryVisitor;
@@ -19,12 +20,11 @@ public class PageRank {
     //berkstan       685230       30
 
     public static void main(String[] args) throws FileNotFoundException {
-//        PrintStream printStream = new PrintStream(new FileOutputStream("/home/gengl/out.txt", true));
-//        System.setOut(printStream);
         distTest();
     }
-//-Xmx28G -Dsocialite.output.dir=gen -Dsocialite.worker.num=32 -Dsocialite.port=50100 -Dsocialite.master=master -Dlog4j.configuration=/home/gengl/socialite-before-yarn/conf/log4j.properties
-    static void localTest(){
+
+    //-Xmx28G -Dsocialite.output.dir=gen -Dsocialite.worker.num=32 -Dsocialite.port=50100 -Dsocialite.master=master -Dlog4j.configuration=file:/home/gengl/socialite-before-yarn/conf/log4j.properties
+    static void localTest() {
         STGroup stg = new MySTGroupFile(PageRank.class.getResource("PageRank.stg"),
                 "UTF-8", '<', '>');
         stg.load();
@@ -64,7 +64,7 @@ public class PageRank {
         System.out.println(vals[0]);
     }
 
-    static void distTest(){
+    static void distTest() {
         ClientEngine clientEngine = new ClientEngine();
         STGroup stg = new MySTGroupFile(PageRank.class.getResource("PageRank.stg"),
                 "UTF-8", '<', '>');
@@ -90,17 +90,24 @@ public class PageRank {
             System.out.println("iter:" + i);
         }
         System.out.println("recursive statement:" + (System.currentTimeMillis() - start));
-        TIntFloatMap result = new TIntFloatHashMap();
-        double[] vals = new double[1];
+        TextUtils textUtils = new TextUtils("/home/gengl/Datasets", "PageRank_Google.txt");
         clientEngine.run("?- Rank(n, 0, rank).", new QueryVisitor() {
 
             @Override
             public boolean visit(Tuple _0) {
-                vals[0] += _0.getDouble(2);
+                textUtils.writeLine(_0.toString());
                 return true;
             }
-        },0);
-        clientEngine.shutdown();
+
+            @Override
+            public void finish() {
+                textUtils.close();
+            }
+        }, 0);
+        clientEngine.run("drop Edge.");
+        clientEngine.run("drop EdgeCnt.");
+        clientEngine.run("drop Node.");
+        clientEngine.run("drop Rank.");
         clientEngine.shutdown();
     }
 }

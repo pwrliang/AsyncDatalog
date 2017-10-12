@@ -13,6 +13,6 @@ Rank(n, 0, r) :- Node(n), r = 0.0 + 1.0 * 1.0 / <N>.
 >>
 
 Iter(i, N)::=<<
-Rank(n, <i> + 1, $sum(r)) :- Node(n), r=0.2*1.0 / <N> ;
+Rank(n, <i> + 1, $sum(r)) :- Node(n), r=0.2 / <N> ;
                       :- Rank(s, <i>, r1), EdgeCnt(s, cnt), r=0.8*r1/cnt, Edge(s, n).
 >>

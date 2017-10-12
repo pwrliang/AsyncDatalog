@@ -1,10 +1,4 @@
 #!/usr/bin/env bash
-./copyToMachine.sh hadoop0
-./copyToMachine.sh hadoop1
-./copyToMachine.sh hadoop2
-./copyToMachine.sh hadoop3
-
-
 SOCIALITE_PREFIX=/home/gengl/socialite-before-yarn
 HADOOP_HOME=/home/gengl/hadoop
 
@@ -113,6 +107,19 @@ JAR_PATH=${JAR_PATH}:${HADOOP_HDFS}/hadoop-hdfs-2.7.2.jar
 TEST_CLASSPATH=${SOCIALITE_PREFIX}/out/production/socialite
 #-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 \
 
+MASTER_HOST=master
+
+./kill-all.sh machines
+
+tar -zcf /tmp/out.tar.gz -C ${SOCIALITE_PREFIX} out conf examples
+while IFS='' read -r line || [[ -n "$line" ]]; do
+    if [ ${line} == ${MASTER_HOST} ]; then
+        continue
+    fi
+    scp /tmp/out.tar.gz gengl@${line}:"/tmp/out.tar.gz"
+    ssh -n -f gengl@${line} "rm -rf ${SOCIALITE_PREFIX}/out 2> /dev/null && tar -zxf /tmp/out.tar.gz -C ${SOCIALITE_PREFIX}/ && rm /tmp/out.tar.gz"
+done < "machines"
+
 mpjrun.sh -Xmx28G \
 -machinesfile ${SOCIALITE_PREFIX}/machines -np 6 -dev niodev \
 -Dsocialite.output.dir=${SOCIALITE_PREFIX}/gen \
@@ -123,4 +130,4 @@ mpjrun.sh -Xmx28G \
 -cp ${TEST_CLASSPATH}:${JAR_PATH} \
 socialite.async.Entry ${SOCIALITE_PREFIX}/examples/PageRank/Google.dl
 
-kill -9 $(ps aux|grep '[s]ocialite.master=master'|awk '{print $2}')
+./kill-all.sh machines
