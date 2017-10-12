@@ -17,12 +17,13 @@ public class PageRank {
     //livejournal    4847571      25
     //google         875713       28
     //berkstan       685230       30
+
     public static void main(String[] args) throws FileNotFoundException {
 //        PrintStream printStream = new PrintStream(new FileOutputStream("/home/gengl/out.txt", true));
 //        System.setOut(printStream);
         distTest();
     }
-
+//-Xmx28G -Dsocialite.output.dir=gen -Dsocialite.worker.num=32 -Dsocialite.port=50100 -Dsocialite.master=master -Dlog4j.configuration=/home/gengl/socialite-before-yarn/conf/log4j.properties
     static void localTest(){
         STGroup stg = new MySTGroupFile(PageRank.class.getResource("PageRank.stg"),
                 "UTF-8", '<', '>');

@@ -117,7 +117,7 @@ mpjrun.sh -Xmx28G \
 -machinesfile ${SOCIALITE_PREFIX}/machines -np 6 -dev niodev \
 -Dsocialite.output.dir=${SOCIALITE_PREFIX}/gen \
 -Dsocialite.worker.num=32 \
--Dsocialite.port=40100 \
+-Dsocialite.port=50100 \
 -Dsocialite.master=master \
 -Dlog4j.configuration=file:${SOCIALITE_PREFIX}/conf/log4j.properties \
 -cp ${TEST_CLASSPATH}:${JAR_PATH} \
