@@ -2,7 +2,6 @@ package socialite.async.dist.worker;
 
 import mpi.MPI;
 import mpi.MPIException;
-import mpi.Request;
 import mpi.Status;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -21,6 +20,7 @@ import socialite.resource.TableInstRegistry;
 import socialite.tables.TableInst;
 import socialite.util.Assert;
 import socialite.util.Loader;
+import socialite.util.SociaLiteException;
 import socialite.visitors.VisitorImpl;
 
 import java.lang.reflect.Constructor;
@@ -31,6 +31,7 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CyclicBarrier;
 import java.util.stream.IntStream;
 
 public class DistAsyncRuntime extends BaseAsyncRuntime {
@@ -58,14 +59,8 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         if (loadData(initTableInstArr, edgeTableInstArr)) {//this worker is idle, stop
             createThreads();
             startThreads();
-        } else {//this worker is idle, only start checker
-            checkThread = new CheckThread();
-            checkThread.start();
-            try {
-                checkThread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        } else {//this worker is idle
+            throw new SociaLiteException("Worker " + myWorkerId + " is idle, please reduce the number of workers");
         }
     }
 
@@ -151,7 +146,8 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
 
     @Override
     protected void createThreads() {
-        int threadNum = AsyncConfig.get().getThreadNum();
+        AsyncConfig asyncConfig = AsyncConfig.get();
+        int threadNum = asyncConfig.getThreadNum();
         computingThreads = new ComputingThread[threadNum];
         IntStream.range(0, threadNum).forEach(i -> computingThreads[i] = new ComputingThread(i));
         checkThread = new CheckThread();
@@ -162,94 +158,23 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
             sendThreads[wid] = new SendThread(wid);
             receiveThreads[wid] = new ReceiveThread(wid);
         }
+        if (asyncConfig.isSync()) barrier = new CyclicBarrier(threadNum, checkThread);
     }
 
     private void startThreads() {
         Arrays.stream(computingThreads).filter(Objects::nonNull).forEach(Thread::start);
         Arrays.stream(receiveThreads).filter(Objects::nonNull).forEach(Thread::start);
         Arrays.stream(sendThreads).filter(Objects::nonNull).forEach(Thread::start);
-        checkThread.start();
+        if (!AsyncConfig.get().isSync())
+            checkThread.start();
         L.info(String.format("Worker %d all threads started.", myWorkerId));
         try {
             for (ComputingThread computingThread : computingThreads) computingThread.join();
             L.info("Worker " + myWorkerId + " Computing Threads exited.");
-            checkThread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
-
-//    private class SendThread extends Thread {
-//        private final int sendToWorkerId;
-//        private SerializeTool serializeTool;
-//
-//        private SendThread(int sendToWorkerId) {
-//            this.sendToWorkerId = sendToWorkerId;
-//            serializeTool = new SerializeTool.Builder()
-//                    .setSerializeTransient(true) //!!!!!!!!!!AtomicDouble's value field is transient
-//                    .build();
-//        }
-//
-//        @Override
-//        public void run() {
-//            try {
-//                while (!isStop()) {
-//                    byte[] data = ((BaseDistAsyncTable) asyncTable).getSendableMessageTableBytes(sendToWorkerId, serializeTool);
-//                    Request request = MPI.COMM_WORLD.Isend(data, 0, data.length, MPI.BYTE, sendToWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal());
-//                    while (true) {
-//                        if (isStop()) return; //notify to stop
-//                        if (request.Wait() != null) break;//send success
-//                        Thread.sleep(10);
-//                    }
-//                }
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
-//
-//    private class ReceiveThread extends Thread {
-//        private SerializeTool serializeTool;
-//        private int recvFromWorkerId;
-//        private Class<?> klass;
-//
-//        private ReceiveThread(int recvFromWorkerId) {
-//            this.recvFromWorkerId = recvFromWorkerId;
-//            serializeTool = new SerializeTool.Builder()
-//                    .setSerializeTransient(true)
-//                    .build();
-//            klass = Loader.forName("socialite.async.codegen.MessageTable");
-//        }
-//
-//        @Override
-//        public void run() {
-//            try {
-//                while (!isStop()) {
-//                    Status status;
-//                    while (true) {
-//                        status = MPI.COMM_WORLD.Iprobe(recvFromWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal());
-//                        if (isStop()) return;
-//                        if (status != null) break;
-//                        Thread.sleep(10);
-//                    }
-//
-//                    int size = status.Get_count(MPI.BYTE);
-//                    int source = status.source;
-//                    byte[] data = new byte[size];
-//                    Request request = MPI.COMM_WORLD.Irecv(data, 0, size, MPI.BYTE, source, MsgType.MESSAGE_TABLE.ordinal());
-//                    while (true) {
-//                        if (isStop()) return;
-//                        if (request.Wait() != null) break;//received
-//                    }
-//
-//                    MessageTableBase messageTable = (MessageTableBase) serializeTool.fromBytesToObject(data, klass);
-//                    ((BaseDistAsyncTable) asyncTable).applyBuffer(messageTable);
-//                }
-//            } catch (MPIException | InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
 
     private class SendThread extends Thread {
         private final int sendToWorkerId;
@@ -292,29 +217,26 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         public void run() {
             try {
                 while (!isStop()) {
-                    applyBufferToAsyncTable();
+                    Status status = MPI.COMM_WORLD.Probe(recvFromWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal());
+                    int size = status.Get_count(MPI.BYTE);
+                    int source = status.source;
+//            L.info(String.format("worker %d probe %d size %d MB", recvFromWorkerId + 1, source, size / 1024 / 1024));
+                    byte[] data = new byte[size];
+//            L.info("applyBufferToAsyncTable");
+                    MPI.COMM_WORLD.Recv(data, 0, size, MPI.BYTE, source, MsgType.MESSAGE_TABLE.ordinal());
+                    //L.info(String.format("Machine %d <---- %d", myWorkerId + 1, source));
+                    MessageTableBase messageTable = (MessageTableBase) serializeTool.fromBytesToObject(data, klass);
+                    ((BaseDistAsyncTable) asyncTable).applyBuffer(messageTable);
                 }
-            } catch (Exception e) {
+            } catch (MPIException e) {
                 e.printStackTrace();
             }
-        }
-
-        private void applyBufferToAsyncTable() throws MPIException, InterruptedException {
-            Status status = MPI.COMM_WORLD.Probe(recvFromWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal());
-            int size = status.Get_count(MPI.BYTE);
-            int source = status.source;
-//            L.info(String.format("worker %d probe %d size %d MB", recvFromWorkerId + 1, source, size / 1024 / 1024));
-            byte[] data = new byte[size];
-//            L.info("applyBufferToAsyncTable");
-            MPI.COMM_WORLD.Recv(data, 0, size, MPI.BYTE, source, MsgType.MESSAGE_TABLE.ordinal());
-            //L.info(String.format("Machine %d <---- %d", myWorkerId + 1, source));
-            MessageTableBase messageTable = (MessageTableBase) serializeTool.fromBytesToObject(data, klass);
-            ((BaseDistAsyncTable) asyncTable).applyBuffer(messageTable);
         }
     }
 
     private class CheckThread extends BaseAsyncRuntime.CheckThread {
         private AsyncConfig asyncConfig;
+
 
         private CheckThread() {
             asyncConfig = AsyncConfig.get();
@@ -323,47 +245,57 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         @Override
         public void run() {
             super.run();
+            boolean[] feedback = new boolean[1];
             while (true) {
-                boolean[] feedback = new boolean[1];
-                double partialSum = 0;
-                Object accumulated;
-                MPI.COMM_WORLD.Recv(new byte[1], 0, 1, MPI.BYTE, AsyncMaster.ID, MsgType.REQUIRE_TERM_CHECK.ordinal());
-                if (asyncTable != null) {//null indicate this worker is idle
-
-                    if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DELTA) {
-                        accumulated = asyncTable.accumulateDelta();
-                        if (accumulated instanceof Integer) {
-                            partialSum = (Integer) accumulated;
-                        } else if (accumulated instanceof Long) {
-                            partialSum = (Long) accumulated;
-                        } else if (accumulated instanceof Float) {
-                            partialSum = (Float) accumulated;
-                        } else if (accumulated instanceof Double) {
-                            partialSum = (Double) accumulated;
-                        }
-                        L.info("partialSum of delta: " + new BigDecimal(partialSum));
-                    } else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.VALUE) {
-                        accumulated = asyncTable.accumulateValue();
-                        if (accumulated instanceof Integer) {
-                            partialSum = (Integer) accumulated;
-                        } else if (accumulated instanceof Long) {
-                            partialSum = (Long) accumulated;
-                        } else if (accumulated instanceof Float) {
-                            partialSum = (Float) accumulated;
-                        } else if (accumulated instanceof Double) {
-                            partialSum = (Double) accumulated;
-                        }
-                        L.info("sum of value: " + new BigDecimal(partialSum));
+                double partialSum = update();
+                if (asyncConfig.isSync()) {//sync mode
+                    MPI.COMM_WORLD.Sendrecv(new double[]{partialSum}, 0, 1, MPI.DOUBLE, AsyncMaster.ID, MsgType.REQUIRE_TERM_CHECK.ordinal(),
+                            feedback, 0, 1, MPI.BOOLEAN, AsyncMaster.ID, MsgType.TERM_CHECK_FEEDBACK.ordinal());
+                    if (feedback[0]) done();
+                    return;//exit function, run will be called next round
+                } else {
+                    MPI.COMM_WORLD.Recv(new byte[1], 0, 1, MPI.BYTE, AsyncMaster.ID, MsgType.REQUIRE_TERM_CHECK.ordinal());
+                    MPI.COMM_WORLD.Sendrecv(new double[]{partialSum}, 0, 1, MPI.DOUBLE, AsyncMaster.ID, MsgType.TERM_CHECK_PARTIAL_VALUE.ordinal(),
+                            feedback, 0, 1, MPI.BOOLEAN, AsyncMaster.ID, MsgType.TERM_CHECK_FEEDBACK.ordinal());
+                    if (feedback[0]) {
+                        done();
+                        break;
                     }
                 }
+            }
+        }
 
-                MPI.COMM_WORLD.Sendrecv(new double[]{partialSum}, 0, 1, MPI.DOUBLE, AsyncMaster.ID, MsgType.TERM_CHECK_PARTIAL_VALUE.ordinal(),
-                        feedback, 0, 1, MPI.BOOLEAN, AsyncMaster.ID, MsgType.TERM_CHECK_FEEDBACK.ordinal());
-                if (feedback[0]) {
-                    done();
-                    break;
+        private double update() {
+            double partialSum = 0;
+            Object accumulated;
+            if (asyncTable != null) {//null indicate this worker is idle
+                if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DELTA) {
+                    accumulated = asyncTable.accumulateDelta();
+                    if (accumulated instanceof Integer) {
+                        partialSum = (Integer) accumulated;
+                    } else if (accumulated instanceof Long) {
+                        partialSum = (Long) accumulated;
+                    } else if (accumulated instanceof Float) {
+                        partialSum = (Float) accumulated;
+                    } else if (accumulated instanceof Double) {
+                        partialSum = (Double) accumulated;
+                    }
+                    L.info("partialSum of delta: " + new BigDecimal(partialSum));
+                } else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.VALUE) {
+                    accumulated = asyncTable.accumulateValue();
+                    if (accumulated instanceof Integer) {
+                        partialSum = (Integer) accumulated;
+                    } else if (accumulated instanceof Long) {
+                        partialSum = (Long) accumulated;
+                    } else if (accumulated instanceof Float) {
+                        partialSum = (Float) accumulated;
+                    } else if (accumulated instanceof Double) {
+                        partialSum = (Double) accumulated;
+                    }
+                    L.info("sum of value: " + new BigDecimal(partialSum));
                 }
             }
+            return partialSum;
         }
     }
 

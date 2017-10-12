@@ -16,6 +16,7 @@ import socialite.resource.TableInstRegistry;
 import socialite.tables.QueryVisitor;
 import socialite.tables.TableInst;
 import socialite.tables.Tuple;
+import socialite.util.SociaLiteException;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -59,6 +60,16 @@ public class LocalAsyncEngine {
 
     private void compile() {
         if (asyncAnalysis.analysis()) {
+            if(AsyncConfig.get().isPriority()) {
+                if (asyncAnalysis.getAggrName().equals("dcount") || asyncAnalysis.getAggrName().equals("dsum"))
+                    AsyncConfig.get().setPriorityType(AsyncConfig.PriorityType.SUM_COUNT);
+                else if (asyncAnalysis.getAggrName().equals("dmin"))
+                    AsyncConfig.get().setPriorityType(AsyncConfig.PriorityType.MIN);
+                else if (asyncAnalysis.getAggrName().equals("dmax"))
+                    AsyncConfig.get().setPriorityType(AsyncConfig.PriorityType.MAX);
+                else throw new SociaLiteException("unsupported priority");
+            }
+
             asyncCodeGenMain = new AsyncCodeGenMain(asyncAnalysis);
             asyncCodeGenMain.generateSharedMem();
         }

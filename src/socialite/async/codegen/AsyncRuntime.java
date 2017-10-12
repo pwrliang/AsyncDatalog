@@ -10,6 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.concurrent.CyclicBarrier;
 import java.util.stream.IntStream;
 
 public class AsyncRuntime extends BaseAsyncRuntime {
@@ -58,21 +59,23 @@ public class AsyncRuntime extends BaseAsyncRuntime {
         IntStream.range(0, threadNum).forEach(i -> computingThreads[i] = new ComputingThread(i));
         checkerThread = new CheckThread();
         checkerThread.setPriority(Thread.MAX_PRIORITY);
+        if (AsyncConfig.get().isSync()) barrier = new CyclicBarrier(threadNum, checkerThread);
     }
 
 
     @Override
     public void run() {
+        L.info("RECV CMD NOTIFY_INIT CONFIG:" + AsyncConfig.get());
         loadData(initTableInstArr, edgeTableInstArr);
         createThreads();
         L.info("Data Loaded size:" + asyncTable.getSize());
-        checkerThread.start();
+        if (!AsyncConfig.get().isSync())
+            checkerThread.start();
         Arrays.stream(computingThreads).forEach(ComputingThread::start);
         L.info("Worker started");
         try {
             for (ComputingThread worker : computingThreads)
                 worker.join();
-            checkerThread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -89,7 +92,7 @@ public class AsyncRuntime extends BaseAsyncRuntime {
 
         @Override
         public void run() {
-            stopWatch.start();
+            super.run();
             while (true) {
                 try {
                     double sum = 0.0d;
@@ -165,6 +168,8 @@ public class AsyncRuntime extends BaseAsyncRuntime {
                         done();
                         break;
                     }
+                    if (barrier != null)
+                        break;
                     Thread.sleep(CHECKER_INTERVAL);
                 } catch (Exception e) {
                     e.printStackTrace();

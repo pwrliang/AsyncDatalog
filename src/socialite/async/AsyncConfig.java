@@ -16,9 +16,11 @@ public class AsyncConfig {
     private CheckerType checkType;
     private Cond cond;
     private boolean dynamic;
+    private boolean priority;
     private PriorityType priorityType = PriorityType.NONE;
     private double sampleRate;
     private double schedulePortion;
+    private boolean sync;
     private boolean debugging;
     private int threadNum;
     private int initSize;
@@ -36,15 +38,16 @@ public class AsyncConfig {
         if (priorityType == PriorityType.NONE)
             sb.append("PRIORITY_TYPE:NONE").append(", ");
         else {
-            if (priorityType == PriorityType.TYPE1)
+            if (priorityType == PriorityType.SUM_COUNT)
                 sb.append("PRIORITY_TYPE:DELTA").append(", ");
-            else if (priorityType == PriorityType.TYPE2)
+            else if (priorityType == PriorityType.MIN)
                 sb.append("PRIORITY_TYPE:VALUE -  MIN(VALUE, DELTA)").append(", ");
-            else if (priorityType == PriorityType.TYPE3)
+            else if (priorityType == PriorityType.MAX)
                 sb.append("PRIORITY_TYPE:VALUE -  MAX(VALUE, DELTA)").append(", ");
             sb.append("SAMPLE_RATE:").append(sampleRate).append(", ");
             sb.append("SCHEDULE_PORTION:").append(schedulePortion).append(", ");
         }
+        sb.append(sync ? "SYNC" : "ASYNC").append(", ");
         sb.append(dynamic ? "DYNAMIC" : "STATIC").append(", ");
         sb.append("THREAD_NUM:").append(threadNum).append(", ");
         sb.append("INIT_SIZE:").append(initSize).append(", ");
@@ -100,8 +103,16 @@ public class AsyncConfig {
         return cond;
     }
 
+    public boolean isPriority() {
+        return priority;
+    }
+
     public PriorityType getPriorityType() {
         return priorityType;
+    }
+
+    public boolean isSync() {
+        return sync;
     }
 
     public double getSampleRate() {
@@ -153,6 +164,11 @@ public class AsyncConfig {
         return debugging;
     }
 
+
+    public void setPriorityType(PriorityType priorityType) {
+        this.priorityType = priorityType;
+    }
+
     public enum Cond {
         G, GE, E, L, LE
     }
@@ -162,9 +178,9 @@ public class AsyncConfig {
     }
 
     public enum PriorityType {
-        NONE, TYPE1, //delta
-        TYPE2, //value-min(value, delta)
-        TYPE3 //value-max(value, delta)
+        NONE, SUM_COUNT, //delta
+        MIN, //value-min(value, delta)
+        MAX //value-max(value, delta)
     }
 
     public static class Builder {
@@ -173,10 +189,11 @@ public class AsyncConfig {
         private CheckerType checkType;
         private Cond cond;
         private boolean dynamic;
+        private boolean sync;
         private boolean debugging;
         private int threadNum;
         private int initSize;
-        private PriorityType priorityType;
+        private boolean priority;
         private double sampleRate;
         private double schedulePortion;
         private int messageTableInitSize;
@@ -206,8 +223,8 @@ public class AsyncConfig {
             return this;
         }
 
-        public Builder setPriorityType(PriorityType priorityType) {
-            this.priorityType = priorityType;
+        public Builder setPriority(boolean priority) {
+            this.priority = priority;
             return this;
         }
 
@@ -223,6 +240,11 @@ public class AsyncConfig {
 
         public Builder setDynamic(boolean dynamic) {
             this.dynamic = dynamic;
+            return this;
+        }
+
+        public Builder setSync(boolean sync) {
+            this.sync = sync;
             return this;
         }
 
@@ -283,10 +305,11 @@ public class AsyncConfig {
             asyncConfig.threshold = threshold;
             asyncConfig.checkType = checkType;
             asyncConfig.cond = cond;
-            asyncConfig.priorityType = priorityType;
+            asyncConfig.priority = priority;
             asyncConfig.sampleRate = sampleRate;
             asyncConfig.schedulePortion = schedulePortion;
             asyncConfig.dynamic = dynamic;
+            asyncConfig.sync = sync;
             asyncConfig.debugging = debugging;
             asyncConfig.threadNum = threadNum;
             asyncConfig.initSize = initSize;
@@ -372,23 +395,12 @@ public class AsyncConfig {
                 case "CHECK_THRESHOLD":
                     asyncConfig.setThreshold(Double.parseDouble(val));
                     break;
-                case "PRIORITY_TYPE":
-                    switch (val) {
-                        case "NONE":
-                            asyncConfig.setPriorityType(PriorityType.NONE);
-                            break;
-                        case "TYPE1":
-                            asyncConfig.setPriorityType(PriorityType.TYPE1);
-                            break;
-                        case "TYPE2":
-                            asyncConfig.setPriorityType(PriorityType.TYPE2);
-                            break;
-                        case "TYPE3":
-                            asyncConfig.setPriorityType(PriorityType.TYPE3);
-                            break;
-                        default:
-                            throw new SociaLiteException("unknown priority type");
-                    }
+                case "PRIORITY":
+                    if (val.equals("TRUE"))
+                        asyncConfig.setPriority(true);
+                    else if (val.equals("FALSE"))
+                        asyncConfig.setPriority(false);
+                    else throw new SociaLiteException("unknown val: " + val);
                     break;
                 case "SAMPLE_RATE":
                     asyncConfig.setSampleRate(Double.parseDouble(val));
@@ -401,6 +413,13 @@ public class AsyncConfig {
                         asyncConfig.setDynamic(true);
                     else if (val.equals("FALSE"))
                         asyncConfig.setDynamic(false);
+                    else throw new SociaLiteException("unknown val: " + val);
+                    break;
+                case "SYNC":
+                    if (val.equals("TRUE"))
+                        asyncConfig.setSync(true);
+                    else if (val.equals("FALSE"))
+                        asyncConfig.setSync(false);
                     else throw new SociaLiteException("unknown val: " + val);
                     break;
                 case "PRINT_RESULT":

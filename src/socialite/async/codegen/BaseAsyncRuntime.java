@@ -9,6 +9,8 @@ import socialite.async.AsyncConfig;
 import socialite.tables.TableInst;
 
 import java.util.Arrays;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ThreadLocalRandom;
 
 public abstract class BaseAsyncRuntime implements Runnable {
@@ -17,6 +19,7 @@ public abstract class BaseAsyncRuntime implements Runnable {
     protected ComputingThread[] computingThreads;
     protected CheckThread checkThread;
     protected BaseAsyncTable asyncTable;
+    protected CyclicBarrier barrier;
 
     protected abstract boolean loadData(TableInst[] initTableInstArr, TableInst[] edgeTableInstArr);
 
@@ -52,54 +55,57 @@ public abstract class BaseAsyncRuntime implements Runnable {
 
         @Override
         public void run() {
-            while (!stop) {
-                if (!assigned || asyncConfig.isDynamic()) {
-                    arrangeTask();
-                    assigned = true;
-                }
+            try {
+                while (!stop) {
+                    if (!assigned || asyncConfig.isDynamic()) {
+                        arrangeTask();
+                        assigned = true;
+                    }
 
-                //empty thread, sleep to reduce CPU race
-                if (start == end) {
-                    try {
+                    //empty thread, sleep to reduce CPU race
+                    if (start == end) {
                         Thread.sleep(10);
+                        if (barrier != null) barrier.await();
                         continue;
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
                     }
-                }
-                double threshold = 0;
-                if (asyncConfig.getPriorityType() != AsyncConfig.PriorityType.NONE) {
-                    for (int i = 0; i < deltaSample.length; i++) {
-                        int ind = randomGenerator.nextInt(start, end);
-                        if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.TYPE1)
-                            deltaSample[i] = asyncTable.getDelta(ind);
-                        else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.TYPE2) {
-                            double value = asyncTable.getValue(ind);
-                            double delta = asyncTable.getDelta(ind);
-                            deltaSample[i] = value - Math.min(value, delta);
-                        } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.TYPE3) {
-                            double value = asyncTable.getValue(ind);
-                            double delta = asyncTable.getDelta(ind);
-                            deltaSample[i] = value - Math.max(value, delta);
-                        }
-                    }
-                    Arrays.sort(deltaSample);
-                    int cutIndex = (int) (deltaSample.length * (1 - SCHEDULE_PORTION));
-                    threshold = deltaSample[cutIndex];
-                }
 
-                if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.NONE) {
-                    for (int k = start; k < end; k++) {
-                        asyncTable.updateLockFree(k);
+                    double threshold = 0;
+                    if (asyncConfig.getPriorityType() != AsyncConfig.PriorityType.NONE) {
+                        for (int i = 0; i < deltaSample.length; i++) {
+                            int ind = randomGenerator.nextInt(start, end);
+                            if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.SUM_COUNT)
+                                deltaSample[i] = asyncTable.getDelta(ind);
+                            else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.MIN) {
+                                double value = asyncTable.getValue(ind);
+                                double delta = asyncTable.getDelta(ind);
+                                deltaSample[i] = value - Math.min(value, delta);
+                            } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.MAX) {
+                                double value = asyncTable.getValue(ind);
+                                double delta = asyncTable.getDelta(ind);
+                                deltaSample[i] = value - Math.max(value, delta);
+                            }
+                        }
+                        Arrays.sort(deltaSample);
+                        int cutIndex = (int) (deltaSample.length * (1 - SCHEDULE_PORTION));
+                        threshold = deltaSample[cutIndex];
                     }
-                } else {
-                    for (int k = start; k < end; k++) {
-                        double f = asyncTable.getDelta(k);
-                        if (f >= threshold) {
+
+                    if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.NONE) {
+                        for (int k = start; k < end; k++) {
                             asyncTable.updateLockFree(k);
                         }
+                    } else {
+                        for (int k = start; k < end; k++) {
+                            double f = asyncTable.getDelta(k);
+                            if (f >= threshold) {
+                                asyncTable.updateLockFree(k);
+                            }
+                        }
                     }
+                    if (barrier != null) barrier.await();
                 }
+            } catch (InterruptedException | BrokenBarrierException e) {
+                e.printStackTrace();
             }
         }
 
@@ -143,12 +149,14 @@ public abstract class BaseAsyncRuntime implements Runnable {
         protected final int CHECKER_INTERVAL = AsyncConfig.get().getCheckInterval();
 
         protected CheckThread() {
-            stopWatch = new StopWatch();
         }
 
         @Override
         public void run() {
-            stopWatch.start();
+            if (stopWatch == null) {
+                stopWatch = new StopWatch();
+                stopWatch.start();
+            }
         }
 
         protected void done() {

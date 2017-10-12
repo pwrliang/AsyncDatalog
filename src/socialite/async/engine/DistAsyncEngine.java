@@ -18,6 +18,7 @@ import socialite.parser.DeltaRule;
 import socialite.parser.Parser;
 import socialite.parser.Rule;
 import socialite.parser.antlr.TableDecl;
+import socialite.util.SociaLiteException;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -77,6 +78,15 @@ public class DistAsyncEngine implements Runnable {
         if (asyncAnalysis.analysis()) {
             asyncCodeGenMain = new AsyncCodeGenMain(asyncAnalysis);
             asyncCodeGenMain.generateDist();
+            if(AsyncConfig.get().isPriority()) {
+                if (asyncAnalysis.getAggrName().equals("dcount") || asyncAnalysis.getAggrName().equals("dsum"))
+                    AsyncConfig.get().setPriorityType(AsyncConfig.PriorityType.SUM_COUNT);
+                else if (asyncAnalysis.getAggrName().equals("dmin"))
+                    AsyncConfig.get().setPriorityType(AsyncConfig.PriorityType.MIN);
+                else if (asyncAnalysis.getAggrName().equals("dmax"))
+                    AsyncConfig.get().setPriorityType(AsyncConfig.PriorityType.MAX);
+                else throw new SociaLiteException("unsupported priority");
+            }
         }
     }
 
@@ -125,66 +135,78 @@ public class DistAsyncEngine implements Runnable {
 
         @Override
         public void run() {
+
+            double[] partialValue = new double[1];
+            boolean[] termOrNot = new boolean[1];
+            double accumulatedSum;
             try {
                 while (true) {
-                    boolean skipFirst = false;
-                    boolean[] termOrNot = new boolean[1];
-                    double accumulatedSum = 0;
+                    if (asyncConfig.isSync()) {
+                        accumulatedSum = IntStream.rangeClosed(1, workerNum).mapToDouble(src -> {
+                            MPI.COMM_WORLD.Recv(partialValue, 0, 1, MPI.DOUBLE, src, MsgType.REQUIRE_TERM_CHECK.ordinal());
+                            return partialValue[0];
+                        }).reduce(0, Double::sum);
+                        termOrNot[0] = isTerm(accumulatedSum);
+                        IntStream.rangeClosed(1, workerNum).forEach(dest ->
+                                MPI.COMM_WORLD.Send(termOrNot, 0, 1, MPI.BOOLEAN, dest, MsgType.TERM_CHECK_FEEDBACK.ordinal()));
+                        if(termOrNot[0])
+                            return;
+                    } else {
+                        accumulatedSum = IntStream.rangeClosed(1, workerNum).mapToDouble(dest -> {
+                            MPI.COMM_WORLD.Sendrecv(new byte[1], 0, 1, MPI.BYTE, dest, MsgType.REQUIRE_TERM_CHECK.ordinal(),
+                                    partialValue, 0, 1, MPI.DOUBLE, dest, MsgType.TERM_CHECK_PARTIAL_VALUE.ordinal());//send term check request and receive partial value
+                            return partialValue[0];
+                        }).reduce(0, Double::sum);
 
-                    for (int dest = 1; dest <= workerNum; dest++) {
-                        double[] partialValue = new double[1];
-                        MPI.COMM_WORLD.Sendrecv(new byte[1], 0, 1, MPI.BYTE, dest, MsgType.REQUIRE_TERM_CHECK.ordinal(),
-                                partialValue, 0, 1, MPI.DOUBLE, dest, MsgType.TERM_CHECK_PARTIAL_VALUE.ordinal());//send term check request and receive partial value
-                        accumulatedSum += partialValue[0];
-                    }
-
-                    if (stopWatch == null) {
-                        stopWatch = new StopWatch();
-                        stopWatch.start();
-                    }
-
-
-                    if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.VALUE)
-                        L.info("TERM_CHECK_VALUE_SUM: " + new BigDecimal(accumulatedSum));
-                    else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DELTA)
-                        L.info("TERM_CHECK_DELTA_SUM: " + new BigDecimal(accumulatedSum));
-                    else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DIFF_VALUE) {
-                        if (lastSum == null) {
-                            lastSum = accumulatedSum;
-                            skipFirst = true;
-                        } else {
-                            double tmp = accumulatedSum;
-                            accumulatedSum = Math.abs(lastSum - accumulatedSum);
-                            lastSum = tmp;
+                        if (stopWatch == null) {
+                            stopWatch = new StopWatch();
+                            stopWatch.start();
                         }
-                        L.info("TERM_CHECK_DIFF_VALUE_SUM: " + new BigDecimal(accumulatedSum));
-                    } else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DIFF_DELTA) {
-                        if (lastSum == null) {
-                            lastSum = accumulatedSum;
-                            skipFirst = true;
-                        } else {
-                            double tmp = accumulatedSum;
-                            accumulatedSum = Math.abs(lastSum - accumulatedSum);
-                            lastSum = tmp;
+
+
+                        termOrNot[0] = isTerm(accumulatedSum);
+
+                        IntStream.rangeClosed(1, workerNum).parallel().forEach(dest -> MPI.COMM_WORLD.Send(termOrNot, 0, 1, MPI.BOOLEAN, dest, MsgType.TERM_CHECK_FEEDBACK.ordinal()));
+                        if (termOrNot[0]) {
+                            stopWatch.stop();
+                            L.info("TERM_CHECK_DETERMINED_TO_STOP ELAPSED " + stopWatch.getTime());
+                            return;
                         }
-                        L.info("TERM_CHECK_DIFF_DELTA_SUM: " + new BigDecimal(accumulatedSum));
+                        Thread.sleep(AsyncConfig.get().getCheckInterval());
                     }
-
-
-                    termOrNot[0] = !skipFirst && BaseAsyncRuntime.eval(accumulatedSum);
-
-                    IntStream.rangeClosed(1, workerNum).parallel().forEach(dest -> MPI.COMM_WORLD.Send(termOrNot, 0, 1, MPI.BOOLEAN, dest, MsgType.TERM_CHECK_FEEDBACK.ordinal()));
-                    if (termOrNot[0]) {
-                        stopWatch.stop();
-                        L.info("TERM_CHECK_DETERMINED_TO_STOP ELAPSED " + stopWatch.getTime());
-                        break;
-                    }
-                    Thread.sleep(AsyncConfig.get().getCheckInterval());
                 }
             } catch (MPIException | InterruptedException e) {
                 e.printStackTrace();
             }
         }
 
+        private boolean isTerm(double accumulatedSum) {
+            if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.VALUE)
+                L.info("TERM_CHECK_VALUE_SUM: " + new BigDecimal(accumulatedSum));
+            else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DELTA)
+                L.info("TERM_CHECK_DELTA_SUM: " + new BigDecimal(accumulatedSum));
+            else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DIFF_VALUE) {
+                if (lastSum == null) {
+                    lastSum = accumulatedSum;
+                    return false;
+                } else {
+                    double tmp = accumulatedSum;
+                    accumulatedSum = Math.abs(lastSum - accumulatedSum);
+                    lastSum = tmp;
+                }
+                L.info("TERM_CHECK_DIFF_VALUE_SUM: " + new BigDecimal(accumulatedSum));
+            } else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DIFF_DELTA) {
+                if (lastSum == null) {
+                    lastSum = accumulatedSum;
+                    return false;
+                } else {
+                    double tmp = accumulatedSum;
+                    accumulatedSum = Math.abs(lastSum - accumulatedSum);
+                    lastSum = tmp;
+                }
+                L.info("TERM_CHECK_DIFF_DELTA_SUM: " + new BigDecimal(accumulatedSum));
+            }
+            return BaseAsyncRuntime.eval(accumulatedSum);
+        }
     }
 }
