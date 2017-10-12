@@ -16,6 +16,9 @@ public class AsyncConfig {
     private CheckerType checkType;
     private Cond cond;
     private boolean dynamic;
+    private PriorityType priorityType = PriorityType.NONE;
+    private double sampleRate;
+    private double secondarySampleRate;
     private boolean debugging;
     private int threadNum;
     private int initSize;
@@ -28,15 +31,27 @@ public class AsyncConfig {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("CHECK_COND ").append(checkType == CheckerType.DELTA ? "DELTA" : "VALUE").append(getSCond()).append(" ").append(threshold).append(", ");
-        sb.append("CHECK_INTERVAL ").append(checkInterval).append(", ");
+        sb.append("CHECK_COND:").append(checkType == CheckerType.DELTA ? "DELTA" : "VALUE").append(getSCond()).append(" ").append(threshold).append(", ");
+        sb.append("CHECK_INTERVAL:").append(checkInterval).append(", ");
+        if (priorityType == PriorityType.NONE)
+            sb.append("PRIORITY_TYPE:NONE").append(", ");
+        else {
+            if (priorityType == PriorityType.TYPE1)
+                sb.append("PRIORITY_TYPE:DELTA").append(", ");
+            else if (priorityType == PriorityType.TYPE2)
+                sb.append("PRIORITY_TYPE:VALUE -  MIN(VALUE, DELTA)").append(", ");
+            else if (priorityType == PriorityType.TYPE3)
+                sb.append("PRIORITY_TYPE:VALUE -  MAX(VALUE, DELTA)").append(", ");
+            sb.append("SAMPLE_RATE:").append(sampleRate).append(", ");
+            sb.append("SECONDARY_SAMPLE_RATE:").append(secondarySampleRate).append(", ");
+        }
         sb.append(dynamic ? "DYNAMIC" : "STATIC").append(", ");
-        sb.append("THREAD_NUM ").append(threadNum).append(", ");
-        sb.append("INIT_SIZE").append(initSize).append(", ");
-        sb.append("MESSAGE_INIT_SIZE ").append(messageTableInitSize).append(", ");
-        sb.append("MESSAGE_UPDATE_THRESHOLD ").append(messageTableUpdateThreshold).append(", ");
-        sb.append("MESSAGE_TABLE_WAITING_INTERVAL").append(messageTableWaitingInterval).append(", ");
-        sb.append("SAVE_PATH").append(savePath);
+        sb.append("THREAD_NUM:").append(threadNum).append(", ");
+        sb.append("INIT_SIZE:").append(initSize).append(", ");
+        sb.append("MESSAGE_INIT_SIZE:").append(messageTableInitSize).append(", ");
+        sb.append("MESSAGE_UPDATE_THRESHOLD:").append(messageTableUpdateThreshold).append(", ");
+        sb.append("MESSAGE_TABLE_WAITING_INTERVAL:").append(messageTableWaitingInterval).append(", ");
+        sb.append("SAVE_PATH:").append(savePath);
         return sb.toString();
     }
 
@@ -83,6 +98,18 @@ public class AsyncConfig {
 
     public Cond getCond() {
         return cond;
+    }
+
+    public PriorityType getPriorityType() {
+        return priorityType;
+    }
+
+    public double getSampleRate() {
+        return sampleRate;
+    }
+
+    public double getSecondarySampleRate() {
+        return secondarySampleRate;
     }
 
     public int getThreadNum() {
@@ -134,6 +161,12 @@ public class AsyncConfig {
         VALUE, DELTA, DIFF_VALUE, DIFF_DELTA
     }
 
+    public enum PriorityType {
+        NONE, TYPE1, //delta
+        TYPE2, //value-min(value, delta)
+        TYPE3 //value-max(value, delta)
+    }
+
     public static class Builder {
         private int checkInterval = -1;
         private Double threshold = null;
@@ -143,6 +176,9 @@ public class AsyncConfig {
         private boolean debugging;
         private int threadNum;
         private int initSize;
+        private PriorityType priorityType;
+        private double sampleRate;
+        private double secondarySampleRate;
         private int messageTableInitSize;
         private int messageTableUpdateThreshold;
         private int messageTableWaitingInterval = -1;
@@ -167,6 +203,21 @@ public class AsyncConfig {
 
         public Builder setCheckerCond(Cond cond) {
             this.cond = cond;
+            return this;
+        }
+
+        public Builder setPriorityType(PriorityType priorityType) {
+            this.priorityType = priorityType;
+            return this;
+        }
+
+        public Builder setSampleRate(double sampleRate) {
+            this.sampleRate = sampleRate;
+            return this;
+        }
+
+        public Builder setSecondarySampleRate(double secondarySampleRate) {
+            this.secondarySampleRate = secondarySampleRate;
             return this;
         }
 
@@ -232,6 +283,9 @@ public class AsyncConfig {
             asyncConfig.threshold = threshold;
             asyncConfig.checkType = checkType;
             asyncConfig.cond = cond;
+            asyncConfig.priorityType = priorityType;
+            asyncConfig.sampleRate = sampleRate;
+            asyncConfig.secondarySampleRate = secondarySampleRate;
             asyncConfig.dynamic = dynamic;
             asyncConfig.debugging = debugging;
             asyncConfig.threadNum = threadNum;
@@ -317,6 +371,30 @@ public class AsyncConfig {
                     break;
                 case "CHECK_THRESHOLD":
                     asyncConfig.setThreshold(Double.parseDouble(val));
+                    break;
+                case "PRIORITY_TYPE":
+                    switch (val) {
+                        case "NONE":
+                            asyncConfig.setPriorityType(PriorityType.NONE);
+                            break;
+                        case "TYPE1":
+                            asyncConfig.setPriorityType(PriorityType.TYPE1);
+                            break;
+                        case "TYPE2":
+                            asyncConfig.setPriorityType(PriorityType.TYPE2);
+                            break;
+                        case "TYPE3":
+                            asyncConfig.setPriorityType(PriorityType.TYPE3);
+                            break;
+                        default:
+                            throw new SociaLiteException("unknown priority type");
+                    }
+                    break;
+                case "SAMPLE_RATE":
+                    asyncConfig.setSampleRate(Double.parseDouble(val));
+                    break;
+                case "SECONDARY_SAMPLE_RATE":
+                    asyncConfig.setSecondarySampleRate(Double.parseDouble(val));
                     break;
                 case "DYNAMIC":
                     if (val.equals("TRUE"))

@@ -29,6 +29,7 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.IntStream;
 
 public class DistAsyncRuntime extends BaseAsyncRuntime {
     private static final Log L = LogFactory.getLog(DistAsyncRuntime.class);
@@ -54,7 +55,6 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         TableInst[] edgeTableInstArr = tableInstRegistry.getTableInstArray(tableMap.get(payload.getEdgeTableName()).id());
         if (loadData(initTableInstArr, edgeTableInstArr)) {//this worker is idle, stop
             createThreads();
-            arrangeTask();
             startThreads();
             L.info(String.format("Worker %d all threads started.", myWorkerId));
         } else {//this worker is idle, only start checker
@@ -145,6 +145,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
     protected void createThreads() {
         int threadNum = AsyncConfig.get().getThreadNum();
         computingThreads = new ComputingThread[threadNum];
+        IntStream.range(0, threadNum).forEach(i -> computingThreads[i] = new ComputingThread(i));
         checkThread = new CheckThread();
         sendThreads = new SendThread[workerNum];
         receiveThreads = new ReceiveThread[workerNum];
@@ -274,10 +275,6 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                             partialSum = (Double) accumulated;
                         }
                         L.info("sum of value: " + new BigDecimal(partialSum));
-                    }
-                    if (asyncConfig.isDynamic()) {
-                        L.info("Worker " + myWorkerId + " AsyncTable Size " + asyncTable.getSize());
-                        arrangeTask();
                     }
                 }
 

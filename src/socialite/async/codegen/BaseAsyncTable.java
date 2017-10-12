@@ -17,6 +17,10 @@ public abstract class BaseAsyncTable {
         throw new NotImplementedException();
     }
 
+    public abstract double getValue(int localInd);
+
+    public abstract double getDelta(int localInd);
+
     public abstract Object accumulateValue();
 
     public abstract Object accumulateDelta();

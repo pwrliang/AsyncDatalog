@@ -8,6 +8,8 @@ import org.apache.commons.logging.LogFactory;
 import socialite.async.AsyncConfig;
 import socialite.tables.TableInst;
 
+import java.util.Arrays;
+
 public abstract class BaseAsyncRuntime implements Runnable {
     protected static final Log L = LogFactory.getLog(BaseAsyncRuntime.class);
     private volatile boolean stop;
@@ -18,35 +20,6 @@ public abstract class BaseAsyncRuntime implements Runnable {
     protected abstract boolean loadData(TableInst[] initTableInstArr, TableInst[] edgeTableInstArr);
 
     protected abstract void createThreads();
-
-    protected void arrangeTask() {
-        int threadNum = AsyncConfig.get().getThreadNum();
-        int size = asyncTable.getSize();
-        int blockSize = size / threadNum;
-        if (blockSize == 0) {
-            L.warn("too many threads asynctable size " + size);
-            blockSize = size;
-        }
-
-        for (int tid = 0; tid < threadNum; tid++) {
-            int start = tid * blockSize;
-            int end = (tid + 1) * blockSize;
-            if (tid == threadNum - 1)//last thread, assign all
-                end = size;
-            if (start >= size) {//assign empty tasks
-                start = 0;
-                end = 0;
-            } else if (end > size || tid == threadNum - 1) {//block < lastThread's tasks or block > ~
-                end = size;
-            }
-            if (computingThreads[tid] == null) {
-                computingThreads[tid] = new ComputingThread(tid, start, end);
-            } else {
-                computingThreads[tid].start = start;
-                computingThreads[tid].end = end;
-            }
-        }
-    }
 
     protected boolean isStop() {
         return stop;
@@ -60,29 +33,113 @@ public abstract class BaseAsyncRuntime implements Runnable {
         private volatile int start;
         private volatile int end;
         private int tid;
+        double[] deltaSample;
+        int sampleInterval;
+        double SAMPLE_RATE;
+        double SECONDARY_SAMPLE_RATE;
+        boolean assigned;
+        private AsyncConfig asyncConfig;
 
-        private ComputingThread(int tid, int start, int end) {
+        public ComputingThread(int tid) {
             this.tid = tid;
-            this.start = start;
-            this.end = end;
+            asyncConfig = AsyncConfig.get();
+            SAMPLE_RATE = asyncConfig.getSampleRate();
+            SECONDARY_SAMPLE_RATE = asyncConfig.getSecondarySampleRate();
         }
+
 
         @Override
         public void run() {
             while (!stop) {
+                if (!assigned || asyncConfig.isDynamic()) {
+                    arrangeTask();
+                    assigned = true;
+                }
+
                 //empty thread, sleep to reduce CPU race
                 if (start == end) {
                     try {
                         Thread.sleep(10);
+                        continue;
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
-                for (int k = start; k < end; k++) {
-                    asyncTable.updateLockFree(k);
+                double threshold = 0;
+                if (asyncConfig.getPriorityType() != AsyncConfig.PriorityType.NONE) {
+                    int a = (int) (Math.random() * 100);
+                    for (int i = 0; i < deltaSample.length; i++) {
+                        int interval = (end - start) / deltaSample.length;
+                        int ind = start + interval * i + a;
+                        if (ind >= end) {
+                            ind = end - 1;
+                        }
+                        if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.TYPE1)
+                            deltaSample[i] = asyncTable.getDelta(ind);
+                        else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.TYPE2) {
+                            double value = asyncTable.getValue(ind);
+                            double delta = asyncTable.getDelta(ind);
+                            deltaSample[i] = value - Math.min(value, delta);
+                        } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.TYPE3) {
+                            double value = asyncTable.getValue(ind);
+                            double delta = asyncTable.getDelta(ind);
+                            deltaSample[i] = value - Math.max(value, delta);
+                        }
+                    }
+                    Arrays.sort(deltaSample);
+                    int cutIndex = (int) (deltaSample.length * (1 - SECONDARY_SAMPLE_RATE));
+                    threshold = deltaSample[cutIndex];
+                }
+
+                if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.NONE) {
+                    for (int k = start; k < end; k++) {
+                        asyncTable.updateLockFree(k);
+                    }
+                } else {
+                    int processed = 0;
+                    for (int k = start; k < end; k++) {
+                        double f = asyncTable.getDelta(k);
+                        if (f >= threshold) {
+                            processed++;
+                            asyncTable.updateLockFree(k);
+                        }
+                    }
+                    if (tid == 0) {
+//                        L.info("processed " + (float) processed / (end - start) * 100);
+                    }
                 }
             }
         }
+
+        private void arrangeTask() {
+            int threadNum = AsyncConfig.get().getThreadNum();
+            int size = asyncTable.getSize();
+            int blockSize = size / threadNum;
+            if (blockSize == 0) {
+                L.warn("too many threads asynctable size " + size);
+                blockSize = size;
+            }
+
+            for (int tid = 0; tid < threadNum; tid++) {
+                int start = tid * blockSize;
+                int end = (tid + 1) * blockSize;
+                if (tid == threadNum - 1)//last thread, assign all
+                    end = size;
+                if (start >= size) {//assign empty tasks
+                    start = 0;
+                    end = 0;
+                } else if (end > size || tid == threadNum - 1) {//block < lastThread's tasks or block > ~
+                    end = size;
+                }
+                computingThreads[tid].start = start;
+                computingThreads[tid].end = end;
+                if (asyncConfig.getPriorityType() != AsyncConfig.PriorityType.NONE) {
+                    deltaSample = new double[(int) ((end - start) * SAMPLE_RATE)];
+                    sampleInterval = (end - start) / deltaSample.length;
+                }
+            }
+        }
+
 
         @Override
         public String toString() {

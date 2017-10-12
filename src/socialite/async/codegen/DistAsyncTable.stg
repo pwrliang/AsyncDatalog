@@ -363,6 +363,20 @@ public class DistAsyncTable extends BaseDistAsyncTable{
     }
 
     @Override
+    public double getValue(int localInd) {
+        <if(IsBoolean.(valueType))>
+            throw new UnsupportedOperationException();
+        <else>
+            return valueList.get(localInd);
+        <endif>
+    }
+
+    @Override
+    public double getDelta(int localInd) {
+        return (double)deltaList.get(localInd).get();
+    }
+
+    @Override
 	public void iterate(MyVisitorImpl visitor) {
 		for (int i=0; i\<size; i++) {
 	        <if(dynamic || !IsKeyAsIndex.(keyType))>

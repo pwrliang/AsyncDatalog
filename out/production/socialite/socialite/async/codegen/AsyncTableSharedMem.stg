@@ -294,6 +294,21 @@ public class AsyncTable extends BaseAsyncTable{
     <endif>
 
     @Override
+    public double getValue(int localInd) {
+        <if(IsBoolean.(valueType))>
+            throw new UnsupportedOperationException();
+        <else>
+            return valueList.get(localInd);
+        <endif>
+    }
+
+    @Override
+    public double getDelta(int localInd) {
+        return (double)deltaList.get(localInd).get();
+    }
+
+
+    @Override
     public <WrappedTypeMap.(deltaType)> accumulateDelta(){
         <deltaType> sum = 0;
 

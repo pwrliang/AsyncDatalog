@@ -10,6 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 public class AsyncRuntime extends BaseAsyncRuntime {
     private static final Log L = LogFactory.getLog(AsyncRuntime.class);
@@ -54,6 +55,7 @@ public class AsyncRuntime extends BaseAsyncRuntime {
     protected void createThreads() {
         int threadNum = AsyncConfig.get().getThreadNum();
         computingThreads = new ComputingThread[threadNum];
+        IntStream.range(0, threadNum).forEach(i -> computingThreads[i] = new ComputingThread(i));
         checkerThread = new CheckThread();
         checkerThread.setPriority(Thread.MAX_PRIORITY);
     }
@@ -63,7 +65,6 @@ public class AsyncRuntime extends BaseAsyncRuntime {
     public void run() {
         loadData(initTableInstArr, edgeTableInstArr);
         createThreads();
-        arrangeTask();
         L.info("Data Loaded size:" + asyncTable.getSize());
         checkerThread.start();
         Arrays.stream(computingThreads).forEach(ComputingThread::start);
@@ -164,8 +165,6 @@ public class AsyncRuntime extends BaseAsyncRuntime {
                         done();
                         break;
                     }
-                    if (asyncConfig.isDynamic())
-                        arrangeTask();
                     Thread.sleep(CHECKER_INTERVAL);
                 } catch (Exception e) {
                     e.printStackTrace();
