@@ -18,6 +18,7 @@ import socialite.resource.DistTableSliceMap;
 import socialite.resource.SRuntimeWorker;
 import socialite.resource.TableInstRegistry;
 import socialite.tables.TableInst;
+import socialite.util.Assert;
 import socialite.util.Loader;
 import socialite.visitors.VisitorImpl;
 
@@ -103,12 +104,16 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                 asyncTable = (BaseDistAsyncTable) constructor.newInstance(messageTableClass, sliceMap, indexForTableId, payload.getMyIdxWorkerIdMap());
                 //动态算法需要edge做连接，如prog4、9!>
                 method = edgeTableInstArr[0].getClass().getDeclaredMethod("iterate", VisitorImpl.class);
+                int edgeTableNum = 0;
                 for (TableInst tableInst : edgeTableInstArr) {
                     if (!tableInst.isEmpty()) {
                         method.invoke(tableInst, asyncTable.getEdgeVisitor());
-                        //tableInst.clear();
+                        tableInst.clear();
+                        edgeTableNum++;
                     }
                 }
+                if (edgeTableNum > 1)
+                    Assert.impossible();
             } else {
                 TableInst initTableInst = Arrays.stream(initTableInstArr).filter(tableInst -> !tableInst.isEmpty()).findFirst().orElse(null);
                 if (initTableInst == null) {
@@ -127,13 +132,16 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
 
 
             Method method = initTableInstArr[0].getClass().getDeclaredMethod("iterate", VisitorImpl.class);
+            int initTableNum = 0;
             for (TableInst tableInst : initTableInstArr) {
                 if (!tableInst.isEmpty()) {
                     method.invoke(tableInst, asyncTable.getInitVisitor());
-                    //tableInst.clear();
+                    tableInst.clear();
+                    initTableNum++;
                 }
             }
-
+            if (initTableNum > 1)
+                Assert.impossible();
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException | NoSuchFieldException e) {
             e.printStackTrace();
         }

@@ -2,6 +2,9 @@ CHECK_INTERVAL = 1500
 CHECK_TYPE = DELTA
 CHECK_COND = E
 CHECK_THRESHOLD = 0
+PRIORITY_TYPE = TYPE2
+SAMPLE_RATE = 0.01
+SCHEDULE_PORTION = 0.1
 DYNAMIC = FALSE
 THREAD_NUM = 32
 DEBUGGING = FALSE
@@ -12,18 +15,8 @@ RULE:
 edge(int src:0..875712, (int dst, int weight)).
 sssp(int node:0..875712, int dist).
 
-edge(s, t, w) :- l=$read("/home/gengl/Datasets/SSSP/Google/edge.txt"), (s1,s2,s3)=$split(l, "	"),
+edge(s, t, w) :- l=$read("hdfs://master:9000/Datasets/SSSP/Google/edge.txt"), (s1,s2,s3)=$split(l, "	"),
              s=$toInt(s1), t=$toInt(s2), w=$toInt(s3).
 
-sssp(s, d) :- l=$read("/home/gengl/Datasets/SSSP/Google/node.txt"), (s1,s2)=$split(l, "	"), s=$toInt(s1), d=$toInt(s2).
+sssp(s, d) :- l=$read("hdfs://master:9000/Datasets/SSSP/Google/node.txt"), (s1,s2)=$split(l, "	"), s=$toInt(s1), d=$toInt(s2).
 sssp(Y, $dmin(D)) :- sssp(X, D1), edge(X, Y, D2), D = D1 + D2.
-
-#/home/gengl/socialite-before-yarn/examples
-#E:\\socialite-before-yarn\\examples\\
-#/home/gengl/Datasets/nodes/web-Google_fix_nodes.txt
-#/home/gengl/Datasets/weight/web-Google_fix_weight.txt
-#dateset        node
-#    livejournal    4847571
-#    google         875713
-#    berkstan       685230
-# NOTE MESSAGE_TABLE_UPDATE_THRESHOLD FOR SSSP CANNOT TOO LOW

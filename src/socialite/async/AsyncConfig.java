@@ -18,7 +18,7 @@ public class AsyncConfig {
     private boolean dynamic;
     private PriorityType priorityType = PriorityType.NONE;
     private double sampleRate;
-    private double secondarySampleRate;
+    private double schedulePortion;
     private boolean debugging;
     private int threadNum;
     private int initSize;
@@ -43,7 +43,7 @@ public class AsyncConfig {
             else if (priorityType == PriorityType.TYPE3)
                 sb.append("PRIORITY_TYPE:VALUE -  MAX(VALUE, DELTA)").append(", ");
             sb.append("SAMPLE_RATE:").append(sampleRate).append(", ");
-            sb.append("SECONDARY_SAMPLE_RATE:").append(secondarySampleRate).append(", ");
+            sb.append("SCHEDULE_PORTION:").append(schedulePortion).append(", ");
         }
         sb.append(dynamic ? "DYNAMIC" : "STATIC").append(", ");
         sb.append("THREAD_NUM:").append(threadNum).append(", ");
@@ -108,8 +108,8 @@ public class AsyncConfig {
         return sampleRate;
     }
 
-    public double getSecondarySampleRate() {
-        return secondarySampleRate;
+    public double getSchedulePortion() {
+        return schedulePortion;
     }
 
     public int getThreadNum() {
@@ -178,7 +178,7 @@ public class AsyncConfig {
         private int initSize;
         private PriorityType priorityType;
         private double sampleRate;
-        private double secondarySampleRate;
+        private double schedulePortion;
         private int messageTableInitSize;
         private int messageTableUpdateThreshold;
         private int messageTableWaitingInterval = -1;
@@ -216,8 +216,8 @@ public class AsyncConfig {
             return this;
         }
 
-        public Builder setSecondarySampleRate(double secondarySampleRate) {
-            this.secondarySampleRate = secondarySampleRate;
+        public Builder setSchedulePortion(double schedulePortion) {
+            this.schedulePortion = schedulePortion;
             return this;
         }
 
@@ -285,7 +285,7 @@ public class AsyncConfig {
             asyncConfig.cond = cond;
             asyncConfig.priorityType = priorityType;
             asyncConfig.sampleRate = sampleRate;
-            asyncConfig.secondarySampleRate = secondarySampleRate;
+            asyncConfig.schedulePortion = schedulePortion;
             asyncConfig.dynamic = dynamic;
             asyncConfig.debugging = debugging;
             asyncConfig.threadNum = threadNum;
@@ -393,8 +393,8 @@ public class AsyncConfig {
                 case "SAMPLE_RATE":
                     asyncConfig.setSampleRate(Double.parseDouble(val));
                     break;
-                case "SECONDARY_SAMPLE_RATE":
-                    asyncConfig.setSecondarySampleRate(Double.parseDouble(val));
+                case "SCHEDULE_PORTION":
+                    asyncConfig.setSchedulePortion(Double.parseDouble(val));
                     break;
                 case "DYNAMIC":
                     if (val.equals("TRUE"))

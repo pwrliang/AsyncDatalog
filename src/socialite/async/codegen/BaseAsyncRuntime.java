@@ -9,6 +9,7 @@ import socialite.async.AsyncConfig;
 import socialite.tables.TableInst;
 
 import java.util.Arrays;
+import java.util.concurrent.ThreadLocalRandom;
 
 public abstract class BaseAsyncRuntime implements Runnable {
     protected static final Log L = LogFactory.getLog(BaseAsyncRuntime.class);
@@ -34,17 +35,18 @@ public abstract class BaseAsyncRuntime implements Runnable {
         private volatile int end;
         private int tid;
         double[] deltaSample;
-        int sampleInterval;
-        double SAMPLE_RATE;
-        double SECONDARY_SAMPLE_RATE;
+        final double SAMPLE_RATE;
+        final double SCHEDULE_PORTION;
         boolean assigned;
         private AsyncConfig asyncConfig;
+        private ThreadLocalRandom randomGenerator;
 
         public ComputingThread(int tid) {
             this.tid = tid;
             asyncConfig = AsyncConfig.get();
+            randomGenerator = ThreadLocalRandom.current();
             SAMPLE_RATE = asyncConfig.getSampleRate();
-            SECONDARY_SAMPLE_RATE = asyncConfig.getSecondarySampleRate();
+            SCHEDULE_PORTION = asyncConfig.getSchedulePortion();
         }
 
 
@@ -67,13 +69,8 @@ public abstract class BaseAsyncRuntime implements Runnable {
                 }
                 double threshold = 0;
                 if (asyncConfig.getPriorityType() != AsyncConfig.PriorityType.NONE) {
-                    int a = (int) (Math.random() * 100);
                     for (int i = 0; i < deltaSample.length; i++) {
-                        int interval = (end - start) / deltaSample.length;
-                        int ind = start + interval * i + a;
-                        if (ind >= end) {
-                            ind = end - 1;
-                        }
+                        int ind = randomGenerator.nextInt(start, end);
                         if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.TYPE1)
                             deltaSample[i] = asyncTable.getDelta(ind);
                         else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.TYPE2) {
@@ -87,7 +84,7 @@ public abstract class BaseAsyncRuntime implements Runnable {
                         }
                     }
                     Arrays.sort(deltaSample);
-                    int cutIndex = (int) (deltaSample.length * (1 - SECONDARY_SAMPLE_RATE));
+                    int cutIndex = (int) (deltaSample.length * (1 - SCHEDULE_PORTION));
                     threshold = deltaSample[cutIndex];
                 }
 
@@ -135,7 +132,6 @@ public abstract class BaseAsyncRuntime implements Runnable {
                 computingThreads[tid].end = end;
                 if (asyncConfig.getPriorityType() != AsyncConfig.PriorityType.NONE) {
                     deltaSample = new double[(int) ((end - start) * SAMPLE_RATE)];
-                    sampleInterval = (end - start) / deltaSample.length;
                 }
             }
         }

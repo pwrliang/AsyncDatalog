@@ -34,7 +34,7 @@ public class AsyncRuntime extends BaseAsyncRuntime {
                 for (TableInst tableInst : edgeTableInstArr) {
                     if (!tableInst.isEmpty()) {
                         method.invoke(tableInst, asyncTable.getEdgeVisitor());
-                        //tableInst.clear();
+                        tableInst.clear();
                     }
                 }
             }
@@ -42,7 +42,7 @@ public class AsyncRuntime extends BaseAsyncRuntime {
             for (TableInst tableInst : initTableInstArr) {
                 if (!tableInst.isEmpty()) {
                     method.invoke(tableInst, asyncTable.getInitVisitor());
-                    //tableInst.clear();
+                    tableInst.clear();
                 }
             }
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
