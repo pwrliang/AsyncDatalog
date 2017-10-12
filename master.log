@@ -1,0 +1,86 @@
+16:11:08 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+16:11:08 INFO MasterNode: Master started
+16:11:09 INFO MasterNode: Waiting for 5 worker(s): master/219.216.64.144 hadoop0/219.216.64.200 hadoop1/219.216.65.202 hadoop2/219.216.65.243 hadoop3/219.216.64.182
+16:11:09 INFO WorkerReqListener: register hadoop0
+16:11:10 INFO WorkerReqListener: register hadoop1
+16:11:11 INFO MasterNode: Waiting for 3 worker(s): master/219.216.64.144 hadoop2/219.216.65.243 hadoop3/219.216.64.182
+16:11:12 INFO WorkerReqListener: register hadoop2
+16:11:13 INFO WorkerReqListener: register hadoop3
+16:11:15 INFO MasterNode: Waiting for 1 worker(s): master/219.216.64.144
+16:11:23 INFO MasterNode: Waiting for 1 worker(s): master/219.216.64.144
+16:11:39 INFO MasterNode: Waiting for 1 worker(s): master/219.216.64.144
+16:12:11 INFO MasterNode: Waiting for 1 worker(s): master/219.216.64.144
+16:12:17 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+16:12:17 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+16:12:17 INFO MasterNode: Master started
+16:12:17 INFO WorkerReqListener: register master
+16:12:17 INFO CmdListener: 0'th worker registered to MasterNode
+16:12:17 INFO WorkerNode:  NOTICE startListen()
+16:12:18 INFO MasterNode: Waiting for 4 worker(s): hadoop0/219.216.64.200 hadoop1/219.216.65.202 hadoop2/219.216.65.243 hadoop3/219.216.64.182
+16:12:18 INFO WorkerReqListener: register hadoop0
+16:12:20 INFO WorkerReqListener: register hadoop1
+16:12:20 INFO MasterNode: Waiting for 2 worker(s): hadoop2/219.216.65.243 hadoop3/219.216.64.182
+16:12:21 INFO WorkerReqListener: register hadoop2
+16:12:22 INFO WorkerReqListener: register hadoop3
+16:12:22 INFO WorkerAddrMap: Adding master/219.216.64.144 at index:0
+16:12:22 INFO WorkerAddrMap: Adding hadoop0/219.216.64.200 at index:1
+16:12:22 INFO WorkerAddrMap: Adding hadoop1/219.216.65.202 at index:2
+16:12:22 INFO WorkerAddrMap: Adding hadoop2/219.216.65.243 at index:3
+16:12:22 INFO WorkerAddrMap: Adding hadoop3/219.216.64.182 at index:4
+16:12:22 INFO MasterNode: All workers registered. Ready to run queries.
+16:13:21 INFO DistEngine: WorkerCmd.run() all called:17ms
+16:13:21 INFO SRuntimeMaster: waitForIdle: stat=socialite.dist.IdleStat@91b7bc4
+16:13:21 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=0)
+16:13:31 INFO WorkerReqListener: All idle for epoch:0
+16:13:31 INFO WorkerReqListener: reportIdle() epoch done, epoch-id=0
+16:13:31 INFO DistEngine: Epoch done! Exec Time:10167ms
+16:13:31 INFO DistEngine: WorkerCmd.run() all called:2ms
+16:13:31 INFO SRuntimeMaster: waitForIdle: stat=socialite.dist.IdleStat@27224418
+16:13:31 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=1)
+16:13:32 INFO WorkerReqListener: All idle for epoch:1
+16:13:32 INFO WorkerReqListener: reportIdle() epoch done, epoch-id=1
+16:13:32 INFO DistEngine: Epoch done! Exec Time:361ms
+16:13:32 INFO DistEngine: WorkerCmd.run() all called:1ms
+16:13:32 INFO SRuntimeMaster: waitForIdle: stat=socialite.dist.IdleStat@7d5ae402
+16:13:32 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=2)
+16:13:32 INFO WorkerReqListener: All idle for epoch:2
+16:13:32 INFO WorkerReqListener: reportIdle() epoch done, epoch-id=2
+16:13:32 INFO DistEngine: Epoch done! Exec Time:72ms
+16:13:32 INFO QueryListener: Exec time:10602ms for Edge(int n:0..875713, (int t)) multiset.
+Edge(s,t) :- l=$read("/home/gengl/Datasets/directed/web-Google_fix.txt"), (s1,s2)=$split(l, "	"),
+             s=$toInt(s1), t=$toInt(s2).
+EdgeCnt(int n:0..875713, int cnt).
+EdgeCnt(s, $inc(1)) :- Edge(s, t).
+Node(int n:0..875713).
+Node(n) :- Edge(n, _). 
+Rank(int n:0..875713, int i:iter, double rank).
+Rank(n, 0, r) :- Node(n), r = 0.0 + 1.0 * 1.0 / 875713.
+
+
+16:13:32 INFO DistEngine: WorkerCmd.run() all called:1ms
+16:13:32 INFO SRuntimeMaster: waitForIdle: stat=socialite.dist.IdleStat@4fb9290a
+16:13:32 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=3)
+16:13:47 INFO WorkerReqListener: All idle for epoch:3
+16:13:47 INFO WorkerReqListener: reportIdle() epoch done, epoch-id=3
+16:13:47 INFO DistEngine: Epoch done! Exec Time:15010ms
+16:13:47 INFO QueryListener: Exec time:15010ms for Rank(n, 0 + 1, $sum(r)) :- Node(n), r=0.2*1.0 / 875713 ;
+                      :- Rank(s, 0, r1), EdgeCnt(s, cnt), r=0.8*r1/cnt, Edge(s, n).
+16:13:48 INFO DistEngine: WorkerCmd.run() all called:1ms
+16:13:48 INFO SRuntimeMaster: waitForIdle: stat=socialite.dist.IdleStat@1a4e88a8
+16:13:48 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=4)
+16:14:03 INFO WorkerReqListener: All idle for epoch:4
+16:14:03 INFO WorkerReqListener: reportIdle() epoch done, epoch-id=4
+16:14:03 INFO DistEngine: Epoch done! Exec Time:15254ms
+16:14:03 INFO QueryListener: Exec time:15254ms for Rank(n, 1 + 1, $sum(r)) :- Node(n), r=0.2*1.0 / 875713 ;
+                      :- Rank(s, 1, r1), EdgeCnt(s, cnt), r=0.8*r1/cnt, Edge(s, n).
+16:14:03 INFO DistEngine: WorkerCmd.run() all called:5ms
+16:14:03 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=5)
+16:14:03 INFO SRuntimeMaster: waitForIdle: stat=socialite.dist.IdleStat@29b7e4cb
+16:14:18 INFO WorkerReqListener: All idle for epoch:5
+16:14:18 INFO WorkerReqListener: reportIdle() epoch done, epoch-id=5
+16:14:18 INFO DistEngine: Epoch done! Exec Time:14730ms
+16:14:18 INFO QueryListener: Exec time:14730ms for Rank(n, 2 + 1, $sum(r)) :- Node(n), r=0.2*1.0 / 875713 ;
+                      :- Rank(s, 2, r1), EdgeCnt(s, cnt), r=0.8*r1/cnt, Edge(s, n).
+16:14:18 INFO DistEngine: WorkerCmd.run() all called:0ms
+16:14:18 INFO SRuntimeMaster: waitForIdle: stat=socialite.dist.IdleStat@5bf04313
+16:14:18 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=6)

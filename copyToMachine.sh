@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 host_name=$1
 dir=~/socialite-before-yarn
 tar -zcf $dir/out.tar.gz -C $dir out conf examples

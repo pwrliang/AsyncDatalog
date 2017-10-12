@@ -106,11 +106,17 @@ JAR_PATH=${JAR_PATH}:${HADOOP_HDFS}/hadoop-hdfs-2.7.2.jar
 
 TEST_CLASSPATH=${SOCIALITE_PREFIX}/out/production/socialite
 
-java -Xmx28G \
--Dsocialite.output.dir=${SOCIALITE_PREFIX}/gen \
--Dsocialite.worker.num=32 \
--Dsocialite.port=50100 \
--Dsocialite.master=master \
--Dlog4j.configuration=file:${SOCIALITE_PREFIX}/conf/log4j.properties \
--cp ${TEST_CLASSPATH}:${JAR_PATH} \
-socialite.dist.master.MasterNode
+MASTER_HOST=master
+MASTER_CMD="java -Xmx28G -Dsocialite.output.dir=${SOCIALITE_PREFIX}/gen -Dsocialite.worker.num=32 -Dsocialite.port=50100 -Dsocialite.master=$MASTER_HOST -Dlog4j.configuration=file:${SOCIALITE_PREFIX}/conf/log4j.properties -cp ${TEST_CLASSPATH}:${JAR_PATH} socialite.dist.master.MasterNode"
+WORKER_CMD="java -Xmx6G -Dsocialite.output.dir=${SOCIALITE_PREFIX}/gen -Dsocialite.worker.num=32 -Dsocialite.port=50100 -Dsocialite.master=$MASTER_HOST -Dlog4j.configuration=file:${SOCIALITE_PREFIX}/conf/log4j.properties -cp ${TEST_CLASSPATH}:${JAR_PATH} socialite.dist.worker.WorkerNode"
+sh -c "kill -9 \$(ps aux|grep '[s]ocialite.master='|awk '{print \$2}') 2> /dev/null"
+nohup ${MASTER_CMD} >> master.log 2>&1 &
+nohup ${WORKER_CMD} >> master.log 2>&1 &
+while IFS='' read -r line || [[ -n "$line" ]]; do
+    if [ ${line} == ${MASTER_HOST} ]; then
+        continue
+    fi
+    ssh -n -f gengl@${line} "kill -9 \$(ps aux|grep '[s]ocialite.master='|awk '{print \$2}') 2> /dev/null"
+    sleep 1
+    ssh -n -f gengl@${line} "sh -c 'cd /home/gengl/socialite-before-yarn; nohup $WORKER_CMD > /dev/null 2>&1 &'"
+done < "$1"
