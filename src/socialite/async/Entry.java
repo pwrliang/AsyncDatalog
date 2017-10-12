@@ -41,8 +41,9 @@ public class Entry {
                 AsyncWorker worker = new AsyncWorker();
                 worker.startWorker();
             }
-            L.info("process " + machineId + " exit.");
+            Thread.sleep(5000);
             MPI.Finalize();
+            L.info("process " + machineId + " exit.");
             System.exit(0);
         } else {
             AsyncConfig.parse(TextUtils.readText(args[args.length - 1]));

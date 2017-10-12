@@ -93,16 +93,11 @@ public abstract class BaseAsyncRuntime implements Runnable {
                         asyncTable.updateLockFree(k);
                     }
                 } else {
-                    int processed = 0;
                     for (int k = start; k < end; k++) {
                         double f = asyncTable.getDelta(k);
                         if (f >= threshold) {
-                            processed++;
                             asyncTable.updateLockFree(k);
                         }
-                    }
-                    if (tid == 0) {
-//                        L.info("processed " + (float) processed / (end - start) * 100);
                     }
                 }
             }

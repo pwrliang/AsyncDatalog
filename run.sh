@@ -130,4 +130,4 @@ mpjrun.sh -Xmx28G \
 -cp ${TEST_CLASSPATH}:${JAR_PATH} \
 socialite.async.Entry ${SOCIALITE_PREFIX}/examples/PageRank/Google.dl
 
-./kill-all.sh machines
+#./kill-all.sh machines

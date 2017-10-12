@@ -31,6 +31,7 @@ public class AsyncWorker {
         String savePath = asyncConfig.getSavePath();
         if (savePath.length() > 0)
             textUtils = new TextUtils(asyncConfig.getSavePath(), "part-" + myWorkerId);
+        else if (!asyncConfig.isPrintResult()) return;
 
         TextUtils finalTextUtils = textUtils;
         distAsyncRuntime.getAsyncTable().iterateTuple(new QueryVisitor() {

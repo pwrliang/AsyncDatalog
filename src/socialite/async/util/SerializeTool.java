@@ -121,7 +121,7 @@ public class SerializeTool {
         return object;
     }
 
-    public Object fromBytes1(byte[] data, Class<?> klass) {
+    public Object fromBytesToObject(byte[] data, Class<?> klass) {
         Input input = new Input(new ByteArrayInputStream(data));
         Object object = kryo.readObject(input, klass);
         input.close();

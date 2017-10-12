@@ -2,6 +2,7 @@ package socialite.async.dist.worker;
 
 import mpi.MPI;
 import mpi.MPIException;
+import mpi.Request;
 import mpi.Status;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -57,7 +58,6 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         if (loadData(initTableInstArr, edgeTableInstArr)) {//this worker is idle, stop
             createThreads();
             startThreads();
-            L.info(String.format("Worker %d all threads started.", myWorkerId));
         } else {//this worker is idle, only start checker
             checkThread = new CheckThread();
             checkThread.start();
@@ -169,16 +169,87 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         Arrays.stream(receiveThreads).filter(Objects::nonNull).forEach(Thread::start);
         Arrays.stream(sendThreads).filter(Objects::nonNull).forEach(Thread::start);
         checkThread.start();
-
+        L.info(String.format("Worker %d all threads started.", myWorkerId));
         try {
             for (ComputingThread computingThread : computingThreads) computingThread.join();
-            L.info("Worker " + myWorkerId + " Computing Thread exited.");
+            L.info("Worker " + myWorkerId + " Computing Threads exited.");
             checkThread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
+//    private class SendThread extends Thread {
+//        private final int sendToWorkerId;
+//        private SerializeTool serializeTool;
+//
+//        private SendThread(int sendToWorkerId) {
+//            this.sendToWorkerId = sendToWorkerId;
+//            serializeTool = new SerializeTool.Builder()
+//                    .setSerializeTransient(true) //!!!!!!!!!!AtomicDouble's value field is transient
+//                    .build();
+//        }
+//
+//        @Override
+//        public void run() {
+//            try {
+//                while (!isStop()) {
+//                    byte[] data = ((BaseDistAsyncTable) asyncTable).getSendableMessageTableBytes(sendToWorkerId, serializeTool);
+//                    Request request = MPI.COMM_WORLD.Isend(data, 0, data.length, MPI.BYTE, sendToWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal());
+//                    while (true) {
+//                        if (isStop()) return; //notify to stop
+//                        if (request.Wait() != null) break;//send success
+//                        Thread.sleep(10);
+//                    }
+//                }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
+//
+//    private class ReceiveThread extends Thread {
+//        private SerializeTool serializeTool;
+//        private int recvFromWorkerId;
+//        private Class<?> klass;
+//
+//        private ReceiveThread(int recvFromWorkerId) {
+//            this.recvFromWorkerId = recvFromWorkerId;
+//            serializeTool = new SerializeTool.Builder()
+//                    .setSerializeTransient(true)
+//                    .build();
+//            klass = Loader.forName("socialite.async.codegen.MessageTable");
+//        }
+//
+//        @Override
+//        public void run() {
+//            try {
+//                while (!isStop()) {
+//                    Status status;
+//                    while (true) {
+//                        status = MPI.COMM_WORLD.Iprobe(recvFromWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal());
+//                        if (isStop()) return;
+//                        if (status != null) break;
+//                        Thread.sleep(10);
+//                    }
+//
+//                    int size = status.Get_count(MPI.BYTE);
+//                    int source = status.source;
+//                    byte[] data = new byte[size];
+//                    Request request = MPI.COMM_WORLD.Irecv(data, 0, size, MPI.BYTE, source, MsgType.MESSAGE_TABLE.ordinal());
+//                    while (true) {
+//                        if (isStop()) return;
+//                        if (request.Wait() != null) break;//received
+//                    }
+//
+//                    MessageTableBase messageTable = (MessageTableBase) serializeTool.fromBytesToObject(data, klass);
+//                    ((BaseDistAsyncTable) asyncTable).applyBuffer(messageTable);
+//                }
+//            } catch (MPIException | InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
 
     private class SendThread extends Thread {
         private final int sendToWorkerId;
@@ -237,7 +308,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
 //            L.info("applyBufferToAsyncTable");
             MPI.COMM_WORLD.Recv(data, 0, size, MPI.BYTE, source, MsgType.MESSAGE_TABLE.ordinal());
             //L.info(String.format("Machine %d <---- %d", myWorkerId + 1, source));
-            MessageTableBase messageTable = (MessageTableBase) serializeTool.fromBytes1(data, klass);
+            MessageTableBase messageTable = (MessageTableBase) serializeTool.fromBytesToObject(data, klass);
             ((BaseDistAsyncTable) asyncTable).applyBuffer(messageTable);
         }
     }
