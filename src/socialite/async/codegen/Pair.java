@@ -18,6 +18,10 @@ public class Pair {
         return v0 + " " + v1;
     }
 
+    public String toReversedString() {
+        return v1 + " " + v0;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

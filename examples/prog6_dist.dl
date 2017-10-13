@@ -13,10 +13,10 @@ MESSAGE_TABLE_UPDATE_THRESHOLD = 0
 MESSAGE_TABLE_WAITING_INTERVAL = 5000
 PRINT_RESULT = TRUE
 RULE:
-cite(int y:0..10, (int x)).
-ancestor(int Y:0..10, (int X, int depth)).
+cite(int y:0..11, (int x)).
+ancestor(int Y:0..11, (int X, int depth)).
 
 cite(y, x) :- l=$read("hdfs://master:9000/examples/prog6_cite.txt"), (s1,s2)=$split(l, "	"), y=$toInt(s1), x=$toInt(s2).
 
-ancestor(Y, X, 1) :- cite(Y, X), X<5.
+ancestor(X, Y, 1) :- cite(Y, X), X<5.
 ancestor(Z, X, $dmin(D1)) :- ancestor(Z, Y, D), cite(Y, X), D1 = D + 1.

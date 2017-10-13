@@ -85,9 +85,13 @@ public abstract class BaseAsyncRuntime implements Runnable {
                                 deltaSample[i] = value - Math.max(value, delta);
                             }
                         }
-                        Arrays.sort(deltaSample);
-                        int cutIndex = (int) (deltaSample.length * (1 - SCHEDULE_PORTION));
-                        threshold = deltaSample[cutIndex];
+                        if (deltaSample.length == 0) {//no sample, schedule all
+                            threshold = Double.MIN_VALUE;
+                        } else {
+                            Arrays.sort(deltaSample);
+                            int cutIndex = (int) (deltaSample.length * (1 - SCHEDULE_PORTION));
+                            threshold = deltaSample[cutIndex];
+                        }
                     }
 
                     if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.NONE) {
@@ -114,7 +118,7 @@ public abstract class BaseAsyncRuntime implements Runnable {
             int size = asyncTable.getSize();
             int blockSize = size / threadNum;
             if (blockSize == 0) {
-                L.warn("too many threads asynctable size " + size);
+//                L.warn("too many threads asynctable size " + size);
                 blockSize = size;
             }
 

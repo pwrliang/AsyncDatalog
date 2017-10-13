@@ -105,7 +105,7 @@ JAR_PATH=${JAR_PATH}:${HADOOP_COMMON}/lib/hadoop-auth-2.7.2.jar
 JAR_PATH=${JAR_PATH}:${HADOOP_HDFS}/hadoop-hdfs-2.7.2.jar
 
 TEST_CLASSPATH=${SOCIALITE_PREFIX}/out/production/socialite
-#-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 \
+
 
 MASTER_HOST=master
 
@@ -120,14 +120,15 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
     ssh -n -f gengl@${line} "rm -rf ${SOCIALITE_PREFIX}/out 2> /dev/null && tar -zxf /tmp/out.tar.gz -C ${SOCIALITE_PREFIX}/ && rm /tmp/out.tar.gz"
 done < "machines"
 
+#-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 \
 mpjrun.sh -Xmx28G \
--machinesfile ${SOCIALITE_PREFIX}/machines -np 6 -dev niodev \
+-machinesfile ${SOCIALITE_PREFIX}/machines -np 5 -dev niodev \
 -Dsocialite.output.dir=${SOCIALITE_PREFIX}/gen \
 -Dsocialite.worker.num=32 \
 -Dsocialite.port=50100 \
 -Dsocialite.master=master \
 -Dlog4j.configuration=file:${SOCIALITE_PREFIX}/conf/log4j.properties \
 -cp ${TEST_CLASSPATH}:${JAR_PATH} \
-socialite.async.Entry ${SOCIALITE_PREFIX}/examples/PageRank/Google.dl
+socialite.async.Entry ${SOCIALITE_PREFIX}/examples/prog6_dist.dl
 
 #./kill-all.sh machines

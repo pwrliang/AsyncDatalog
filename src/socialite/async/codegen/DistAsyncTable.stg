@@ -382,7 +382,8 @@ public class DistAsyncTable extends BaseDistAsyncTable{
 	        <if(dynamic || !IsKeyAsIndex.(keyType))>
                 <if(IsPairKey.(keyType))>
                     Pair pair = indKeyMap.get(i);
-                    if (!visitor.visit(pair.toString(), valueList.get(i), deltaList.get(i).<deltaType>Value()))
+                    <! reverse key to print right answer !>
+                    if (!visitor.visit(pair.toReversedString(), valueList.get(i), deltaList.get(i).<deltaType>Value()))
                         break;
                 <elseif(IsBoolean.(valueType))>
                     if(valueList.get(i))
@@ -407,7 +408,7 @@ public class DistAsyncTable extends BaseDistAsyncTable{
                 <if(IsPairKey.(keyType))>
                     Pair pair = indKeyMap.get(i);
                     tuple = new Tuple_Object_<valueType>_<deltaType>();
-                    tuple.set<WrappedTypeForTupleMap.(keyType)>(0, pair.toString());
+                    tuple.set<WrappedTypeForTupleMap.(keyType)>(0, pair.toReversedString());<! reverse key to print right answer !>
                     tuple.set<WrappedTypeForTupleMap.(valueType)>(1, valueList.get(i));
                     tuple.set<WrappedTypeForTupleMap.(deltaType)>(2, deltaList.get(i).get());
                     if(!queryVisitor.visit(tuple))
