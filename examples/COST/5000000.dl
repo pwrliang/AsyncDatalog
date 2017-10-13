@@ -1,0 +1,21 @@
+CHECK_INTERVAL = 1000
+CHECK_TYPE = DELTA
+CHECK_COND = E
+CHECK_THRESHOLD = 0
+PRIORITY = TRUE
+SAMPLE_RATE = 0.01
+SCHEDULE_PORTION = 0.1
+THREAD_NUM = 32
+MESSAGE_TABLE_INIT_SIZE = 10000
+MESSAGE_TABLE_UPDATE_THRESHOLD = 0
+MESSAGE_TABLE_WAITING_INTERVAL = 5000
+RULE:
+basic(int part:0..4999999, int cost).
+assb(int sub:0..4999999, (int part, int n)).
+cost(int part:0..4999999, int c).
+
+
+basic(part, cost) :- l=$read("hdfs://master:9000/Datasets/COST/5000000/basic_5000000.txt"),  (s1,s2)=$split(l, "	"), part=$toInt(s1), cost=$toInt(s2).
+assb(sub, part, n) :- l=$read("hdfs://master:9000/Datasets/COST/5000000/assb_5000000.txt"), (s1, s2, s3)=$split(l, "	"), part=$toInt(s1), sub=$toInt(s2), n=$toInt(s3).
+cost(part, cost) :- basic(part, cost).
+cost(part, $dsum(c1)) :- cost(sub, c), assb(sub, part, n), c1 = c*n.

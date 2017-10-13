@@ -1,12 +1,11 @@
-CHECK_INTERVAL = 100
-CHECK_TYPE = VALUE
-CHECK_COND = GE
-CHECK_THRESHOLD = 0.999
+CHECK_INTERVAL = 1000
+CHECK_TYPE = DIFF_DELTA
+CHECK_COND = LE
+CHECK_THRESHOLD = 0.00001
 PRIORITY = FALSE
 SAMPLE_RATE = 0.01
 SCHEDULE_PORTION = 0.1
 SYNC = FALSE
-DYNAMIC = FALSE
 MESSAGE_TABLE_INIT_SIZE = 10000
 MESSAGE_TABLE_UPDATE_THRESHOLD = 1000
 MESSAGE_TABLE_WAITING_INTERVAL = 1000
@@ -26,5 +25,5 @@ Edge(s, t) :- l=$read("hdfs://master:9000/Datasets/PageRank/Google/edge.txt"), (
 Node(n) :- l=$read("hdfs://master:9000/Datasets/PageRank/Google/node.txt"), n=$toInt(l).
 
 EdgeCnt(s, $inc(1)) :- Edge(s, t).
-Rank(n, r) :- Node(n), r = 0.2 / 875713.
+Rank(n, r) :- Node(n), r = 0.2.
 Rank(y, $dsum(r1)) :- Rank(x, r), Edge(x, y),  EdgeCnt(x, d), r1 = 0.8 * r / d.

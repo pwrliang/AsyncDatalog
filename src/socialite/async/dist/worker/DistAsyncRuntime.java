@@ -269,7 +269,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
             double partialSum = 0;
             Object accumulated;
             if (asyncTable != null) {//null indicate this worker is idle
-                if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DELTA) {
+                if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DELTA || asyncConfig.getCheckType() == AsyncConfig.CheckerType.DIFF_DELTA) {
                     accumulated = asyncTable.accumulateDelta();
                     if (accumulated instanceof Integer) {
                         partialSum = (Integer) accumulated;
@@ -281,7 +281,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                         partialSum = (Double) accumulated;
                     }
                     L.info("partialSum of delta: " + new BigDecimal(partialSum));
-                } else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.VALUE) {
+                } else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.VALUE || asyncConfig.getCheckType() == AsyncConfig.CheckerType.DIFF_VALUE) {
                     accumulated = asyncTable.accumulateValue();
                     if (accumulated instanceof Integer) {
                         partialSum = (Integer) accumulated;

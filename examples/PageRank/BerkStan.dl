@@ -2,15 +2,15 @@ CHECK_INTERVAL = 1000
 CHECK_TYPE = VALUE
 CHECK_COND = GE
 CHECK_THRESHOLD = 0.999
-PRIORITY_TYPE = NONE
+PRIORITY = FALSE
 SAMPLE_RATE = 0.01
 SCHEDULE_PORTION = 0.1
-DYNAMIC = FALSE
+SYNC = FALSE
 MESSAGE_TABLE_INIT_SIZE = 10000
 MESSAGE_TABLE_UPDATE_THRESHOLD = 10000
 MESSAGE_TABLE_WAITING_INTERVAL = 1000
-THREAD_NUM = 64
-#SAVE_PATH = "hdfs://master:9000/expr/PageRank/BerkStan"
+THREAD_NUM = 32
+SAVE_PATH = "hdfs://master:9000/expr/PageRank/BerkStan"
 #PRINT_RESULT = TRUE
 RULE:
 Node(int n:0..685229).
@@ -18,11 +18,11 @@ Rank(int n:0..685229, double rank).
 Edge(int n:0..685229, (int t)).
 EdgeCnt(int n:0..685229, int cnt).
 
-Edge(s, t) :- l=$read("hdfs://master:9000/Datasets/PageRank/LiveJournal/edge.txt"), (s1,s2)=$split(l, "	"),
+Edge(s, t) :- l=$read("hdfs://master:9000/Datasets/PageRank/BerkStan/edge.txt"), (s1,s2)=$split(l, "	"),
              s=$toInt(s1), t=$toInt(s2).
 
 
-Node(n) :- l=$read("hdfs://master:9000/Datasets/PageRank/LiveJournal/node.txt"), n=$toInt(l).
+Node(n) :- l=$read("hdfs://master:9000/Datasets/PageRank/BerkStan/node.txt"), n=$toInt(l).
 
 EdgeCnt(s, $inc(1)) :- Edge(s, t).
 Rank(n, r) :- Node(n), r = 0.2 / 685230.
