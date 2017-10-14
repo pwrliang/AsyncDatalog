@@ -5,6 +5,7 @@ import gnu.trove.map.hash.TIntIntHashMap;
 import org.apache.commons.lang3.time.StopWatch;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
+import socialite.async.util.TextUtils;
 import socialite.engine.ClientEngine;
 import socialite.engine.LocalEngine;
 import socialite.tables.QueryVisitor;
@@ -18,24 +19,25 @@ public class SSSP {
 
     //dateset        node         iter   distSum
     //livejournal    4847571      16     2243012525
-    //google         875713       26
+    //google         875713       26     590940903
     //berkstan       685230       356
 
     public static void main(String[] args) throws FileNotFoundException {
 //        PrintStream printStream = new PrintStream(new FileOutputStream("/home/gengl/out.txt", true));
 //        System.setOut(printStream);
-        distTest();
+        test();
+//        distTest();
     }
 
     static void test() {
         STGroup stg = new MySTGroupFile(SSSP.class.getResource("SSSP.stg"),
                 "UTF-8", '<', '>');
         stg.load();
-        int nodeCount = 4847571;//google 875713 livejournal 4847571 iter 16
-        int iter = 16;
+        int nodeCount = 685230;//google 875713 livejournal 4847571 iter 16
+        int iter = 356;
         ST st = stg.getInstanceOf("Init");
         st.add("N", nodeCount);
-        st.add("PATH", "/home/gengl/Desktop/gengl/Datasets/weight/LiveJournal-edge1_fix_weight.txt");
+        st.add("PATH", "E:/edge.txt");
         st.add("SPLITTER", "\t");
         String init = st.render();
         System.out.println(init);
@@ -90,11 +92,18 @@ public class SSSP {
         System.out.println("min " + min);
         System.out.println("size " + result.size());
         System.out.println("dist sum " + distSum);
+        StringBuilder resultText = new StringBuilder();
+        result.forEachEntry((key, val) -> {
+            resultText.append(key).append(" ").append(val).append("\n");
+            return true;
+        });
+        TextUtils.writeText("E:\\BerkStanSSSP.txt", resultText.toString());
 //        save("/home/gengl/Desktop/gengl/IdeaProjects/Datasets/sssp-socialite-result", result);
 //            System.out.printf("%d %d\n", src, result.get(src));
 //        ReadAnswer.load();
 //        ReadAnswer.compare(result);
     }
+
 
     static void distTest() {
         STGroup stg = new MySTGroupFile(SSSP.class.getResource("SSSP.stg"),

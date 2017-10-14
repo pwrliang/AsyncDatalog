@@ -4,6 +4,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import socialite.engine.ClientEngine;
+import socialite.engine.LocalEngine;
 import socialite.util.MySTGroupFile;
 
 import java.io.FileNotFoundException;
@@ -20,7 +21,32 @@ public class COST {
     }
 
     static void test() {
-
+        STGroup stg = new MySTGroupFile(COST.class.getResource("COST.stg"),
+                "UTF-8", '<', '>');
+        stg.load();
+        int nodeCount = 50000000;
+        ST st = stg.getInstanceOf("Init");
+        st.add("N", nodeCount + 1);
+        st.add("BASIC_PATH", "hdfs://master:9000/Datasets/COST/5000000/basic_" + nodeCount + ".txt");
+        st.add("ASSB_PATH", "hdfs://master:9000/Datasets/COST/5000000/assb_" + nodeCount + ".txt");
+        st.add("SPLITTER", "\t");
+        String init = st.render();
+        System.out.println(init);
+        LocalEngine en = new LocalEngine();//config
+        en.run(init);
+        st = stg.getInstanceOf("Iter");
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+        for (int i = 0; i < 49; i++) {
+            st.add("i", i);
+            String iterCode = st.render();
+            st.remove("i");
+            en.run(iterCode);
+            System.out.println("iter " + i);
+        }
+        stopWatch.stop();
+        System.out.println("elapsed " + stopWatch.getTime());
+        en.shutdown();
     }
 
     static void distTest() {
