@@ -297,15 +297,16 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
 //                    L.info("sum of value: " + new BigDecimal(partialSum));
                 }
                 //accumulate rest message
-                BaseDistAsyncTable baseDistAsyncTable = (BaseDistAsyncTable) asyncTable;
-                for (int workerId = 0; workerId < workerNum; workerId++) {
-                    MessageTableBase messageTable = baseDistAsyncTable.getMessageTableList()[workerId][0];
-                    if (messageTable == null) continue;
-                    partialSum += messageTable.accumulate();
-                    messageTable = baseDistAsyncTable.getMessageTableList()[workerId][1];
-                    if (messageTable == null) continue;
-                    partialSum += messageTable.accumulate();
-                }
+//                BaseDistAsyncTable baseDistAsyncTable = (BaseDistAsyncTable) asyncTable;
+//                for (int workerId = 0; workerId < workerNum; workerId++) {
+//                    MessageTableBase messageTable1 = baseDistAsyncTable.getMessageTableList()[workerId][0];
+//                    MessageTableBase messageTable2 = baseDistAsyncTable.getMessageTableList()[workerId][1];
+//                    if (messageTable1 == null && messageTable2 != null || messageTable1 != null && messageTable2 == null)
+//                        Assert.impossible();
+//                    if (messageTable1 == null || messageTable2 == null) continue;
+//                    partialSum += messageTable1.accumulate();
+//                    partialSum += messageTable2.accumulate();
+//                }
             }
             return partialSum;
         }
