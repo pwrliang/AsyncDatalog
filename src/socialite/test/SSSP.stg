@@ -1,12 +1,7 @@
 Init(N, PATH, SPLITTER) ::= <<
+Path(int n:0..<N>, int dist, int prev).
 Edge(int src:0..<N>, (int sink, int len)).
-Edge(s,t,cnt) :- l=$read("<PATH>"), (s1,s2,s3)=$split(l, "<SPLITTER>"),
-               s=$toInt(s1), t=$toInt(s2), cnt=$toInt(s3).
-PATH(int sink:0..<N>, int i:iter, int dist).
->>
-
-
-Iter(i, SRC, N)::=<<
-PATH(t, <i> + 1, $min(d)) :- Edge(<SRC>, t, d);
-                 :- PATH(s, <i>, d1), Edge(s, t, d2), d = d1 + d2.
+Edge(s,t,cnt) :- l=$read("<PATH>"), (s1,s2,s3)=$split(l, "<SPLITTER>"), s=$toInt(s1), t=$toInt(s2), cnt=$toInt(s3).
+Path(n, $min(d), prev) :- n=0, d=0, prev=-1 ;
+                       :- Path(s, d1, prev1), Edge(s, n, weight), d=d1+weight, prev=s.
 >>
