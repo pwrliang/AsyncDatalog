@@ -96,7 +96,7 @@ public class Config {
         return workerNodeNum;
     }
 
-    public static int systemWorkerNum = -1;
+    public static int systemWorkerNum = 32;
 
     static {
         String p = System.getProperty("socialite.worker.num");
@@ -107,7 +107,7 @@ public class Config {
         }
     }
 
-    int workerThreadNum = 1;
+    int workerThreadNum = 32;
     boolean verbose = false;
     boolean cleanup = false;
 

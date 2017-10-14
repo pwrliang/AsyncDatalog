@@ -3,23 +3,33 @@ package socialite.test;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
+import socialite.async.util.TextUtils;
 import socialite.engine.ClientEngine;
+import socialite.engine.Config;
 import socialite.engine.LocalEngine;
 import socialite.tables.QueryVisitor;
+import socialite.tables.Tuple;
+import socialite.util.AtomicDouble;
 import socialite.util.MySTGroupFile;
 
 import java.io.FileNotFoundException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class CC {
-    public static final int SRC_NODE = 0;
+    private static final Log L = LogFactory.getLog(SSSP.class);
 
     //dateset        node
     //livejournal    4847571
     //google         875713
     //berkstan       685230
     public static void main(String[] args) throws FileNotFoundException {
+//        test();
         distTest();
     }
 
@@ -30,14 +40,14 @@ public class CC {
         int nodeCount = 4847571;
         ST st = stg.getInstanceOf("Init");
         st.add("N", nodeCount);
-        st.add("PATH", "/home/gengl/Desktop/gengl/Datasets/undirected/LiveJournal-edge1_fix_undirected.txt");
-        st.add("NPATH", "/home/gengl/Desktop/gengl/Datasets/undirected/LiveJournal-node.txt");
+        st.add("PATH", "hdfs://master:9000/Datasets/CC/LiveJournal/edge.txt");
+        st.add("NPATH", "hdfs://master:9000/Datasets/CC/LiveJournal/node.txt");
         st.add("SPLITTER", "\t");
         String init = st.render();
         System.out.println(init);
 
 
-        LocalEngine en = new LocalEngine();
+        LocalEngine en = new LocalEngine(Config.par(64));
 
         en.run(init);
 
@@ -76,7 +86,7 @@ public class CC {
         STGroup stg = new MySTGroupFile(CC.class.getResource("CC.stg"),
                 "UTF-8", '<', '>');
         stg.load();
-        int nodeCount = 4847571;
+        int nodeCount = 875713;
         ST st = stg.getInstanceOf("Init");
         st.add("N", nodeCount);
         st.add("PATH", "hdfs://master:9000/Datasets/CC/Google/edge.txt");
@@ -98,11 +108,16 @@ public class CC {
         String iterCode = st.render();
         en.run(iterCode);
         stopWatch.stop();
-        System.out.println("recursive statement:" + (System.currentTimeMillis() - start));
-        en.run("drop Edge.");
-        en.run("drop Nodes.");
-        en.run("drop Comp.");
-        en.run("drop CompIDs.");
+        L.info("recursive statement:" + (System.currentTimeMillis() - start));
+        StringBuilder stringBuilder = new StringBuilder();
+        en.run("?- Comp(n, belong).", new QueryVisitor() {
+            @Override
+            public boolean visit(Tuple _0) {
+                stringBuilder.append(_0.getInt(0)).append(" ").append(_0.getInt(1)).append("\n");
+                return true;
+            }
+        }, 0);
+        TextUtils.writeText("/home/gengl/CC_BERKSTAN", stringBuilder.toString());
         en.shutdown();
     }
 }

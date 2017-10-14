@@ -6,7 +6,6 @@ import org.apache.commons.logging.LogFactory;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import socialite.engine.ClientEngine;
-import socialite.engine.LocalEngine;
 import socialite.util.MySTGroupFile;
 
 import java.io.FileNotFoundException;
@@ -31,14 +30,14 @@ public class SSSP {
         STGroup stg = new MySTGroupFile(SSSP.class.getResource("SSSP.stg"),
                 "UTF-8", '<', '>');
         stg.load();
-        int nodeCount = 685230;//google 875713 livejournal 4847571 iter 16
+        int nodeCount = 4847571;//google 875713 livejournal 4847571 iter 16
         ST st = stg.getInstanceOf("Init");
         st.add("N", nodeCount);
-        st.add("PATH", "hdfs://master:9000/Datasets/SSSP/BerkStan/edge.txt");
+        st.add("PATH", "hdfs://master:9000/Datasets/SSSP/LiveJournal/edge.txt");
         st.add("SPLITTER", "\t");
         String init = st.render();
         System.out.println(init);
-        LocalEngine en = new LocalEngine();
+        ClientEngine en = new ClientEngine();
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         en.run(init);

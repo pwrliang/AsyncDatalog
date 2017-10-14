@@ -1,6 +1,5 @@
 package socialite.async.dist.worker;
 
-import gnu.trove.map.hash.TIntIntHashMap;
 import mpi.MPI;
 import mpi.MPIException;
 import mpi.Status;
@@ -28,7 +27,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
@@ -85,7 +83,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
             DistTableSliceMap sliceMap = runtimeWorker.getSliceMap();
             Map<Integer, Integer> myIdxWorkerMap = payload.getMyIdxWorkerIdMap();
             int[] myIdxWorkerArr = new int[myIdxWorkerMap.size()];
-            myIdxWorkerMap.forEach((myIdx, workerId)->myIdxWorkerArr[myIdx]=workerId);
+            myIdxWorkerMap.forEach((myIdx, workerId) -> myIdxWorkerArr[myIdx] = workerId);
             //static, int type key
             int indexForTableId;
             if (AsyncConfig.get().isDynamic()) {
@@ -297,6 +295,16 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                         partialSum = (Double) accumulated;
                     }
 //                    L.info("sum of value: " + new BigDecimal(partialSum));
+                }
+                //accumulate rest message
+                BaseDistAsyncTable baseDistAsyncTable = (BaseDistAsyncTable) asyncTable;
+                for (int workerId = 0; workerId < workerNum; workerId++) {
+                    MessageTableBase messageTable = baseDistAsyncTable.getMessageTableList()[workerId][0];
+                    if (messageTable == null) continue;
+                    partialSum += messageTable.accumulate();
+                    messageTable = baseDistAsyncTable.getMessageTableList()[workerId][1];
+                    if (messageTable == null) continue;
+                    partialSum += messageTable.accumulate();
                 }
             }
             return partialSum;

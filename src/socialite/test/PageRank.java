@@ -2,9 +2,10 @@ package socialite.test;
 
 import gnu.trove.map.TIntFloatMap;
 import gnu.trove.map.hash.TIntFloatHashMap;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
-import socialite.async.util.TextUtils;
 import socialite.engine.ClientEngine;
 import socialite.engine.LocalEngine;
 import socialite.tables.QueryVisitor;
@@ -18,9 +19,12 @@ public class PageRank {
     //livejournal    4847571      25
     //google         875713       28
     //berkstan       685230       30
-
+    static ClientEngine clientEngine;
+    private static final Log L = LogFactory.getLog(SSSP.class);
     public static void main(String[] args) throws FileNotFoundException {
+        clientEngine = new ClientEngine();
         distTest();
+        clientEngine.shutdown();
     }
 
     //-Xmx28G -Dsocialite.output.dir=gen -Dsocialite.worker.num=32 -Dsocialite.port=50100 -Dsocialite.master=master -Dlog4j.configuration=file:/home/gengl/socialite-before-yarn/conf/log4j.properties
@@ -28,11 +32,11 @@ public class PageRank {
         STGroup stg = new MySTGroupFile(PageRank.class.getResource("PageRank.stg"),
                 "UTF-8", '<', '>');
         stg.load();
-        int nodeCount = 875713;//875713 berkstan 685230
-        int iter = 28;
+        int nodeCount = 4847571;//875713 berkstan 685230
+        int iter = 25;
         ST st = stg.getInstanceOf("Init");
         st.add("N", nodeCount);
-        st.add("PATH", "/home/gengl/Datasets/directed/web-Google_fix.txt");//web-BerkStan_fix
+        st.add("PATH", "/home/gengl/Datasets/PageRank/LiveJournal/edge.txt");//web-BerkStan_fix
         String init = st.render();
         System.out.println(init);
         LocalEngine en = new LocalEngine();//config
@@ -65,15 +69,15 @@ public class PageRank {
     }
 
     static void distTest() {
-        ClientEngine clientEngine = new ClientEngine();
+
         STGroup stg = new MySTGroupFile(PageRank.class.getResource("PageRank.stg"),
                 "UTF-8", '<', '>');
         stg.load();
-        int nodeCount = 875713;//875713 berkstan 685230
-        int iter = 28;
+        int nodeCount = 4847571;//875713 berkstan 685230
+        int iter = 25;
         ST st = stg.getInstanceOf("Init");
         st.add("N", nodeCount);
-        st.add("PATH", "hdfs://master:9000/Datasets/PageRank/Google/edge.txt");//web-BerkStan_fix
+        st.add("PATH", "hdfs://master:9000/Datasets/PageRank/LiveJournal/edge.txt");//web-BerkStan_fix
         String init = st.render();
         System.out.println(init);
 
@@ -89,11 +93,10 @@ public class PageRank {
             clientEngine.run(iterCode);
             System.out.println("iter:" + i);
         }
-        System.out.println("recursive statement:" + (System.currentTimeMillis() - start));
-        clientEngine.run("drop Edge.");
-        clientEngine.run("drop EdgeCnt.");
-        clientEngine.run("drop Node.");
-        clientEngine.run("drop Rank.");
-        clientEngine.shutdown();
+        L.info("recursive statement:" + (System.currentTimeMillis() - start));
+//        clientEngine.run("drop Edge.");
+//        clientEngine.run("drop EdgeCnt.");
+//        clientEngine.run("drop Node.");
+//        clientEngine.run("drop Rank.");
     }
 }

@@ -1,4 +1,4 @@
-CHECK_INTERVAL = 1500
+CHECK_INTERVAL = 1000
 CHECK_TYPE = DELTA
 CHECK_COND = E
 CHECK_THRESHOLD = 0
@@ -9,6 +9,8 @@ THREAD_NUM = 64
 MESSAGE_TABLE_INIT_SIZE = 200000
 MESSAGE_TABLE_UPDATE_THRESHOLD = 1000
 MESSAGE_TABLE_WAITING_INTERVAL = 100
+SAVE_PATH = "hdfs://master:9000/expr/CC/BerkStan"
+#PRINT_RESULT = TRUE
 RULE:
 
 Edge(int src:0..685229, (int dst)).
@@ -19,3 +21,5 @@ Edge(s, t) :- l=$read("hdfs://master:9000/Datasets/CC/BerkStan/edge.txt"), (s1,s
 Node(n) :- l=$read("hdfs://master:9000/Datasets/CC/BerkStan/node.txt"), n=$toInt(l).
 CC(X, X) :- Node(X).
 CC(Y, $dmin(V)) :- CC(X, V), Edge(X, Y), V1 = V.
+
+//note! dist-version may converge before "really coverage" due to check term before message flush, this can be resolve by tune MESSAGE_TABLE_UPDATE_THRESHOLD, CHECK_TYPE, etc.

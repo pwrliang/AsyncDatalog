@@ -185,6 +185,8 @@ public abstract class MessageTableBase {
         throw new NotImplementedException();
     }
 
+    public abstract double accumulate();
+
     public abstract int size();
 
     public abstract void resetDelta();

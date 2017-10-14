@@ -60,5 +60,11 @@ public class MessageTable extends MessageTableBase {
     public int size(){
         return keyDeltaMap.size();
     }
+
+    @Override
+    public double accumulate() {
+        return keyDeltaMap.values().stream().map(MyAtomic<WrappedTypeMap.(deltaType)>::get)
+        .filter(val-> val != IDENTITY_ELEMENT).reduce(<PrimitiveInitValue.(deltaType)>, <WrappedTypeMap.(deltaType)>::sum) + 0.0;
+    }
 }
 >>

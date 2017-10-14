@@ -56,6 +56,10 @@ public abstract class BaseDistAsyncTable extends BaseAsyncTable {
         return messageTableSelector;
     }
 
+    public MessageTableBase[][] getMessageTableList() {
+        return messageTableList;
+    }
+
     public MessageTableBase getWritableMessageTable(int workerId) {
         return messageTableList[workerId][messageTableSelector.get(workerId)];
     }
