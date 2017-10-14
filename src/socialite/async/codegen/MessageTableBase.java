@@ -185,6 +185,8 @@ public abstract class MessageTableBase {
         throw new NotImplementedException();
     }
 
+    public abstract int size();
+
     public abstract void resetDelta();
 
     public static void main(String[] args) {

@@ -56,5 +56,9 @@ public class MessageTable extends MessageTableBase {
         return keyDeltaMap;
     }
 
+    @Override
+    public int size(){
+        return keyDeltaMap.size();
+    }
 }
 >>

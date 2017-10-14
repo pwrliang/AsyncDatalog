@@ -73,7 +73,7 @@ public class PageRank {
         int iter = 28;
         ST st = stg.getInstanceOf("Init");
         st.add("N", nodeCount);
-        st.add("PATH", "/home/gengl/Datasets/directed/web-Google_fix.txt");//web-BerkStan_fix
+        st.add("PATH", "hdfs://master:9000/Datasets/PageRank/Google/edge.txt");//web-BerkStan_fix
         String init = st.render();
         System.out.println(init);
 
@@ -90,20 +90,6 @@ public class PageRank {
             System.out.println("iter:" + i);
         }
         System.out.println("recursive statement:" + (System.currentTimeMillis() - start));
-        TextUtils textUtils = new TextUtils("/home/gengl/Datasets", "PageRank_Google.txt");
-        clientEngine.run("?- Rank(n, 0, rank).", new QueryVisitor() {
-
-            @Override
-            public boolean visit(Tuple _0) {
-                textUtils.writeLine(_0.toString());
-                return true;
-            }
-
-            @Override
-            public void finish() {
-                textUtils.close();
-            }
-        }, 0);
         clientEngine.run("drop Edge.");
         clientEngine.run("drop EdgeCnt.");
         clientEngine.run("drop Node.");

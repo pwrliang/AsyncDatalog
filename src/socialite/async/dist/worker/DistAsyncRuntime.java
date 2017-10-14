@@ -1,5 +1,6 @@
 package socialite.async.dist.worker;
 
+import gnu.trove.map.hash.TIntIntHashMap;
 import mpi.MPI;
 import mpi.MPIException;
 import mpi.Status;
@@ -82,7 +83,9 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         try {
             SRuntimeWorker runtimeWorker = SRuntimeWorker.getInst();
             DistTableSliceMap sliceMap = runtimeWorker.getSliceMap();
-
+            Map<Integer, Integer> myIdxWorkerMap = payload.getMyIdxWorkerIdMap();
+            int[] myIdxWorkerArr = new int[myIdxWorkerMap.size()];
+            myIdxWorkerMap.forEach((myIdx, workerId)->myIdxWorkerArr[myIdx]=workerId);
             //static, int type key
             int indexForTableId;
             if (AsyncConfig.get().isDynamic()) {
@@ -95,8 +98,9 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                 Method method = edgeInst.getClass().getMethod("tableid");
                 indexForTableId = (Integer) method.invoke(edgeInst);
                 //public DistAsyncTable(Class\<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId) {
-                Constructor constructor = distAsyncTableClass.getConstructor(messageTableClass.getClass(), DistTableSliceMap.class, int.class, Map.class);
-                asyncTable = (BaseDistAsyncTable) constructor.newInstance(messageTableClass, sliceMap, indexForTableId, payload.getMyIdxWorkerIdMap());
+                Constructor constructor = distAsyncTableClass.getConstructor(messageTableClass.getClass(), DistTableSliceMap.class, int.class, int[].class);
+
+                asyncTable = (BaseDistAsyncTable) constructor.newInstance(messageTableClass, sliceMap, indexForTableId, myIdxWorkerArr);
                 //动态算法需要edge做连接，如prog4、9!>
                 method = edgeTableInstArr[0].getClass().getDeclaredMethod("iterate", VisitorImpl.class);
                 int edgeTableNum = 0;
@@ -121,8 +125,8 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                 baseField.setAccessible(true);
                 int base = baseField.getInt(Arrays.stream(initTableInstArr).filter(tableInst -> !tableInst.isEmpty()).findFirst().orElse(null));
                 //public DistAsyncTable(Class\<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId, int base) {
-                Constructor constructor = distAsyncTableClass.getConstructor(messageTableClass.getClass(), DistTableSliceMap.class, int.class, Map.class, int.class);
-                asyncTable = (BaseDistAsyncTable) constructor.newInstance(messageTableClass, sliceMap, indexForTableId, payload.getMyIdxWorkerIdMap(), base);
+                Constructor constructor = distAsyncTableClass.getConstructor(messageTableClass.getClass(), DistTableSliceMap.class, int.class, int[].class, int.class);
+                asyncTable = (BaseDistAsyncTable) constructor.newInstance(messageTableClass, sliceMap, indexForTableId, myIdxWorkerArr, base);
             }
 
 
@@ -280,7 +284,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                     } else if (accumulated instanceof Double) {
                         partialSum = (Double) accumulated;
                     }
-                    L.info("partialSum of delta: " + new BigDecimal(partialSum));
+//                    L.info("partialSum of delta: " + new BigDecimal(partialSum));
                 } else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.VALUE || asyncConfig.getCheckType() == AsyncConfig.CheckerType.DIFF_VALUE) {
                     accumulated = asyncTable.accumulateValue();
                     if (accumulated instanceof Integer) {
@@ -292,7 +296,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                     } else if (accumulated instanceof Double) {
                         partialSum = (Double) accumulated;
                     }
-                    L.info("sum of value: " + new BigDecimal(partialSum));
+//                    L.info("sum of value: " + new BigDecimal(partialSum));
                 }
             }
             return partialSum;

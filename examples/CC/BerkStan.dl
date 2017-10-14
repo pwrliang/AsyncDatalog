@@ -7,15 +7,15 @@ SAMPLE_RATE = 0.01
 SCHEDULE_PORTION = 0.1
 THREAD_NUM = 32
 MESSAGE_TABLE_INIT_SIZE = 10000
-MESSAGE_TABLE_UPDATE_THRESHOLD = 0
+MESSAGE_TABLE_UPDATE_THRESHOLD = 100
 MESSAGE_TABLE_WAITING_INTERVAL = 5000
 RULE:
 
-Edge(int src:0..3, (int dst)).
-CC(int node:0..3, int tag).
-Node(int node:0..3).
-Edge(s, t) :- l=$read("hdfs://master:9000/examples/prog3_edge.txt"), (s1,s2)=$split(l, "	"),
+Edge(int src:0..685229, (int dst)).
+CC(int node:0..685229, int tag).
+Node(int node:0..685229).
+Edge(s, t) :- l=$read("hdfs://master:9000/Datasets/CC/BerkStan/edge.txt"), (s1,s2)=$split(l, "	"),
              s=$toInt(s1), t=$toInt(s2).
-Node(n) :- l=$read("hdfs://master:9000/examples/prog3_node.txt"), n=$toInt(l).
+Node(n) :- l=$read("hdfs://master:9000/Datasets/CC/BerkStan/node.txt"), n=$toInt(l).
 CC(X, X) :- Node(X).
 CC(Y, $dmin(V)) :- CC(X, V), Edge(X, Y), V1 = V.

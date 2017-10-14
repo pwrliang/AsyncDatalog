@@ -2,8 +2,6 @@ package socialite.async.codegen;
 
 
 import mpi.MPI;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import socialite.async.AsyncConfig;
 import socialite.async.analysis.MyVisitorImpl;
 import socialite.async.util.SerializeTool;
@@ -13,7 +11,6 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 public abstract class BaseDistAsyncTable extends BaseAsyncTable {
@@ -23,12 +20,12 @@ public abstract class BaseDistAsyncTable extends BaseAsyncTable {
     protected final int myWorkerId;
     protected final DistTableSliceMap sliceMap;
     protected final int indexForTableId;
-    protected final Map<Integer, Integer> myIdxWorkerIdMap;
+    protected final int[] myIdxWorkerIdMap;
 
     protected final int messageTableUpdateThreshold;
     protected final int initSize;
 
-    public BaseDistAsyncTable(Class<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId, Map<Integer, Integer> myIdxWorkerIdMap) {
+    public BaseDistAsyncTable(Class<?> messageTableClass, DistTableSliceMap sliceMap, int indexForTableId, int[] myIdxWorkerIdMap) {
         this.workerNum = Config.getWorkerNodeNum();
         this.myWorkerId = MPI.COMM_WORLD.Rank() - 1;
         this.sliceMap = sliceMap;
@@ -55,10 +52,6 @@ public abstract class BaseDistAsyncTable extends BaseAsyncTable {
 
     }
 
-    public MessageTableBase[] getMessageTables(int workerId) {
-        return messageTableList[workerId];
-    }
-
     public AtomicIntegerArray getMessageTableSelector() {
         return messageTableSelector;
     }
@@ -66,8 +59,6 @@ public abstract class BaseDistAsyncTable extends BaseAsyncTable {
     public MessageTableBase getWritableMessageTable(int workerId) {
         return messageTableList[workerId][messageTableSelector.get(workerId)];
     }
-
-    private static final Log L = LogFactory.getLog(BaseDistAsyncTable.class);
 
     public byte[] getSendableMessageTableBytes(int sendToWorkerId, SerializeTool serializeTool) throws InterruptedException {
         int writingTableInd;
