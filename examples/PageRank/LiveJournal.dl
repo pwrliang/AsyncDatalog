@@ -4,7 +4,7 @@ CHECK_COND = GE
 CHECK_THRESHOLD = 0.9999
 PRIORITY = TRUE
 SAMPLE_RATE = 0.01
-SCHEDULE_PORTION = 0.40
+SCHEDULE_PORTION = 0.20
 SYNC = FALSE
 MESSAGE_TABLE_INIT_SIZE = 500000
 MESSAGE_TABLE_UPDATE_THRESHOLD = 1000
@@ -25,5 +25,5 @@ Edge(s, t) :- l=$read("hdfs://master:9000/Datasets/PageRank/LiveJournal/edge.txt
 Node(n) :- l=$read("hdfs://master:9000/Datasets/PageRank/LiveJournal/node.txt"), n=$toInt(l).
 
 EdgeCnt(s, $inc(1)) :- Edge(s, t).
-Rank(n, r) :- Node(n), r = 10 / 4847571.
+Rank(n, r) :- Node(n), r = 0.2 / 4847571.
 Rank(y, $dsum(r1)) :- Rank(x, r), Edge(x, y),  EdgeCnt(x, d), r1 = 0.8 * r / d.

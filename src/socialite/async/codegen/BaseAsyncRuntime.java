@@ -73,15 +73,14 @@ public abstract class BaseAsyncRuntime implements Runnable {
                     if (asyncConfig.getPriorityType() != AsyncConfig.PriorityType.NONE) {
                         for (int i = 0; i < deltaSample.length; i++) {
                             int ind = randomGenerator.nextInt(start, end);
+                            double delta = asyncTable.getDelta(ind);
                             if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.SUM_COUNT)
-                                deltaSample[i] = asyncTable.getDelta(ind);
+                                deltaSample[i] = delta;
                             else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.MIN) {
                                 double value = asyncTable.getValue(ind);
-                                double delta = asyncTable.getDelta(ind);
                                 deltaSample[i] = value - Math.min(value, delta);
                             } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.MAX) {
                                 double value = asyncTable.getValue(ind);
-                                double delta = asyncTable.getDelta(ind);
                                 deltaSample[i] = value - Math.max(value, delta);
                             }
                         }
@@ -90,7 +89,11 @@ public abstract class BaseAsyncRuntime implements Runnable {
                         } else {
                             Arrays.sort(deltaSample);
                             int cutIndex = (int) (deltaSample.length * (1 - SCHEDULE_PORTION));
-                            threshold = deltaSample[cutIndex];
+                            if (cutIndex == 0)
+                                threshold = Double.MIN_VALUE;
+                            else
+                                threshold = deltaSample[cutIndex];
+
                         }
                     }
 
@@ -98,9 +101,27 @@ public abstract class BaseAsyncRuntime implements Runnable {
                         for (int k = start; k < end; k++) {
                             asyncTable.updateLockFree(k);
                         }
-                    } else {
+                    } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.SUM_COUNT) {
                         for (int k = start; k < end; k++) {
-                            double f = asyncTable.getDelta(k);
+                            double delta = asyncTable.getDelta(k);
+                            if (delta >= threshold) {
+                                asyncTable.updateLockFree(k);
+                            }
+                        }
+                    } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.MIN) {
+                        for (int k = start; k < end; k++) {
+                            double delta = asyncTable.getDelta(k);
+                            double value = asyncTable.getValue(k);
+                            double f = value - Math.min(value, delta);
+                            if (f >= threshold) {
+                                asyncTable.updateLockFree(k);
+                            }
+                        }
+                    } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.MAX) {
+                        for (int k = start; k < end; k++) {
+                            double delta = asyncTable.getDelta(k);
+                            double value = asyncTable.getValue(k);
+                            double f = value - Math.max(value, delta);
                             if (f >= threshold) {
                                 asyncTable.updateLockFree(k);
                             }
