@@ -3,7 +3,6 @@ BIN=`dirname "$0"`
 BIN=`cd "$BIN"; pwd`
 
 . ${BIN}/common.sh
-TEST_CLASSPATH=${SOCIALITE_PREFIX}/out/production/socialite
 
 function start-node(){
     ${BIN}/kill-all.sh ${MACHINES}

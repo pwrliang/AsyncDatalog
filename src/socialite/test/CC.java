@@ -109,15 +109,15 @@ public class CC {
         en.run(iterCode);
         stopWatch.stop();
         L.info("recursive statement:" + (System.currentTimeMillis() - start));
-        StringBuilder stringBuilder = new StringBuilder();
-        en.run("?- Comp(n, belong).", new QueryVisitor() {
-            @Override
-            public boolean visit(Tuple _0) {
-                stringBuilder.append(_0.getInt(0)).append(" ").append(_0.getInt(1)).append("\n");
-                return true;
-            }
-        }, 0);
-        TextUtils.writeText("/home/gengl/CC_BERKSTAN", stringBuilder.toString());
+//        StringBuilder stringBuilder = new StringBuilder();
+//        en.run("?- Comp(n, belong).", new QueryVisitor() {
+//            @Override
+//            public boolean visit(Tuple _0) {
+//                stringBuilder.append(_0.getInt(0)).append(" ").append(_0.getInt(1)).append("\n");
+//                return true;
+//            }
+//        }, 0);
+//        TextUtils.writeText("/home/gengl/CC_BERKSTAN", stringBuilder.toString());
         en.shutdown();
     }
 }
