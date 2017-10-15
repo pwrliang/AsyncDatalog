@@ -1,6 +1,0 @@
-import "AsyncTableSharedMem.stg"
-import "DistAsyncTable.stg"
-import "InitTableStat.stg"
-dummy() ::= <<
-  // this is dummy
->>

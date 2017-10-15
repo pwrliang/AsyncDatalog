@@ -5,5 +5,5 @@ grammar/output/
 ext/cachedir/
 jython/cachedir/
 out/*
-logs/*
+logs/*.log
 socialite-all.jar
