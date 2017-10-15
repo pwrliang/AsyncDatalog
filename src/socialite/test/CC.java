@@ -19,8 +19,9 @@ public class CC {
     //livejournal    4847571
     //google         875713
     //berkstan       685230
-    //dist node-count node-path edge-path
-    //single threadnum node-path edge-path
+    //0      1              2             3          4
+    //single threadnum      node-count   node-path   edge-path
+    //dist node-count      node-path     edge-path
     public static void main(String[] args) throws FileNotFoundException {
         STGroup stg = new MySTGroupFile(CC.class.getResource("CC.stg"),
                 "UTF-8", '<', '>');
@@ -44,7 +45,7 @@ public class CC {
             stopWatch.stop();
             L.info("recursive statement:" + stopWatch.getTime());
             en.shutdown();
-        } else {
+        } else if (args[0].equals("dist")){
             st.add("N", Integer.valueOf(args[1]));
             st.add("NPATH", args[2]);
             st.add("PATH", args[3]);

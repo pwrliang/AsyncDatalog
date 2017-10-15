@@ -1,13 +1,13 @@
 Init(N, BASIC_PATH, ASSB_PATH, SPLITTER) ::= <<
 basic(int Part:0..<N>, long cost).
-assb(int Part:0..<N>, (int Sub, int n)).
+assb(int Sub:0..<N>, (int Part, int n)).
 cost(int Part:0..<N>, int i:iter, long c).
 basic(Part, cost) :- l=$read("<BASIC_PATH>"),  (s1,s2)=$split(l, "<SPLITTER>"), Part=$toInt(s1), cost=$toLong(s2).
-assb(Part, Sub, n) :- l=$read("<ASSB_PATH>"), (s1, s2, s3)=$split(l, "<SPLITTER>"), Part=$toInt(s1), Sub=$toInt(s2), n=$toInt(s3).
+assb(Sub, Part, n) :- l=$read("<ASSB_PATH>"), (s1, s2, s3)=$split(l, "<SPLITTER>"), Sub=$toInt(s1), Part=$toInt(s2), n=$toInt(s3).
 cost(Part, 0, cost) :- basic(Part, cost).
 >>
 
 
 Iter(i)::=<<
-cost(Part, <i> +1, $sum(sc)) :- assb(Part, Sub, n), cost(Sub, <i>, c), sc = c * n.
+cost(Part, <i> +1, $sum(sc)) :- cost(Sub, <i>, c), assb(Sub, Part, n), sc = c * n.
 >>
