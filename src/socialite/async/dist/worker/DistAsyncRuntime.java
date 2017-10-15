@@ -254,8 +254,8 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                     MPI.COMM_WORLD.Sendrecv(new double[]{partialSum}, 0, 1, MPI.DOUBLE, AsyncMaster.ID, MsgType.REQUIRE_TERM_CHECK.ordinal(),
                             feedback, 0, 1, MPI.BOOLEAN, AsyncMaster.ID, MsgType.TERM_CHECK_FEEDBACK.ordinal());
                     if (feedback[0]) {
-                        done();
                         flush();
+                        done();
                     }
                     return;//exit function, run will be called next round
                 } else {
@@ -263,8 +263,8 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                     MPI.COMM_WORLD.Sendrecv(new double[]{partialSum}, 0, 1, MPI.DOUBLE, AsyncMaster.ID, MsgType.TERM_CHECK_PARTIAL_VALUE.ordinal(),
                             feedback, 0, 1, MPI.BOOLEAN, AsyncMaster.ID, MsgType.TERM_CHECK_FEEDBACK.ordinal());
                     if (feedback[0]) {
-                        done();
                         flush();
+                        done();
                         break;
                     }
                 }
@@ -296,12 +296,14 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
 
         //ensure all messages flushed to remote workers
         private void flush() {
-            stopNetworkThread = true;
+            int sleepTime = asyncConfig.getMessageTableWaitingInterval() + 5000;
+            L.info("Wait " + sleepTime + "ms to flush");
             try {
-                Thread.sleep(asyncConfig.getMessageTableWaitingInterval() + 1000);
+                Thread.sleep(sleepTime);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            stopNetworkThread = true;
         }
     }
 

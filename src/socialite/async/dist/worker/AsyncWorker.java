@@ -31,24 +31,24 @@ public class AsyncWorker {
         String savePath = asyncConfig.getSavePath();
         if (savePath.length() > 0)
             textUtils = new TextUtils(asyncConfig.getSavePath(), "part-" + myWorkerId);
-        else if (!asyncConfig.isPrintResult()) return;
+        if (textUtils != null || asyncConfig.isPrintResult()) {
+            TextUtils finalTextUtils = textUtils;
+            distAsyncRuntime.getAsyncTable().iterateTuple(new QueryVisitor() {
+                @Override
+                public boolean visit(Tuple _0) {
+                    if (asyncConfig.isPrintResult())
+                        System.out.println(_0.toString());
+                    if (finalTextUtils != null)
+                        finalTextUtils.writeLine(_0.toString());
+                    return true;
+                }
 
-        TextUtils finalTextUtils = textUtils;
-        distAsyncRuntime.getAsyncTable().iterateTuple(new QueryVisitor() {
-            @Override
-            public boolean visit(Tuple _0) {
-                if (asyncConfig.isPrintResult())
-                    System.out.println(_0.toString());
-                if (finalTextUtils != null)
-                    finalTextUtils.writeLine(_0.toString());
-                return true;
-            }
-
-            @Override
-            public void finish() {
-                if (finalTextUtils != null)
-                    finalTextUtils.close();
-            }
-        });//save result
+                @Override
+                public void finish() {
+                    if (finalTextUtils != null)
+                        finalTextUtils.close();
+                }
+            });//save result
+        }
     }
 }
