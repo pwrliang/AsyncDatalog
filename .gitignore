@@ -5,6 +5,6 @@ grammar/output/
 ext/cachedir/
 jython/cachedir/
 gen_master/
-logs/
+logs/*.log
 socialite-all.jar
 mpj-v0_44/

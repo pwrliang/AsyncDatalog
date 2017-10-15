@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-curDir=`pwd`
-bin=`dirname $0`
-bin=`cd $bin; pwd`
-
-$bin/launcher client org.python.util.socialite "$@"

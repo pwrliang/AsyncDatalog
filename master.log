@@ -11695,3 +11695,36 @@ Comp(n, n) :- Nodes(n).
 21:48:32 INFO DistEngine: Epoch done! Exec Time:25832ms
 21:48:32 INFO QueryListener: Exec time:25832ms for Comp(n, $min(i)) :- Comp(p, i), Edge(p, n).
 21:48:42 INFO QueryListener: Exec time:10321ms for ?- Comp(n, belong).
+nohup: ignoring input
+15:06:59 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+15:06:59 INFO MasterNode: Master started
+15:07:00 INFO MasterNode: Waiting for 5 worker(s): master/219.216.64.144 hadoop0/219.216.64.200 hadoop1/219.216.65.202 hadoop2/219.216.65.243 hadoop3/219.216.64.182
+15:07:02 INFO MasterNode: Waiting for 5 worker(s): master/219.216.64.144 hadoop0/219.216.64.200 hadoop1/219.216.65.202 hadoop2/219.216.65.243 hadoop3/219.216.64.182
+15:07:06 INFO MasterNode: Waiting for 5 worker(s): master/219.216.64.144 hadoop0/219.216.64.200 hadoop1/219.216.65.202 hadoop2/219.216.65.243 hadoop3/219.216.64.182
+15:07:14 INFO MasterNode: Waiting for 5 worker(s): master/219.216.64.144 hadoop0/219.216.64.200 hadoop1/219.216.65.202 hadoop2/219.216.65.243 hadoop3/219.216.64.182
+15:07:30 INFO MasterNode: Waiting for 5 worker(s): master/219.216.64.144 hadoop0/219.216.64.200 hadoop1/219.216.65.202 hadoop2/219.216.65.243 hadoop3/219.216.64.182
+15:08:02 INFO MasterNode: Waiting for 5 worker(s): master/219.216.64.144 hadoop0/219.216.64.200 hadoop1/219.216.65.202 hadoop2/219.216.65.243 hadoop3/219.216.64.182
+nohup: ignoring input
+15:08:04 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+15:08:04 INFO MasterNode: Master started
+15:08:04 INFO MasterNode: Waiting for 5 worker(s): master/219.216.64.144 hadoop0/219.216.64.200 hadoop1/219.216.65.202 hadoop2/219.216.65.243 hadoop3/219.216.64.182
+15:08:06 INFO MasterNode: Waiting for 5 worker(s): master/219.216.64.144 hadoop0/219.216.64.200 hadoop1/219.216.65.202 hadoop2/219.216.65.243 hadoop3/219.216.64.182
+15:08:10 INFO MasterNode: Waiting for 5 worker(s): master/219.216.64.144 hadoop0/219.216.64.200 hadoop1/219.216.65.202 hadoop2/219.216.65.243 hadoop3/219.216.64.182
+15:08:18 INFO MasterNode: Waiting for 5 worker(s): master/219.216.64.144 hadoop0/219.216.64.200 hadoop1/219.216.65.202 hadoop2/219.216.65.243 hadoop3/219.216.64.182
+nohup: ignoring input
+15:08:31 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+15:08:31 INFO MasterNode: Master started
+15:08:32 INFO MasterNode: Waiting for 5 worker(s): master/219.216.64.144 hadoop0/219.216.64.200 hadoop1/219.216.65.202 hadoop2/219.216.65.243 hadoop3/219.216.64.182
+15:08:34 INFO MasterNode: Waiting for 5 worker(s): master/219.216.64.144 hadoop0/219.216.64.200 hadoop1/219.216.65.202 hadoop2/219.216.65.243 hadoop3/219.216.64.182
+15:08:38 INFO MasterNode: Waiting for 5 worker(s): master/219.216.64.144 hadoop0/219.216.64.200 hadoop1/219.216.65.202 hadoop2/219.216.65.243 hadoop3/219.216.64.182
+15:08:46 INFO MasterNode: Waiting for 5 worker(s): master/219.216.64.144 hadoop0/219.216.64.200 hadoop1/219.216.65.202 hadoop2/219.216.65.243 hadoop3/219.216.64.182
+15:09:02 INFO MasterNode: Waiting for 5 worker(s): master/219.216.64.144 hadoop0/219.216.64.200 hadoop1/219.216.65.202 hadoop2/219.216.65.243 hadoop3/219.216.64.182
+15:20:24 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+15:20:24 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+15:20:24 INFO MasterNode: Master started
+15:20:25 INFO WorkerReqListener: register master
+15:20:25 INFO CmdListener: 0'th worker registered to MasterNode
+15:20:25 INFO WorkerNode:  NOTICE startListen()
+15:20:25 INFO MasterNode: Waiting for 4 worker(s): hadoop0/219.216.64.200 hadoop1/219.216.65.202 hadoop2/219.216.65.243 hadoop3/219.216.64.182
+15:20:27 INFO MasterNode: Waiting for 4 worker(s): hadoop0/219.216.64.200 hadoop1/219.216.65.202 hadoop2/219.216.65.243 hadoop3/219.216.64.182
+15:20:31 INFO MasterNode: Waiting for 4 worker(s): hadoop0/219.216.64.200 hadoop1/219.216.65.202 hadoop2/219.216.65.243 hadoop3/219.216.64.182

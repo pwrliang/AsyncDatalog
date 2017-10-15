@@ -1,13 +1,56 @@
 #!/usr/bin/env bash
-# Absolute path to this script. /home/user/bin/foo.sh
-SCRIPT=$(readlink -f $0)
-# Absolute path this script is in. /home/user/bin
-SCRIPT_PATH=`dirname ${SCRIPT}`
-SOCIALITE_HOME=$(readlink -f "${SCRIPT_PATH}/..")
-${SOCIALITE_HOME}/bin/copyToMachine.sh hadoop0
-${SOCIALITE_HOME}/bin/copyToMachine.sh hadoop1
-${SOCIALITE_HOME}/bin/copyToMachine.sh hadoop2
-${SOCIALITE_HOME}/bin/copyToMachine.sh hadoop3
-# -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 
-mpjrun.sh -Xmx28G -machinesfile ${SOCIALITE_HOME}/machines -np 5 -dev niodev -Dsocialite.output.dir=${SOCIALITE_HOME}/gen -Dsocialite.worker.num=8 -Dsocialite.port=50100 -Dsocialite.master=master -Dlog4j.configuration=file:${SOCIALITE_HOME}/conf/log4j.properties -cp ${SOCIALITE_HOME}/out/production/socialite:${SOCIALITE_HOME}/ext/ST-4.0.7.jar:${SOCIALITE_HOME}/ext/guava-18.0.jar:${SOCIALITE_HOME}/ext/trove-3.0.3.jar:${SOCIALITE_HOME}/ext/log4j-1.2.16.jar:${SOCIALITE_HOME}/ext/antlrworks-1.5.jar:${SOCIALITE_HOME}/ext/annotations-5.1.jar:${SOCIALITE_HOME}/ext/antlrworks-1.4.3.jar:${SOCIALITE_HOME}/ext/commons-lang-2.6.jar:${SOCIALITE_HOME}/ext/commons-lang3-3.1.jar:${SOCIALITE_HOME}/ext/RoaringBitmap-0.5.18.jar:${SOCIALITE_HOME}/ext/commons-logging-1.1.1.jar:${SOCIALITE_HOME}/ext/commons-collections-3.2.1.jar:${SOCIALITE_HOME}/ext/commons-configuration-1.6.jar:${SOCIALITE_HOME}/ext/commons-logging-api-1.0.4.jar:${SOCIALITE_HOME}/ext/concurrent-prim-map-1.0.0.jar:${SOCIALITE_HOME}/ext/antlr-3.5.2-complete-no-st3.jar:${SOCIALITE_HOME}/jython/jython.jar:${SOCIALITE_HOME}/ext/hadoop/commons-io-2.4.jar:${SOCIALITE_HOME}/ext/hadoop/zookeeper-3.4.6.jar:${SOCIALITE_HOME}/ext/hadoop/hadoop-auth-2.7.1.jar:${SOCIALITE_HOME}/ext/hadoop/hadoop-hdfs-2.7.1.jar:${SOCIALITE_HOME}/ext/hadoop/hadoop-common-2.7.1.jar:${SOCIALITE_HOME}/ext/hadoop/curator-client-2.10.0.jar:${SOCIALITE_HOME}/ext/hadoop/hadoop-yarn-api-2.7.1.jar:${SOCIALITE_HOME}/ext/hadoop/curator-recipes-2.10.0.jar:${SOCIALITE_HOME}/ext/hadoop/jackson-core-asl-1.9.13.jar:${SOCIALITE_HOME}/ext/hadoop/curator-framework-2.10.0.jar:${SOCIALITE_HOME}/ext/hadoop/hadoop-yarn-client-2.7.1.jar:${SOCIALITE_HOME}/ext/hadoop/hadoop-yarn-common-2.7.1.jar:${SOCIALITE_HOME}/ext/hadoop/jackson-mapper-asl-1.9.13.jar:${SOCIALITE_HOME}/ext/hadoop/hadoop-yarn-registry-2.7.1.jar:${SOCIALITE_HOME}/ext/hadoop/htrace-core-3.2.0-incubating.jar:${SOCIALITE_HOME}/ext/serialize/minlog-1.3.0.jar:${SOCIALITE_HOME}/ext/serialize/libthrift-0.9.3.jar:${SOCIALITE_HOME}/ext/serialize/objenesis-2.5.1.jar:${SOCIALITE_HOME}/ext/serialize/slf4j-api-1.7.13.jar:${SOCIALITE_HOME}/ext/serialize/kryo-shaded-4.0.1.jar:${SOCIALITE_HOME}/ext/serialize/protobuf-java-2.5.0.jar:${SOCIALITE_HOME}/ext/serialize/slf4j-log4j12-1.7.13.jar socialite.ClientTest examples/prog1.dl ${SOCIALITE_HOME}/examples/prog1.dl
-kill -9 $(ps aux|grep '[a]sync.Entry'|awk '{print $2}')
+BIN=`dirname "$0"`
+BIN=`cd "$BIN"; pwd`
+
+. ${BIN}/common.sh
+
+function run(){
+    ${BIN}/kill-all.sh ${MACHINES}
+
+    mpjrun.sh -Xmx28G \
+    -machinesfile ${MACHINES} -np $((MACHINES_NUM+1)) -dev niodev \
+    -Dsocialite.output.dir=${SOCIALITE_PREFIX}/gen \
+    -Dsocialite.port=50100 \
+    -Dsocialite.master=${MASTER_HOST} \
+    -Dlog4j.configuration=file:${SOCIALITE_PREFIX}/conf/log4j.properties \
+    -cp ${CODE_CLASSPATH}:${JAR_PATH} \
+    socialite.async.Entry ${SOCIALITE_PREFIX}/$1
+}
+
+if [ "$#" == "0" ]
+then
+    echo "please specify Datalog program"
+    exit 1
+elif [ "$#" == "1" ]
+then
+    run $1
+elif [ "$#" == "2" ]
+then
+    if [ "$1" == "-copy-jar" ]
+    then
+        CODE_CLASSPATH=${SOCIALITE_PREFIX}/classes/socialite.jar
+        while IFS='' read -r line || [[ -n "$line" ]]; do
+            if [ ${line} == ${MASTER_HOST} ]; then
+                continue
+            fi
+            ssh -n ${USER}@${line} "mkdir $SOCIALITE_PREFIX/classes 2> /dev/null"
+            scp ${CODE_CLASSPATH} ${USER}@${line}:"$SOCIALITE_PREFIX/classes/"
+        done < "${MACHINES}"
+    elif [ "$1" == "-copy-classes" ]
+    then
+        CODE_CLASSPATH=${SOCIALITE_PREFIX}/out/production/socialite
+        cd ${SOCIALITE_PREFIX}
+        tar -zcf /tmp/out.tar.gz -C ${SOCIALITE_PREFIX} out conf examples
+        while IFS='' read -r line || [[ -n "$line" ]]; do
+            if [ ${line} == ${MASTER_HOST} ]; then
+                continue
+            fi
+            scp /tmp/out.tar.gz ${USER}@${line}:"/tmp/out.tar.gz"
+            ssh -n ${USER}@${line} "rm -rf ${SOCIALITE_PREFIX}/out 2> /dev/null && tar -zxf /tmp/out.tar.gz -C ${SOCIALITE_PREFIX}/ && rm /tmp/out.tar.gz"
+        done < "${MACHINES}"
+    else
+        echo "please specify -copy-jar or -copy-classes"
+        exit 1
+    fi
+    run $2
+fi

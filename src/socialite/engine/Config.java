@@ -96,18 +96,18 @@ public class Config {
         return workerNodeNum;
     }
 
-    public static int systemWorkerNum = 32;
+    public static int systemWorkerNum = -1;
 
     static {
         String p = System.getProperty("socialite.worker.num");
         if (p != null) {
             systemWorkerNum = Integer.parseInt(p);
         } else {
-            systemWorkerNum = -1;
+            systemWorkerNum = Runtime.getRuntime().availableProcessors();
         }
     }
 
-    int workerThreadNum = 32;
+    int workerThreadNum = -1;
     boolean verbose = false;
     boolean cleanup = false;
 
