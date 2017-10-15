@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-SOCIALITE_PREFIX=/home/${USER}/socialite-before-yarn
+SOCIALITE_PREFIX=/home/${USER}/AsyncDatalog
 EXT=${SOCIALITE_PREFIX}/ext
 HADOOP_COMMON=${HADOOP_HOME}/share/hadoop/common
 HADOOP_HDFS=${HADOOP_HOME}/share/hadoop/hdfs
@@ -114,4 +114,3 @@ done < "${SOCIALITE_PREFIX}/conf/slaves"
 MACHINES=${SOCIALITE_PREFIX}/conf/machines
 MACHINES_NUM=$(cat ${MACHINES} | sed '/^\s*$/d' | wc -l)
 MASTER_HOST=$(head -n 1 ${MACHINES})
-echo $MACHINES_NUM

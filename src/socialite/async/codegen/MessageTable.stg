@@ -15,7 +15,6 @@ public class MessageTable extends MessageTableBase {
     <elseif(IsDouble.(deltaType))>
     public static final <deltaType> IDENTITY_ELEMENT = <DoubleIdentityElement.(aggrType)>;
     <endif>
-    private volatile boolean flag;
 
     private MessageTable(){
         //constructor for kryo
@@ -26,8 +25,6 @@ public class MessageTable extends MessageTableBase {
     }
 
     public void apply(<keyType> key<if(!IsCount.(aggrType))>, <deltaType> delta<endif>) {
-        if(flag)
-            L.error("MESSAGE TABLE RESTED!!!!!!!");
         <TypeAtomicMap.(deltaType)> atomicDelta = keyDeltaMap.putIfAbsent(key, new <TypeAtomicMap.(deltaType)>(<if(!IsCount.(aggrType))>delta<else>1<endif>));
         if (atomicDelta != null) {
             <if(IsSum.(aggrType))>
@@ -45,10 +42,8 @@ public class MessageTable extends MessageTableBase {
 
     @Override
     public void resetDelta() {
-        flag = true;
         keyDeltaMap.values().forEach(delta -> delta.set(IDENTITY_ELEMENT));
         updateCounter.set(0);
-        flag = false;
     }
 
     @Override

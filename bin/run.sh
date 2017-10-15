@@ -17,17 +17,8 @@ function run(){
     socialite.async.Entry ${SOCIALITE_PREFIX}/$1
 }
 
-if [ "$#" == "0" ]
-then
-    echo "please specify Datalog program"
-    exit 1
-elif [ "$#" == "1" ]
-then
-    run $1
-elif [ "$#" == "2" ]
-then
-    if [ "$1" == "-copy-jar" ]
-    then
+if [ "$#" == "1" ]; then
+    if [ "$1" == "-copy-jar" ]; then
         CODE_CLASSPATH=${SOCIALITE_PREFIX}/classes/socialite.jar
         while IFS='' read -r line || [[ -n "$line" ]]; do
             if [ ${line} == ${MASTER_HOST} ]; then
@@ -36,8 +27,7 @@ then
             ssh -n ${USER}@${line} "mkdir $SOCIALITE_PREFIX/classes 2> /dev/null"
             scp ${CODE_CLASSPATH} ${USER}@${line}:"$SOCIALITE_PREFIX/classes/"
         done < "${MACHINES}"
-    elif [ "$1" == "-copy-classes" ]
-    then
+    elif [ "$1" == "-copy-classes" ]; then
         CODE_CLASSPATH=${SOCIALITE_PREFIX}/out/production/socialite
         cd ${SOCIALITE_PREFIX}
         tar -zcf /tmp/out.tar.gz -C ${SOCIALITE_PREFIX} out conf examples
@@ -52,5 +42,18 @@ then
         echo "please specify -copy-jar or -copy-classes"
         exit 1
     fi
+elif [ "$#" == "2" ]; then
+    if [ "$1" == "-run" ]; then
+        CODE_CLASSPATH=${SOCIALITE_PREFIX}/classes/socialite.jar
+
+    elif [ "$1" == "-debug" ]; then
+        CODE_CLASSPATH=${SOCIALITE_PREFIX}/out/production/socialite
+    else
+        echo "please specify [-run/-debug] [Datalog_Program]"
+        exit 1
+    fi
     run $2
+else
+    echo "please specify [-copy-jar/-copy-classes] or [-run/-debug] [Datalog_Program]"
+    exit 1
 fi

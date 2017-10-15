@@ -1,4 +1,5 @@
 *.class
+conf/machines
 classes/
 gen/
 grammar/output/
