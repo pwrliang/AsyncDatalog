@@ -97,6 +97,9 @@ public class AsyncRuntime extends BaseAsyncRuntime {
                 try {
                     double sum = 0.0d;
                     boolean skipFirst = false;
+                    //sleep first to prevent stop before compute
+                    if (!asyncConfig.isSync())
+                        Thread.sleep(CHECKER_INTERVAL);
                     if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.VALUE) {
                         sum = asyncTable.accumulateValue();
                         L.info("sum of value: " + new BigDecimal(sum));
@@ -131,9 +134,9 @@ public class AsyncRuntime extends BaseAsyncRuntime {
                         done();
                         break;
                     }
-                    if (barrier != null)
+                    if (barrier != null)//sync mode
                         break;
-                    Thread.sleep(CHECKER_INTERVAL);
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

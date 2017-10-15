@@ -78,7 +78,7 @@ public class DistAsyncEngine implements Runnable {
         if (asyncAnalysis.analysis()) {
             asyncCodeGenMain = new AsyncCodeGenMain(asyncAnalysis);
             asyncCodeGenMain.generateDist();
-            if(AsyncConfig.get().isPriority()) {
+            if (AsyncConfig.get().isPriority()) {
                 if (asyncAnalysis.getAggrName().equals("dcount") || asyncAnalysis.getAggrName().equals("dsum"))
                     AsyncConfig.get().setPriorityType(AsyncConfig.PriorityType.SUM_COUNT);
                 else if (asyncAnalysis.getAggrName().equals("dmin"))
@@ -146,18 +146,28 @@ public class DistAsyncEngine implements Runnable {
                             MPI.COMM_WORLD.Recv(partialValue, 0, 1, MPI.DOUBLE, src, MsgType.REQUIRE_TERM_CHECK.ordinal());
                             return partialValue[0];
                         }).reduce(0, Double::sum);
+                        //when first received feedback, we start stopwatch
+                        if (stopWatch == null) {
+                            stopWatch = new StopWatch();
+                            stopWatch.start();
+                        }
                         termOrNot[0] = isTerm(accumulatedSum);
                         IntStream.rangeClosed(1, workerNum).forEach(dest ->
                                 MPI.COMM_WORLD.Send(termOrNot, 0, 1, MPI.BOOLEAN, dest, MsgType.TERM_CHECK_FEEDBACK.ordinal()));
-                        if(termOrNot[0])
+                        if (termOrNot[0]) {
+                            stopWatch.stop();
+                            L.info("SYNC MODE - TERM_CHECK_DETERMINED_TO_STOP ELAPSED " + stopWatch.getTime());
                             return;
+                        }
                     } else {
+                        //sleep first to prevent stop before compute
+                        Thread.sleep(AsyncConfig.get().getCheckInterval());
                         accumulatedSum = IntStream.rangeClosed(1, workerNum).mapToDouble(dest -> {
                             MPI.COMM_WORLD.Sendrecv(new byte[1], 0, 1, MPI.BYTE, dest, MsgType.REQUIRE_TERM_CHECK.ordinal(),
                                     partialValue, 0, 1, MPI.DOUBLE, dest, MsgType.TERM_CHECK_PARTIAL_VALUE.ordinal());//send term check request and receive partial value
                             return partialValue[0];
                         }).reduce(0, Double::sum);
-
+                        //when first received partial value, we start stopwatch
                         if (stopWatch == null) {
                             stopWatch = new StopWatch();
                             stopWatch.start();
@@ -169,10 +179,9 @@ public class DistAsyncEngine implements Runnable {
                         IntStream.rangeClosed(1, workerNum).parallel().forEach(dest -> MPI.COMM_WORLD.Send(termOrNot, 0, 1, MPI.BOOLEAN, dest, MsgType.TERM_CHECK_FEEDBACK.ordinal()));
                         if (termOrNot[0]) {
                             stopWatch.stop();
-                            L.info("TERM_CHECK_DETERMINED_TO_STOP ELAPSED " + stopWatch.getTime());
+                            L.info("ASYNC MODE - TERM_CHECK_DETERMINED_TO_STOP ELAPSED " + stopWatch.getTime());
                             return;
                         }
-                        Thread.sleep(AsyncConfig.get().getCheckInterval());
                     }
                 }
             } catch (MPIException | InterruptedException e) {
