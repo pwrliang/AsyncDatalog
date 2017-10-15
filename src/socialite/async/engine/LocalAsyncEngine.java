@@ -60,7 +60,7 @@ public class LocalAsyncEngine {
 
     private void compile() {
         if (asyncAnalysis.analysis()) {
-            if (AsyncConfig.get().isPriority()) {
+            if(AsyncConfig.get().isPriority()) {
                 if (asyncAnalysis.getAggrName().equals("dcount") || asyncAnalysis.getAggrName().equals("dsum"))
                     AsyncConfig.get().setPriorityType(AsyncConfig.PriorityType.SUM_COUNT);
                 else if (asyncAnalysis.getAggrName().equals("dmin"))
@@ -106,25 +106,23 @@ public class LocalAsyncEngine {
                 textUtils = new TextUtils(savePath, "part-0");
             }
 
-            if (textUtils != null || asyncConfig.isPrintResult()) {
-                TextUtils finalTextUtils = textUtils;
-                run(new QueryVisitor() {
-                    @Override
-                    public boolean visit(Tuple _0) {
-                        if (asyncConfig.isPrintResult())
-                            System.out.println(_0.toString());
-                        if (finalTextUtils != null)
-                            finalTextUtils.writeLine(_0.toString());
-                        return true;
-                    }
+            TextUtils finalTextUtils = textUtils;
+            run(new QueryVisitor() {
+                @Override
+                public boolean visit(Tuple _0) {
+                    if (asyncConfig.isPrintResult())
+                        System.out.println(_0.toString());
+                    if (finalTextUtils != null)
+                        finalTextUtils.writeLine(_0.toString());
+                    return true;
+                }
 
-                    @Override
-                    public void finish() {
-                        if (finalTextUtils != null)
-                            finalTextUtils.close();
-                    }
-                });//save result
-            }
+                @Override
+                public void finish() {
+                    if (finalTextUtils != null)
+                        finalTextUtils.close();
+                }
+            });//save result
         }
         localEngine.shutdown();
     }
