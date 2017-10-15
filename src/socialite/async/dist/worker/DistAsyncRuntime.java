@@ -37,10 +37,10 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
     private static final Log L = LogFactory.getLog(DistAsyncRuntime.class);
     private final int myWorkerId;
     private final int workerNum;
-
     private SendThread[] sendThreads;
     private ReceiveThread[] receiveThreads;
     private Payload payload;
+    private boolean stopNetworkThread;
 
     DistAsyncRuntime() {
         workerNum = MPI.COMM_WORLD.Size() - 1;
@@ -192,7 +192,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         @Override
         public void run() {
             try {
-                while (!isStop()) {
+                while (!stopNetworkThread) {
                     byte[] data = ((BaseDistAsyncTable) asyncTable).getSendableMessageTableBytes(sendToWorkerId, serializeTool);
                     MPI.COMM_WORLD.Send(data, 0, data.length, MPI.BYTE, sendToWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal());
                 }
@@ -218,7 +218,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         @Override
         public void run() {
             try {
-                while (!isStop()) {
+                while (!stopNetworkThread) {
                     Status status = MPI.COMM_WORLD.Probe(recvFromWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal());
                     int size = status.Get_count(MPI.BYTE);
                     int source = status.source;
@@ -253,7 +253,10 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                 if (asyncConfig.isSync()) {//sync mode
                     MPI.COMM_WORLD.Sendrecv(new double[]{partialSum}, 0, 1, MPI.DOUBLE, AsyncMaster.ID, MsgType.REQUIRE_TERM_CHECK.ordinal(),
                             feedback, 0, 1, MPI.BOOLEAN, AsyncMaster.ID, MsgType.TERM_CHECK_FEEDBACK.ordinal());
-                    if (feedback[0]) done();
+                    if (feedback[0]) {
+                        done();
+                        flush();
+                    }
                     return;//exit function, run will be called next round
                 } else {
                     MPI.COMM_WORLD.Recv(new byte[1], 0, 1, MPI.BYTE, AsyncMaster.ID, MsgType.REQUIRE_TERM_CHECK.ordinal());
@@ -261,6 +264,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                             feedback, 0, 1, MPI.BOOLEAN, AsyncMaster.ID, MsgType.TERM_CHECK_FEEDBACK.ordinal());
                     if (feedback[0]) {
                         done();
+                        flush();
                         break;
                     }
                 }
@@ -269,46 +273,35 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
 
         private double update() {
             double partialSum = 0;
-            Object accumulated;
             if (asyncTable != null) {//null indicate this worker is idle
                 if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DELTA || asyncConfig.getCheckType() == AsyncConfig.CheckerType.DIFF_DELTA) {
-                    accumulated = asyncTable.accumulateDelta();
-                    if (accumulated instanceof Integer) {
-                        partialSum = (Integer) accumulated;
-                    } else if (accumulated instanceof Long) {
-                        partialSum = (Long) accumulated;
-                    } else if (accumulated instanceof Float) {
-                        partialSum = (Float) accumulated;
-                    } else if (accumulated instanceof Double) {
-                        partialSum = (Double) accumulated;
+                    partialSum = asyncTable.accumulateDelta();
+                    BaseDistAsyncTable baseDistAsyncTable = (BaseDistAsyncTable) asyncTable;
+                    for (int workerId = 0; workerId < workerNum; workerId++) {
+                        MessageTableBase messageTable1 = baseDistAsyncTable.getMessageTableList()[workerId][0];
+                        MessageTableBase messageTable2 = baseDistAsyncTable.getMessageTableList()[workerId][1];
+                        if (messageTable1 == null || messageTable2 == null) continue;
+                        partialSum += messageTable1.accumulate();
+                        partialSum += messageTable2.accumulate();
                     }
 //                    L.info("partialSum of delta: " + new BigDecimal(partialSum));
                 } else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.VALUE || asyncConfig.getCheckType() == AsyncConfig.CheckerType.DIFF_VALUE) {
-                    accumulated = asyncTable.accumulateValue();
-                    if (accumulated instanceof Integer) {
-                        partialSum = (Integer) accumulated;
-                    } else if (accumulated instanceof Long) {
-                        partialSum = (Long) accumulated;
-                    } else if (accumulated instanceof Float) {
-                        partialSum = (Float) accumulated;
-                    } else if (accumulated instanceof Double) {
-                        partialSum = (Double) accumulated;
-                    }
+                    partialSum = asyncTable.accumulateValue();
 //                    L.info("sum of value: " + new BigDecimal(partialSum));
                 }
                 //accumulate rest message
-//                BaseDistAsyncTable baseDistAsyncTable = (BaseDistAsyncTable) asyncTable;
-//                for (int workerId = 0; workerId < workerNum; workerId++) {
-//                    MessageTableBase messageTable1 = baseDistAsyncTable.getMessageTableList()[workerId][0];
-//                    MessageTableBase messageTable2 = baseDistAsyncTable.getMessageTableList()[workerId][1];
-//                    if (messageTable1 == null && messageTable2 != null || messageTable1 != null && messageTable2 == null)
-//                        Assert.impossible();
-//                    if (messageTable1 == null || messageTable2 == null) continue;
-//                    partialSum += messageTable1.accumulate();
-//                    partialSum += messageTable2.accumulate();
-//                }
             }
             return partialSum;
+        }
+
+        //ensure all messages flushed to remote workers
+        private void flush() {
+            stopNetworkThread = true;
+            try {
+                Thread.sleep(asyncConfig.getMessageTableWaitingInterval() + 1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 

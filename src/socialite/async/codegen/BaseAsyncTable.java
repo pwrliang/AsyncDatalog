@@ -21,9 +21,9 @@ public abstract class BaseAsyncTable {
 
     public abstract double getDelta(int localInd);
 
-    public abstract Object accumulateValue();
+    public abstract double accumulateValue();
 
-    public abstract Object accumulateDelta();
+    public abstract double accumulateDelta();
 
     public abstract MyVisitorImpl getInitVisitor();
 

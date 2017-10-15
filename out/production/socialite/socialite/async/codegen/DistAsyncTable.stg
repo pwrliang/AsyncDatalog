@@ -327,8 +327,8 @@ public class DistAsyncTable extends BaseDistAsyncTable{
 
     @Override
     <if(IsBoolean.(valueType))>
-    public Integer accumulateValue(){
-        int sum = 0;
+    public double accumulateValue(){
+        double sum = 0;
         for(int i=0;i\<size;i++)
             if(valueList.get(i) && !sentFlagList.get(i)){ //可见性问题，只能这么解决
                 sum++;
@@ -336,13 +336,13 @@ public class DistAsyncTable extends BaseDistAsyncTable{
         return sum;
     }
     <else>
-    public <WrappedTypeMap.(deltaType)> accumulateValue(){
-        <valueType> sum = 0;
+    public double accumulateValue(){
+        double sum = 0;
 
         for(int i=0;i\<size;i++){
             <valueType> value = valueList.get(i);
             if(value != IDENTITY_ELEMENT){
-                sum+=valueList.get(i);
+                sum+=value;
             }
         }
         return sum;
@@ -350,8 +350,8 @@ public class DistAsyncTable extends BaseDistAsyncTable{
     <endif>
 
     @Override
-    public <WrappedTypeMap.(deltaType)> accumulateDelta(){
-        <deltaType> sum = 0;
+    public double accumulateDelta(){
+        double sum = 0;
 
         for(int i=0;i\<size;i++){
             <deltaType> delta = deltaList.get(i).<deltaType>Value();

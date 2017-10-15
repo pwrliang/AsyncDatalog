@@ -271,8 +271,8 @@ public class AsyncTable extends BaseAsyncTable{
 
     @Override
     <if(IsBoolean.(valueType))>
-    public Integer accumulateValue(){
-        int sum = 0;
+    public double accumulateValue(){
+        double sum = 0;
         for(int i=0;i\<size;i++)
             if(valueList.get(i)){
                 sum++;
@@ -280,13 +280,13 @@ public class AsyncTable extends BaseAsyncTable{
         return sum;
     }
     <else>
-    public <WrappedTypeMap.(deltaType)> accumulateValue(){
-        <valueType> sum = 0;
+    public double accumulateValue(){
+        double sum = 0;
 
         for(int i=0;i\<size;i++){
             <valueType> value = valueList.get(i);
             if(value != IDENTITY_ELEMENT){
-                sum+=valueList.get(i);
+                sum+=value;
             }
         }
         return sum;
@@ -309,11 +309,11 @@ public class AsyncTable extends BaseAsyncTable{
 
 
     @Override
-    public <WrappedTypeMap.(deltaType)> accumulateDelta(){
-        <deltaType> sum = 0;
+    public double accumulateDelta(){
+        double sum = 0;
 
         for(int i=0;i\<size;i++){
-            <deltaType> delta = deltaList.get(i).<deltaType>Value();
+            <deltaType> delta = deltaList.get(i).get();
             if(delta != IDENTITY_ELEMENT){
                 sum+=delta;
             }
