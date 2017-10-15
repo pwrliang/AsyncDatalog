@@ -1,10 +1,11 @@
 CHECK_INTERVAL = 1000
 CHECK_TYPE = DIFF_VALUE
 CHECK_COND = L
-CHECK_THRESHOLD = 0.00001
-PRIORITY_TYPE = TYPE1
+CHECK_THRESHOLD = 0.01
+DELTA_FILTER = 0.0000001
+PRIORITY = TRUE
 SAMPLE_RATE = 0.01
-SECONDARY_SAMPLE_RATE = 0.1
+SCHEDULE_PORTION = 0.2
 DYNAMIC = FALSE
 MESSAGE_TABLE_INIT_SIZE = 10000
 MESSAGE_TABLE_UPDATE_THRESHOLD = 0
@@ -18,12 +19,12 @@ Rank(int n:0..3, double rank).
 Edge(int n:0..3, (int t)).
 EdgeCnt(int n:0..3, int cnt).
 
-Edge(s, t) :- l=$read("hdfs://master:9000/examples/prog2_edge.txt"), (s1,s2)=$split(l, "	"),
+Edge(s, t) :- l=$read("G:\\MyProject\\Java\\socialite-before-yarn\\examples\\prog2_edge.txt"), (s1,s2)=$split(l, "	"),
              s=$toInt(s1), t=$toInt(s2).
 
 EdgeCnt(s, $inc(1)) :- Edge(s, t).
 
-Node(n) :- l=$read("hdfs://master:9000/examples/prog2_node.txt"), n=$toInt(l).
+Node(n) :- l=$read("G:\\MyProject\\Java\\socialite-before-yarn\\examples\\prog2_node.txt"), n=$toInt(l).
 
-Rank(n, r) :- Node(n), r = 0.2.
+Rank(n, r) :- Node(n), r = 0.2 / 4.
 Rank(y, $dsum(r1)) :- Rank(x, r), Edge(x, y),  EdgeCnt(x, d), r1 = 0.8 * r / d.

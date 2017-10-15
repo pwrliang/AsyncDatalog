@@ -1,4 +1,4 @@
-CHECK_INTERVAL = 1500
+CHECK_INTERVAL = 100
 CHECK_TYPE = VALUE
 CHECK_COND = E
 CHECK_THRESHOLD = 6
@@ -14,10 +14,10 @@ RULE:
 edge(int src:0..3, (int dst, int weight)).
 sssp(int node:0..3, int dist).
 
-edge(s, t, w) :- l=$read("hdfs://master:9000/examples/prog1_edge.txt"), (s1,s2,s3)=$split(l, "	"),
+edge(s, t, w) :- l=$read("G:\\MyProject\\Java\\socialite-before-yarn\\examples\\prog1_edge.txt"), (s1,s2,s3)=$split(l, "	"),
              s=$toInt(s1), t=$toInt(s2), w=$toInt(s3).
 
-sssp(s, d) :- l=$read("hdfs://master:9000/examples/prog1_node.txt"), (s1,s2)=$split(l, "	"), s=$toInt(s1), d=$toInt(s2).
+sssp(s, d) :- l=$read("G:\\MyProject\\Java\\socialite-before-yarn\\examples\\prog1_node.txt"), (s1,s2)=$split(l, "	"), s=$toInt(s1), d=$toInt(s2).
 sssp(Y, $dmin(D)) :- sssp(X, D1), edge(X, Y, D2), D = D1 + D2.
 
 #/home/gengl/socialite-before-yarn/examples

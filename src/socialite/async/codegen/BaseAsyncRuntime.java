@@ -40,6 +40,7 @@ public abstract class BaseAsyncRuntime implements Runnable {
         double[] deltaSample;
         final double SAMPLE_RATE;
         final double SCHEDULE_PORTION;
+        final double DELTA_FILTER;
         boolean assigned;
         private AsyncConfig asyncConfig;
         private ThreadLocalRandom randomGenerator;
@@ -50,6 +51,7 @@ public abstract class BaseAsyncRuntime implements Runnable {
             randomGenerator = ThreadLocalRandom.current();
             SAMPLE_RATE = asyncConfig.getSampleRate();
             SCHEDULE_PORTION = asyncConfig.getSchedulePortion();
+            DELTA_FILTER = asyncConfig.getDeltaFilter();
         }
 
 
@@ -99,10 +101,12 @@ public abstract class BaseAsyncRuntime implements Runnable {
 
                     if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.NONE) {
                         for (int k = start; k < end; k++) {
+                            if (asyncTable.getDelta(k) < DELTA_FILTER) continue;
                             asyncTable.updateLockFree(k);
                         }
                     } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.SUM_COUNT) {
                         for (int k = start; k < end; k++) {
+                            if (asyncTable.getDelta(k) < DELTA_FILTER) continue;
                             double delta = asyncTable.getDelta(k);
                             if (delta >= threshold) {
                                 asyncTable.updateLockFree(k);
@@ -110,6 +114,7 @@ public abstract class BaseAsyncRuntime implements Runnable {
                         }
                     } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.MIN) {
                         for (int k = start; k < end; k++) {
+                            if (asyncTable.getDelta(k) < DELTA_FILTER) continue;
                             double delta = asyncTable.getDelta(k);
                             double value = asyncTable.getValue(k);
                             double f = value - Math.min(value, delta);
@@ -119,6 +124,7 @@ public abstract class BaseAsyncRuntime implements Runnable {
                         }
                     } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.MAX) {
                         for (int k = start; k < end; k++) {
+                            if (asyncTable.getDelta(k) < DELTA_FILTER) continue;
                             double delta = asyncTable.getDelta(k);
                             double value = asyncTable.getValue(k);
                             double f = value - Math.max(value, delta);
