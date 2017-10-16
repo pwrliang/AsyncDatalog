@@ -1,14 +1,21 @@
 package socialite;
 
+import com.google.common.util.concurrent.AtomicDouble;
+import com.google.common.util.concurrent.AtomicDoubleArray;
 import socialite.engine.LocalEngine;
 import socialite.tables.QueryVisitor;
 import socialite.tables.Tuple;
+
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ClientTest {
     public static void main(String[] args) throws InterruptedException {
         Integer i=1;
         double j = (double)i;
         System.out.println(j);
+        AtomicDoubleArray atomicDoubleArray=new AtomicDoubleArray(1);
+        AtomicDouble atomicDouble;
         //-Dsocialite.worker.num=8 -Dsocialite.port=50100 -Dsocialite.master=localhost -Dlog4j.configuration=file:-Dsocialite.port=50100 -Dsocialite.master=master -Dlog4j.configuration=file:/home/gengl/socialite-before-yarn/conf/log4j.properties
 //        MasterNode.startMasterNode();
 //        while (MasterNode.getInstance().getQueryListener().getDistEngine() == null)

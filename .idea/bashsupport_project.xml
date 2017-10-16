@@ -7,6 +7,7 @@
         <option value="MACHINES" />
         <option value="MACHINES_NUM" />
         <option value="MASTER_HOST" />
+        <option value="MPJ_HOME" />
         <option value="SOCIALITE_PREFIX" />
         <option value="USER" />
       </set>

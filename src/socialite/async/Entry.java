@@ -19,7 +19,7 @@ import socialite.util.SociaLiteException;
 public class Entry {
     private static final Log L = LogFactory.getLog(Entry.class);
 
-    //-jar /opt/mpj-v0_44/lib/starter.jar -machinesfile /home/gengl/socialite-mod/machines -np 2 -dev niodev -Dlog4j.configuration=file:/home/gengl/socialite-mod/conf/log4j.properties
+    //-Dlog4j.configuration=file:/home/gengl/AsyncDatalog/conf/log4j.properties
     public static void main(String[] args) throws InterruptedException {
         if (args.length >= 3) {
             MPI.Init(args);
