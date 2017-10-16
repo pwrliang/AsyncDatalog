@@ -7,23 +7,23 @@ BIN=`cd "$BIN"; pwd`
 function run(){
     ${BIN}/kill-all.sh ${MACHINES}
 
-#    mpjrun.sh -Xmx28G \
-#    -machinesfile ${MACHINES} -np $((MACHINES_NUM+1)) -dev native \
-#    -Dsocialite.output.dir=${SOCIALITE_PREFIX}/gen \
-#    -Dsocialite.port=50100 \
-#    -Dsocialite.master=${MASTER_HOST} \
-#    -Dlog4j.configuration=file:${SOCIALITE_PREFIX}/conf/log4j.properties \
-#    -cp ${CODE_CLASSPATH}:${JAR_PATH} \
-#    socialite.async.Entry ${SOCIALITE_PREFIX}/$1
-    mpirun -machinefile ${MACHINES} -np $((MACHINES_NUM+1)) \
-    java -Djava.library.path=$MPJ_HOME/lib \
+    mpjrun.sh -Xmx28G \
+    -machinesfile ${MACHINES} -np $((MACHINES_NUM+1)) -dev native \
     -Dsocialite.output.dir=${SOCIALITE_PREFIX}/gen \
     -Dsocialite.port=50100 \
     -Dsocialite.master=${MASTER_HOST} \
     -Dlog4j.configuration=file:${SOCIALITE_PREFIX}/conf/log4j.properties \
-    -cp $MPJ_HOME/lib/mpj.jar:${CODE_CLASSPATH}:${JAR_PATH} \
-    socialite.async.Entry \
-    0 0 native ${SOCIALITE_PREFIX}/$1
+    -cp ${CODE_CLASSPATH}:${JAR_PATH} \
+    socialite.async.Entry ${SOCIALITE_PREFIX}/$1
+#    mpirun -machinefile ${MACHINES} -np $((MACHINES_NUM+1)) \
+#    java -Djava.library.path=$MPJ_HOME/lib \
+#    -Dsocialite.output.dir=${SOCIALITE_PREFIX}/gen \
+#    -Dsocialite.port=50100 \
+#    -Dsocialite.master=${MASTER_HOST} \
+#    -Dlog4j.configuration=file:${SOCIALITE_PREFIX}/conf/log4j.properties \
+#    -cp $MPJ_HOME/lib/mpj.jar:${CODE_CLASSPATH}:${JAR_PATH} \
+#    socialite.async.Entry \
+#    0 0 native ${SOCIALITE_PREFIX}/$1
 }
 
 
