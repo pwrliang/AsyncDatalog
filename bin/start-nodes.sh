@@ -29,7 +29,7 @@ function start-node(){
         if [ ${line} == ${MASTER_HOST} ]; then
             nohup ${WORKER_CMD} >> ${SOCIALITE_PREFIX}/logs/master.log 2>&1 &
         else
-            ssh -n gengl@${line} "sh -c 'cd $SOCIALITE_PREFIX; nohup $WORKER_CMD > /dev/null 2>&1 &'"
+            ssh -n $USER@${line} "sh -c 'cd $SOCIALITE_PREFIX; nohup $WORKER_CMD > /dev/null 2>&1 &'"
         fi
     done < "${SOCIALITE_PREFIX}/conf/slaves"
 }
