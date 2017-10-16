@@ -111,6 +111,8 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
     fi
 done < "${SOCIALITE_PREFIX}/conf/slaves"
 
+mkdir $SOCIALITE_PREFIX/logs 2> /dev/null
+
 MACHINES=${SOCIALITE_PREFIX}/conf/machines
 MACHINES_NUM=$(cat ${MACHINES} | sed '/^\s*$/d' | wc -l)
 MASTER_HOST=$(head -n 1 ${MACHINES})
