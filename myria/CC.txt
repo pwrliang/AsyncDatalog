@@ -1,0 +1,23 @@
+store(E, Edge, [src, dst]);
+
+E = load("hdfs://master:9000/Datasets/CC/BerkStan/edge.txt", csv(schema(src:int, dst:int), delimiter="\t"));
+
+V = [from E emit src as x] + [from E emit dst as x];
+V = select distinct x from V;
+do
+  CC = [nid, MIN(cid) as cid] <-
+    [from V emit V.x as nid, V.x as cid] +
+    [from E, CC where E.src = CC.nid emit E.dst as nid, CC.cid];
+until convergence pull_idb;
+store(CC, CC_output);
+
+V = select distinct E.src as x from E;
+do
+    CC = [nid, MIN(cid) as cid] <-
+         [from V emit V.x as nid, V.x as cid] +
+         [from E, CC where E.src = CC.nid emit E.dst as nid, CC.cid];
+until convergence pull_idb;
+store(CC, CC);
+CC(x, x) :- Edge(x, y)
+CC(y, MIN(v)) :- CC(x, v), Edge(x, y)
+CC(y, MIN(v)) :- CC(y, v)
