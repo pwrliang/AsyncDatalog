@@ -3,9 +3,11 @@
   <component name="BashSupportProjectSettings">
     <option name="globalVariables">
       <set>
+        <option value="HADOOP_HOME" />
         <option value="JAR_PATH" />
         <option value="MACHINES" />
         <option value="MACHINES_NUM" />
+        <option value="MAITER_HOME" />
         <option value="MASTER_HOST" />
         <option value="MPJ_HOME" />
         <option value="SOCIALITE_PREFIX" />

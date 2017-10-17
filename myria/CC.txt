@@ -1,5 +1,4 @@
-store(E, Edge, [src, dst]);
-
+#TESTED
 E = load("hdfs://master:9000/Datasets/CC/BerkStan/edge.txt", csv(schema(src:int, dst:int), delimiter="\t"));
 
 V = [from E emit src as x] + [from E emit dst as x];
@@ -11,13 +10,50 @@ do
 until convergence pull_idb;
 store(CC, CC_output);
 
-V = select distinct E.src as x from E;
+#TESTED
+E = load("hdfs://master:9000/Datasets/SSSP/BerkStan/edge.txt", csv(schema(src:int, dst:int, weight:int), delimiter="\t"));
+INIT_SSSP = load("hdfs://master:9000/Datasets/SSSP/BerkStan/node.txt", csv(schema(src:int, dist:int), delimiter="\t"));
 do
-    CC = [nid, MIN(cid) as cid] <-
-         [from V emit V.x as nid, V.x as cid] +
-         [from E, CC where E.src = CC.nid emit E.dst as nid, CC.cid];
+  SSSP = [nid, MIN(dist) as dist] <-
+    [from INIT_SSSP emit INIT_SSSP.src as nid, INIT_SSSP.dist as dist] +
+    [from E, SSSP where E.src = SSSP.nid emit E.dst as nid, SSSP.dist + E.weight];
 until convergence pull_idb;
-store(CC, CC);
-CC(x, x) :- Edge(x, y)
-CC(y, MIN(v)) :- CC(x, v), Edge(x, y)
-CC(y, MIN(v)) :- CC(y, v)
+store(SSSP, SSSP_output);
+
+
+#TESTED
+-- Simplified PageRank; assumes that all nodes have out degree > 0
+
+alpha = [.8];
+epsilon = [.0001];
+
+Edge = load("hdfs://master:9000/examples/prog2_edge.txt", csv(schema(src:int, dst:int), delimiter="\t"));
+Vertex = [from Edge emit src as x] + [from Edge emit dst as x];
+Vertex = select distinct x as id from Vertex;
+
+N = [FROM Vertex EMIT COUNT(id) AS val];
+min_rank = [(1 - *alpha) / *N];
+
+OutDegree = [FROM Edge EMIT Edge.src AS id, COUNT(Edge.dst) AS cnt];
+PageRank = [FROM Vertex EMIT Vertex.id AS id, 1.0 / *N AS rank];
+
+DO
+    -- Calculate each node's outbound page rank contribution
+    PrOut = [FROM PageRank, OutDegree WHERE PageRank.id == OutDegree.id
+             EMIT PageRank.id AS id, PageRank.rank / OutDegree.cnt AS out_rank];
+
+    -- Compute the inbound summands for each node
+    Summand = [FROM Vertex, Edge, PrOut
+                WHERE Edge.dst == Vertex.id AND Edge.src == PrOut.id
+                EMIT Vertex.id AS id, PrOut.out_rank AS summand];
+
+    -- Sum up the summands; adjust by alpha
+    NewPageRank = [FROM Summand EMIT id AS id,
+                   *min_rank + *alpha * SUM(Summand.summand) AS rank];
+    Delta = [FROM NewPageRank, PageRank WHERE NewPageRank.id == PageRank.id
+             EMIT ABS(NewPageRank.rank - PageRank.rank) AS val];
+    Continue = [FROM Delta EMIT MAX(Delta.val) > *epsilon];
+    PageRank = NewPageRank;
+WHILE Continue;
+
+STORE(PageRank, OUTPUT);
