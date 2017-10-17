@@ -8,6 +8,8 @@ import org.stringtemplate.v4.STGroup;
 import socialite.engine.ClientEngine;
 import socialite.engine.Config;
 import socialite.engine.LocalEngine;
+import socialite.tables.QueryVisitor;
+import socialite.tables.Tuple;
 import socialite.util.MySTGroupFile;
 
 import java.io.FileNotFoundException;

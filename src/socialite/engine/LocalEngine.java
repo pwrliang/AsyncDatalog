@@ -2,6 +2,7 @@ package socialite.engine;
 
 import gnu.trove.map.hash.TIntFloatHashMap;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.python.core.Py;
@@ -87,9 +88,9 @@ public class LocalEngine {
                 an = new Analysis(parser, conf);
                 an.run();
                 codeGen = new CodeGenMain(conf, an, runtime);
-                //long start=System.currentTimeMillis();
+                long start = System.currentTimeMillis();
                 codeGen.generate();
-                //System.out.println("generate time:"+(System.currentTimeMillis()-start)+" ms");
+//                System.out.println("generate time:" + (System.currentTimeMillis() - start) + " ms");
             }
         } catch (ParseException pe) {
             throw new SociaLiteException(pe.compileErrorMsg());
@@ -128,10 +129,15 @@ public class LocalEngine {
     public void run(String program) {
         try {
             List<Eval> evals = compile(program).getEvalInsts();
+            StopWatch stopWatch = new StopWatch();
             for (Eval e : evals) {
+                stopWatch.reset();
+                stopWatch.start();
                 e.run();
-			   /* if (runtime.getException()!=null) {
-			    	throw new SociaLiteException(runtime.getException());
+                stopWatch.stop();
+                L.info("epoch " + e.epoch + "\nelapsed " + stopWatch.getTime());
+               /* if (runtime.getException()!=null) {
+                    throw new SociaLiteException(runtime.getException());
 			    }*/
             }
         } catch (Exception e) {

@@ -58,10 +58,12 @@ public class PageRank {
 //
 //                @Override
 //                public boolean visit(Tuple _0) {
+//                    System.out.println(_0);
 //                    vals[0] += _0.getDouble(2);
 //                    return true;
 //                }
 //            });
+//            System.out.println(vals[0]);
             en.shutdown();
         } else if (args[0].equals("dist")) {
             int nodeCount = Integer.parseInt(args[1]);//875713 berkstan 685230
@@ -71,8 +73,8 @@ public class PageRank {
             String init = st.render();
             System.out.println(init);
 
-            ClientEngine clientEngine = new ClientEngine();
-            clientEngine.run(init);
+            ClientEngine en = new ClientEngine();
+            en.run(init);
             st = stg.getInstanceOf("Iter");
             st.add("N", nodeCount);
             long start = System.currentTimeMillis();
@@ -80,10 +82,24 @@ public class PageRank {
                 st.add("i", i);
                 String iterCode = st.render();
                 st.remove("i");
-                clientEngine.run(iterCode);
+                en.run(iterCode);
                 System.out.println("iter:" + i);
             }
             L.info("recursive statement:" + (System.currentTimeMillis() - start));
+
+//            TIntFloatMap result = new TIntFloatHashMap();
+//            double[] vals = new double[1];
+//            en.run("?- Rank(n, 0, rank).", new QueryVisitor() {
+//
+//                @Override
+//                public boolean visit(Tuple _0) {
+//                    System.out.println(_0);
+//                    vals[0] += _0.getDouble(2);
+//                    return true;
+//                }
+//            }, 0);
+//            System.out.println(vals[0]);
+            en.shutdown();
         }
     }
 }
