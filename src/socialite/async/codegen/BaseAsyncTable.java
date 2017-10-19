@@ -13,7 +13,7 @@ public abstract class BaseAsyncTable {
 
     public abstract void iterateTuple(QueryVisitor queryVisitor);
 
-    public void updateLockFree(int localInd) {
+    public boolean updateLockFree(int localInd) {
         throw new NotImplementedException();
     }
 

@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class BaseAsyncRuntime implements Runnable {
     protected static final Log L = LogFactory.getLog(BaseAsyncRuntime.class);
@@ -20,6 +21,11 @@ public abstract class BaseAsyncRuntime implements Runnable {
     protected CheckThread checkThread;
     protected BaseAsyncTable asyncTable;
     protected CyclicBarrier barrier;
+    protected AtomicInteger updateCounter;
+
+    protected BaseAsyncRuntime() {
+        updateCounter = new AtomicInteger();
+    }
 
     protected abstract boolean loadData(TableInst[] initTableInstArr, TableInst[] edgeTableInstArr);
 
@@ -102,14 +108,14 @@ public abstract class BaseAsyncRuntime implements Runnable {
                     if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.NONE) {
                         for (int k = start; k < end; k++) {
                             if (asyncTable.getDelta(k) < DELTA_FILTER) continue;
-                            asyncTable.updateLockFree(k);
+                            if (asyncTable.updateLockFree(k)) updateCounter.addAndGet(1);
                         }
                     } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.SUM_COUNT) {
                         for (int k = start; k < end; k++) {
                             if (asyncTable.getDelta(k) < DELTA_FILTER) continue;
                             double delta = asyncTable.getDelta(k);
                             if (delta >= threshold) {
-                                asyncTable.updateLockFree(k);
+                                if (asyncTable.updateLockFree(k)) updateCounter.addAndGet(1);
                             }
                         }
                     } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.MIN) {
@@ -119,7 +125,7 @@ public abstract class BaseAsyncRuntime implements Runnable {
                             double value = asyncTable.getValue(k);
                             double f = value - Math.min(value, delta);
                             if (f >= threshold) {
-                                asyncTable.updateLockFree(k);
+                                if (asyncTable.updateLockFree(k)) updateCounter.addAndGet(1);
                             }
                         }
                     } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.MAX) {
@@ -129,7 +135,7 @@ public abstract class BaseAsyncRuntime implements Runnable {
                             double value = asyncTable.getValue(k);
                             double f = value - Math.max(value, delta);
                             if (f >= threshold) {
-                                asyncTable.updateLockFree(k);
+                                if (asyncTable.updateLockFree(k)) updateCounter.addAndGet(1);
                             }
                         }
                     }
@@ -193,10 +199,10 @@ public abstract class BaseAsyncRuntime implements Runnable {
         protected void done() {
             stop = true;
             stopWatch.stop();
-            L.info("done elapsed:" + stopWatch.getTime());
-            L.info("checker thread exit");
+            L.info("UPDATE_TIMES:" + updateCounter.get());
+            L.info("DONE ELAPSED:" + stopWatch.getTime());
+            L.info("CHECKER THREAD EXIT");
         }
-
     }
 
     public static boolean eval(double val) {

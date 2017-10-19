@@ -61,16 +61,16 @@ public class AsyncTable extends BaseAsyncTable{
     }
 
     @Override
-    public void updateLockFree(int localInd) {
+    public boolean updateLockFree(int localInd) {
         <if(IsBoolean.(valueType))>
             if (sentFlagList.get(localInd)){
-                return;
+                return false;
             }
             <deltaType> oldDelta = deltaList.get(localInd).get();
             if (eval(oldDelta))
                 valueList.set(localInd, true);
             if (!valueList.get(localInd)){
-                return;
+                return false;
             }
             <PrimitiveMap.(keyType)> adjacencies = adjacenciesList.get(localInd);
             if(adjacencies!=null){
@@ -93,13 +93,13 @@ public class AsyncTable extends BaseAsyncTable{
         <else>
             <deltaType> oldDelta = deltaList.get(localInd).getAndSet(IDENTITY_ELEMENT);
             if(oldDelta == IDENTITY_ELEMENT)
-                return;
+                return false;
 
             //keyType: <keyType> aggrType: <aggrType> weightType:<weightType> extraType: <extraType>
             <valueType> accumulatedValue = <WrappedTypeMap.(valueType)>.<AggrTypeFuncMap.(aggrType)>(valueList.get(localInd), oldDelta);
             <! 聚集后比原来还小，则不更新 !>
-            <if(IsMax.(aggrType))>if(accumulatedValue \<= valueList.get(localInd))return;
-            <elseif(IsMin.(aggrType))>if(accumulatedValue >= valueList.get(localInd))return;<endif>
+            <if(IsMax.(aggrType))>if(accumulatedValue \<= valueList.get(localInd))return false;
+            <elseif(IsMin.(aggrType))>if(accumulatedValue >= valueList.get(localInd))return false;<endif>
             //更新value
             valueList.set(localInd, accumulatedValue);
             <!Count函数在不准与extra、weight同用，因为语义不明!>
@@ -112,7 +112,7 @@ public class AsyncTable extends BaseAsyncTable{
 
             <if(IsPairKey.(keyType))>List\<Pair><else><PrimitiveMap.(keyType)><endif> adjacencies = adjacenciesList.get(localInd);
             <! 遍历每个邻接点 !>
-            if(adjacencies==null)return;
+            if(adjacencies == null)return true;
             for(int i = 0; i \< adjacencies.size(); i++){
                 <if(!IsCount.(aggrType))>
                 <valueType> newDelta = eval(oldDelta <if(weightType)>, weights.get(i)<endif> <if(extraType)>, extra<endif>);
@@ -141,6 +141,7 @@ public class AsyncTable extends BaseAsyncTable{
                 <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
             }
         <endif>
+        return true;
     }
 
     <if(IsBoolean.(valueType))>
