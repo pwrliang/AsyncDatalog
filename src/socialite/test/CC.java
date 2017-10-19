@@ -13,7 +13,7 @@ import socialite.util.MySTGroupFile;
 import java.io.FileNotFoundException;
 
 public class CC {
-    private static final Log L = LogFactory.getLog(SSSP.class);
+    private static final Log L = LogFactory.getLog(CC.class);
 
     //dateset        node
     //livejournal    4847571

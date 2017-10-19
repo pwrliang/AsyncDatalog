@@ -71,7 +71,7 @@ public class DistAsyncTable extends BaseDistAsyncTable{
     }
 
     @Override
-    public true updateLockFree(int localInd) {
+    public boolean updateLockFree(int localInd) {
        <if(IsBoolean.(valueType))>
             if (sentFlagList.get(localInd)){
                 return false;
@@ -171,7 +171,7 @@ public class DistAsyncTable extends BaseDistAsyncTable{
                 }
             }
         <endif>
-        return false;
+        return true;
     }
 
     @Override

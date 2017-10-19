@@ -129,14 +129,13 @@ public class AsyncRuntime extends BaseAsyncRuntime {
                         }
                         L.info("diff sum of delta: " + new BigDecimal(sum));
                     }
-
+                    L.info("UPDATE TIMES:" + updateCounter.get());
                     if (!skipFirst && eval(sum)) {
                         done();
                         break;
                     }
                     if (barrier != null)//sync mode
                         break;
-
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

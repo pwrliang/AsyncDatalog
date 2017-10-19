@@ -1,18 +1,22 @@
 package socialite.test;
 
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
+import socialite.async.util.TextUtils;
 import socialite.engine.ClientEngine;
 import socialite.engine.Config;
 import socialite.engine.LocalEngine;
+import socialite.tables.QueryVisitor;
+import socialite.tables.Tuple;
 import socialite.util.MySTGroupFile;
 
 import java.io.FileNotFoundException;
 
 public class COST {
-    public static final int SRC_NODE = 0;
-
+    private static final Log L = LogFactory.getLog(COST.class);
     //dateset        iter
     //1M             31
     //5M             36
@@ -20,11 +24,13 @@ public class COST {
     //0              1                  2             3            4            5
     //single     thread-num          node-num       basic         assb        iter
     //dist         node-num           basic        assb            iter
+
+    //single 8 5000000 hdfs://master:9000/Datasets/COST/5000000/basic_5000000.txt hdfs://master:9000/Datasets/COST/5000000/assb_5000000.txt 50
     public static void main(String[] args) throws FileNotFoundException {
         STGroup stg = new MySTGroupFile(COST.class.getResource("COST.stg"),
                 "UTF-8", '<', '>');
         stg.load();
-        if(args[0].equals("single")) {
+        if (args[0].equals("single")) {
             LocalEngine en = new LocalEngine(Config.par(Integer.parseInt(args[1])));//config
             int nodeCount = Integer.parseInt(args[2]);
             ST st = stg.getInstanceOf("Init");
@@ -47,8 +53,18 @@ public class COST {
             }
             stopWatch.stop();
             System.out.println("elapsed " + stopWatch.getTime());
+            StringBuilder sb = new StringBuilder();
+            en.run("?- cost(partId, 0, sum).", new QueryVisitor() {
+                @Override
+                public boolean visit(Tuple _0) {
+                    sb.append(_0);
+                    L.info(_0);
+                    return true;
+                }
+            });
             en.shutdown();
-        }else if(args[0].equals("dist")){
+            TextUtils.writeText("/home/gengl/cost_5000000.txt", sb.toString());
+        } else if (args[0].equals("dist")) {
             ClientEngine en = new ClientEngine();
             int nodeCount = Integer.parseInt(args[1]);
             ST st = stg.getInstanceOf("Init");

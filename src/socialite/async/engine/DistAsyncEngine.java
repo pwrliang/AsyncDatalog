@@ -143,6 +143,7 @@ public class DistAsyncEngine implements Runnable {
 
             try {
                 while (true) {
+                    accumulatedSum = 0;
                     if (asyncConfig.isSync()) {
                         for (int source = 1; source <= workerNum; source++) {
                             MPI.COMM_WORLD.Recv(partialValue, 0, 2, MPI.DOUBLE, source, MsgType.REQUIRE_TERM_CHECK.ordinal());
