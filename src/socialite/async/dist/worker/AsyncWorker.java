@@ -37,7 +37,7 @@ public class AsyncWorker {
                 @Override
                 public boolean visit(Tuple _0) {
                     if (asyncConfig.isPrintResult())
-                        System.out.println(_0.toString());
+                        L.info(_0.toString());
                     if (finalTextUtils != null)
                         finalTextUtils.writeLine(_0.toString());
                     return true;

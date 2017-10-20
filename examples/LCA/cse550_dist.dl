@@ -1,0 +1,23 @@
+CHECK_INTERVAL = 1500
+CHECK_TYPE = DELTA
+CHECK_COND = E
+CHECK_THRESHOLD = 0
+PRIORITY = TRUE
+SAMPLE_RATE = 0.01
+SCHEDULE_PORTION = 0.1
+DYNAMIC = TRUE
+THREAD_NUM = 32
+DEBUGGING = FALSE
+MESSAGE_TABLE_INIT_SIZE = 10000
+MESSAGE_TABLE_UPDATE_THRESHOLD = 500
+MESSAGE_TABLE_WAITING_INTERVAL = 100
+PRINT_RESULT = TRUE
+SAVE_PATH = "hdfs://master:9000/expr/LCA"
+RULE:
+cite(int y:0..1787350, (int x)).
+ancestor(int Y:0..1787350, (int X, int depth)).
+
+cite(y, x) :- l=$read("hdfs://master:9000/Datasets/LCA/processed.txt"), (s1,s2)=$split(l, "	"), y=$toInt(s1), x=$toInt(s2).
+
+ancestor(X, Y, 1) :- cite(Y, X), X<5.
+ancestor(Z, X, $dmin(D1)) :- ancestor(Z, Y, D), cite(Y, X), D1 = D + 1.
