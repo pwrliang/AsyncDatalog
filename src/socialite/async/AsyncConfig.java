@@ -56,6 +56,7 @@ public class AsyncConfig {
         sb.append("MESSAGE_INIT_SIZE:").append(messageTableInitSize).append(", ");
         sb.append("MESSAGE_UPDATE_THRESHOLD:").append(messageTableUpdateThreshold).append(", ");
         sb.append("MESSAGE_TABLE_WAITING_INTERVAL:").append(messageTableWaitingInterval).append(", ");
+        sb.append("PRINT_RESULT:").append(printResult ? "TRUE" : "FALSE").append(", ");
         sb.append("SAVE_PATH:").append(savePath);
         return sb.toString();
     }
