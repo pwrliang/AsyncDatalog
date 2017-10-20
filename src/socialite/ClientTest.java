@@ -11,11 +11,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ClientTest {
     public static void main(String[] args) throws InterruptedException {
-        Integer i=1;
-        double j = (double)i;
-        System.out.println(j);
-        AtomicDoubleArray atomicDoubleArray=new AtomicDoubleArray(1);
-        AtomicDouble atomicDouble;
+        System.out.println(Integer.MAX_VALUE);
+        System.exit(0);
         //-Dsocialite.worker.num=8 -Dsocialite.port=50100 -Dsocialite.master=localhost -Dlog4j.configuration=file:-Dsocialite.port=50100 -Dsocialite.master=master -Dlog4j.configuration=file:/home/gengl/socialite-before-yarn/conf/log4j.properties
 //        MasterNode.startMasterNode();
 //        while (MasterNode.getInstance().getQueryListener().getDistEngine() == null)
