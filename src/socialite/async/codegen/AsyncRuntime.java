@@ -15,7 +15,7 @@ import java.util.stream.IntStream;
 
 public class AsyncRuntime extends BaseAsyncRuntime {
     private static final Log L = LogFactory.getLog(AsyncRuntime.class);
-    private CheckThread checkerThread;
+    //    private BaseAsyncRuntime.CheckThread checkerThread;
     private TableInst[] initTableInstArr;
     private TableInst[] edgeTableInstArr;
 
@@ -130,6 +130,8 @@ public class AsyncRuntime extends BaseAsyncRuntime {
                         L.info("diff sum of delta: " + new BigDecimal(sum));
                     }
                     L.info("UPDATE TIMES:" + updateCounter.get());
+                    if (asyncConfig.isSync())
+                        L.info("ITER: " + iter);
                     if (!skipFirst && eval(sum)) {
                         done();
                         break;

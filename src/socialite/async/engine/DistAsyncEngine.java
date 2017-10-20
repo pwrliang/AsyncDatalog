@@ -130,6 +130,7 @@ public class DistAsyncEngine implements Runnable {
         private Double lastSum;
         double accumulatedSum = 0;
         double totalUpdateTimes = 0;
+        private int iter;
 
         private FeedBackThread() {
             asyncConfig = AsyncConfig.get();
@@ -197,6 +198,9 @@ public class DistAsyncEngine implements Runnable {
 
         private boolean isTerm() {
             L.info("TOTAL UPDATE TIMES " + totalUpdateTimes);
+            if (asyncConfig.isSync()) {
+                L.info("ITER: " + ++iter);
+            }
             if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.VALUE)
                 L.info("TERM_CHECK_VALUE_SUM: " + new BigDecimal(accumulatedSum));
             else if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DELTA)

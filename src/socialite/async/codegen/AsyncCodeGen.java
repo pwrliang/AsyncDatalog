@@ -77,6 +77,8 @@ public class AsyncCodeGen {
         st.add("weightType", asyncAn.getWeightType());
         st.add("extraType", asyncAn.getExtraType());
         st.add("expr", asyncAn.getsExpr());
+        st.add("sync", asyncConfig.isSync());
+        st.add("lock", asyncConfig.isLock());
         return st.render();
     }
 }

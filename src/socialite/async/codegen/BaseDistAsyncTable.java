@@ -52,9 +52,9 @@ public abstract class BaseDistAsyncTable extends BaseAsyncTable {
 
     }
 
-    public AtomicIntegerArray getMessageTableSelector() {
-        return messageTableSelector;
-    }
+//    public AtomicIntegerArray getMessageTableSelector() {
+//        return messageTableSelector;
+//    }
 
     public MessageTableBase[][] getMessageTableList() {
         return messageTableList;
@@ -69,7 +69,8 @@ public abstract class BaseDistAsyncTable extends BaseAsyncTable {
         writingTableInd = messageTableSelector.get(sendToWorkerId);//获取计算线程正在写入的表序号
         MessageTableBase sendableMessageTable = messageTableList[sendToWorkerId][writingTableInd];
         long startTime = System.currentTimeMillis();
-        while (sendableMessageTable.getUpdateTimes() < messageTableUpdateThreshold) {
+        //in sync mode, all computing thread write to message table when barrier is triggered, so we don't have to wait
+        while (sendableMessageTable.getUpdateTimes() < messageTableUpdateThreshold && !AsyncConfig.get().isSync()) {
             Thread.sleep(10);
             if ((System.currentTimeMillis() - startTime) >= AsyncConfig.get().getMessageTableWaitingInterval())
                 break;

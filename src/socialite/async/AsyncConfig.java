@@ -17,7 +17,6 @@ public class AsyncConfig {
     private Cond cond;
     private boolean dynamic;
     private boolean priority;
-    private double deltaFilter = Double.MIN_VALUE;
     private PriorityType priorityType = PriorityType.NONE;
     private double sampleRate;
     private double schedulePortion;
@@ -49,7 +48,6 @@ public class AsyncConfig {
             sb.append("SAMPLE_RATE:").append(sampleRate).append(", ");
             sb.append("SCHEDULE_PORTION:").append(schedulePortion).append(", ");
         }
-        sb.append("DELTA_FILTER:").append(deltaFilter).append(", ");
         sb.append(sync ? "SYNC" : "ASYNC").append(", ");
         sb.append(lock ? "LOCK" : "NON-LOCK").append(", ");
         sb.append(dynamic ? "DYNAMIC" : "STATIC").append(", ");
@@ -86,10 +84,6 @@ public class AsyncConfig {
             throw new SociaLiteException("AsyncConfig is not create");
         }
         return asyncConfig;
-    }
-
-    public double getDeltaFilter() {
-        return deltaFilter;
     }
 
     public static void set(AsyncConfig _asyncConfig) {
@@ -208,7 +202,6 @@ public class AsyncConfig {
         private int initSize;
         private boolean priority;
         private boolean lock;
-        private double deltaFilter;
         private double sampleRate;
         private double schedulePortion;
         private int messageTableInitSize;
@@ -235,11 +228,6 @@ public class AsyncConfig {
 
         public Builder setCheckerCond(Cond cond) {
             this.cond = cond;
-            return this;
-        }
-
-        public Builder setDeltaFilter(double deltaFilter) {
-            this.deltaFilter = deltaFilter;
             return this;
         }
 
@@ -326,13 +314,14 @@ public class AsyncConfig {
                 throw new SociaLiteException("check type is not set");
             if (cond == null)
                 throw new SociaLiteException("condition is not set");
+            if (sync && lock)
+                throw new SociaLiteException("you cannot both use sync and lock option");
             asyncConfig.checkInterval = checkInterval;
             asyncConfig.threshold = threshold;
             asyncConfig.checkType = checkType;
             asyncConfig.cond = cond;
             asyncConfig.priority = priority;
             asyncConfig.lock = lock;
-            asyncConfig.deltaFilter = deltaFilter;
             asyncConfig.sampleRate = sampleRate;
             asyncConfig.schedulePortion = schedulePortion;
             asyncConfig.dynamic = dynamic;
@@ -435,9 +424,6 @@ public class AsyncConfig {
                     else if (val.equals("FALSE"))
                         asyncConfig.setLock(false);
                     else throw new SociaLiteException("unknown val: " + val);
-                    break;
-                case "DELTA_FILTER":
-                    asyncConfig.setDeltaFilter(Double.parseDouble(val));
                     break;
                 case "SAMPLE_RATE":
                     asyncConfig.setSampleRate(Double.parseDouble(val));

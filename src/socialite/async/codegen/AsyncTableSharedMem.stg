@@ -53,7 +53,7 @@ public class AsyncTable extends BaseAsyncTable{
 
        valueList = new <PrimitiveMap.(valueType)>(initSize);
        deltaList = new ArrayList\<>(initSize);
-       <if(sync)>deltaList = new ArrayList\<>(initSize);<endif>
+       <if(sync)>bufferDeltaList = new ArrayList\<>(initSize);<endif>
        adjacenciesList = new ArrayList\<>(initSize);
        <if(!IsBoolean.(valueType))>
            <if(weightType)> weightsList = new ArrayList\<>(initSize);<endif>
@@ -63,7 +63,8 @@ public class AsyncTable extends BaseAsyncTable{
     }
 
     @Override
-    public boolean updateLockFree(int localInd, <if(sync)>int iter<endif>) {
+    public boolean updateLockFree(int localInd<if(sync)>, int iter<endif>) {
+        <deltaType> oldDelta;
         <if(IsBoolean.(valueType))>
             if (sentFlagList.get(localInd)){
                 return false;
@@ -71,16 +72,16 @@ public class AsyncTable extends BaseAsyncTable{
 
             <if(sync)>
                 if (iter % 2 == 0)
-                    <deltaType> oldDelta = deltaList.get(localInd).get();
+                    oldDelta = deltaList.get(localInd).get();
                 else
-                    <deltaType> oldDelta = bufferDeltaList.get(localInd).get();
+                    oldDelta = bufferDeltaList.get(localInd).get();
             <else>
                 <if(lock)>
                 synchronized(deltaList) {
-                    <deltaType> oldDelta = deltaList.get(localInd).get();
+                    oldDelta = deltaList.get(localInd).get();
                 }
                 <else>
-                <deltaType> oldDelta = deltaList.get(localInd).get();
+                oldDelta = deltaList.get(localInd).get();
                 <endif>
             <endif>
 
@@ -123,12 +124,13 @@ public class AsyncTable extends BaseAsyncTable{
         <else>
             <if(sync)>
             if (iter % 2 == 0)
-                <deltaType> oldDelta = deltaList.get(localInd).getAndSet(IDENTITY_ELEMENT);
+                oldDelta = deltaList.get(localInd).getAndSet(IDENTITY_ELEMENT);
             else
-                <deltaType> oldDelta = bufferDeltaList.get(localInd).getAndSet(IDENTITY_ELEMENT);
+                oldDelta = bufferDeltaList.get(localInd).getAndSet(IDENTITY_ELEMENT);
             <else>
-                <deltaType> oldDelta = deltaList.get(localInd).getAndSet(IDENTITY_ELEMENT);
+                oldDelta = deltaList.get(localInd).getAndSet(IDENTITY_ELEMENT);
             <endif>
+
             if(oldDelta == IDENTITY_ELEMENT)
                 return false;
 
@@ -173,7 +175,7 @@ public class AsyncTable extends BaseAsyncTable{
                     adjacentLocalInd = adjacencies.get(i); //key for adjacent node
                 <endif>
                 <if(sync)>
-                    if (iter % 2 ==0)
+                    if (iter % 2 == 0)
                         <if(IsSum.(aggrType))>bufferDeltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
                         <if(IsMax.(aggrType))>bufferDeltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
                         <if(IsMin.(aggrType))>bufferDeltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
@@ -184,19 +186,12 @@ public class AsyncTable extends BaseAsyncTable{
                         <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
                         <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
                 <else>
-                    <if(lock)>
-                        synchronized(deltaList) {
+                     <if(lock)>synchronized(deltaList) {<endif>
                         <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
                         <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
                         <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
                         <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
-                        }
-                    <else>
-                        <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
-                        <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
-                        <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
-                        <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
-                    <endif>
+                     <if(lock)>}<endif>
                 <endif>
             }
         <endif>
@@ -220,6 +215,7 @@ public class AsyncTable extends BaseAsyncTable{
         indKeyMap.put(size, key);
         valueList.add(value);
         deltaList.add(new <TypeAtomicMap.(deltaType)>(delta));
+        <if(sync)>bufferDeltaList.add(new <TypeAtomicMap.(deltaType)>(IDENTITY_ELEMENT));<endif>
         adjacenciesList.add(join(<if(IsPairKey.(keyType))>col1OfKey, col2OfKey<else>key<endif>));
         <if(weightType)>
         weightsList.add(srcWeightListMap.get(key));
@@ -281,6 +277,7 @@ public class AsyncTable extends BaseAsyncTable{
                 public boolean visit_0_1<if(extraType)>_2<endif>(<keyType> key, <deltaType> delta <if(extraType)>, <extraType> extra<endif>){
                     valueList.add(IDENTITY_ELEMENT);
                     deltaList.add(new <TypeAtomicMap.(deltaType)>(delta));
+                    <if(sync)>bufferDeltaList.add(new <TypeAtomicMap.(deltaType)>(IDENTITY_ELEMENT));<endif>
                     adjacencies = new <PrimitiveMap.(keyType)>();
                     adjacenciesList.add(adjacencies);
                     <if(extraType)>extraList.add(extra);<endif>
@@ -377,6 +374,13 @@ public class AsyncTable extends BaseAsyncTable{
             if(delta != IDENTITY_ELEMENT){
                 sum+=delta;
             }
+            <if(sync)>
+            delta = bufferDeltaList.get(i).get();
+            if(delta != IDENTITY_ELEMENT){
+                sum+=delta;
+            }
+            <endif>
+
         }
         return sum;
     }
