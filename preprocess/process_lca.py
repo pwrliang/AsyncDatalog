@@ -29,8 +29,6 @@ with open('/home/gengl/Datasets/LCA/processed.txt', 'w') as fo:
         reordered_p2 = paper_id_dict[cites_dic[p1]]
         # ensure every node has out-link
         if reordered_p1 - last != 1:
-            if last == -1:
-                last = 0
             for fake_p in range(last + 1, reordered_p1):
                 fo.write('%d\t%d\n' % (fake_p, random.randrange(0, len(paper_id_dict))))
         fo.write('%d\t%d\n' % (reordered_p1, reordered_p2))
