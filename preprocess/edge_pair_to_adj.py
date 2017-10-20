@@ -21,6 +21,7 @@ if sys.argv[1] == 'pagerank' or sys.argv[1] == 'cc':
                 adj_list.append(dst)
                 last = src
             fo.write('%d\t%s\n' % (last, ' '.join(map(str, adj_list))))
+
 elif sys.argv[2] == 'sssp':
     with open(sys.argv[2], 'r') as fi:
         with open(sys.argv[3], 'w') as fo:
