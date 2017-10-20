@@ -17,6 +17,11 @@ public abstract class BaseAsyncTable {
         throw new NotImplementedException();
     }
 
+    public boolean updateLockFree(int localInd, int iter) {
+        throw new NotImplementedException();
+    }
+
+
     public abstract double getValue(int localInd);
 
     public abstract double getDelta(int localInd);

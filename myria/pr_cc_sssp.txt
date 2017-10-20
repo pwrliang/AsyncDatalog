@@ -57,3 +57,24 @@ DO
 WHILE Continue;
 
 STORE(PageRank, OUTPUT);
+
+
+# LCA
+
+Cite = load("hdfs://master:9000/examples/prog2_edge.txt", csv(schema(a:int, b:int), delimiter="\t"));
+Ancestor = [FROM Cite WHERE Cite.b < 5 EMIT Cite.a as a, ]
+do
+Ancestor = [a,b,MIN(dis) as dis] <- [from Cite emit a, b, 1 as dis] +
+        [from Ancestor, Cite
+         where Ancestor.b = Cite.a
+         emit Ancestor.a, Cite.b, Ancestor.dis+1];
+
+until convergence sync;
+store(LCA, LCA);
+
+#LCA = [pid1,pid2,LEXMIN(dis,anc)] <-
+#        [from Ancestor as A1, Ancestor as A2, Paper
+#         where A1.b = A2.b and A1.b = Paper.d and A1.a < A2.a
+#         emit A1.a as pid1, A2.a as pid2,
+#         greater(A1.dis, A2.dis) as dis,
+#         A1.b as anc];

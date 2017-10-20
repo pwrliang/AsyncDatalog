@@ -23,6 +23,7 @@ public class AsyncConfig {
     private double schedulePortion;
     private boolean sync;
     private boolean debugging;
+    private boolean lock;
     private int threadNum;
     private int initSize;
     private int messageTableInitSize;
@@ -50,6 +51,7 @@ public class AsyncConfig {
         }
         sb.append("DELTA_FILTER:").append(deltaFilter).append(", ");
         sb.append(sync ? "SYNC" : "ASYNC").append(", ");
+        sb.append(lock ? "LOCK" : "NON-LOCK").append(", ");
         sb.append(dynamic ? "DYNAMIC" : "STATIC").append(", ");
         sb.append("THREAD_NUM:").append(threadNum).append(", ");
         sb.append("INIT_SIZE:").append(initSize).append(", ");
@@ -120,6 +122,10 @@ public class AsyncConfig {
 
     public boolean isSync() {
         return sync;
+    }
+
+    public boolean isLock() {
+        return lock;
     }
 
     public double getSampleRate() {
@@ -201,6 +207,7 @@ public class AsyncConfig {
         private int threadNum;
         private int initSize;
         private boolean priority;
+        private boolean lock;
         private double deltaFilter;
         private double sampleRate;
         private double schedulePortion;
@@ -238,6 +245,11 @@ public class AsyncConfig {
 
         public Builder setPriority(boolean priority) {
             this.priority = priority;
+            return this;
+        }
+
+        public Builder setLock(boolean lock) {
+            this.lock = lock;
             return this;
         }
 
@@ -319,6 +331,7 @@ public class AsyncConfig {
             asyncConfig.checkType = checkType;
             asyncConfig.cond = cond;
             asyncConfig.priority = priority;
+            asyncConfig.lock = lock;
             asyncConfig.deltaFilter = deltaFilter;
             asyncConfig.sampleRate = sampleRate;
             asyncConfig.schedulePortion = schedulePortion;
@@ -414,6 +427,13 @@ public class AsyncConfig {
                         asyncConfig.setPriority(true);
                     else if (val.equals("FALSE"))
                         asyncConfig.setPriority(false);
+                    else throw new SociaLiteException("unknown val: " + val);
+                    break;
+                case "LOCK":
+                    if (val.equals("TRUE"))
+                        asyncConfig.setLock(true);
+                    else if (val.equals("FALSE"))
+                        asyncConfig.setLock(false);
                     else throw new SociaLiteException("unknown val: " + val);
                     break;
                 case "DELTA_FILTER":

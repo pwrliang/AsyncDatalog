@@ -108,14 +108,22 @@ public abstract class BaseAsyncRuntime implements Runnable {
                     if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.NONE) {
                         for (int k = start; k < end; k++) {
                             if (asyncTable.getDelta(k) < DELTA_FILTER) continue;
-                            if (asyncTable.updateLockFree(k)) updateCounter.addAndGet(1);
+                            if (asyncConfig.isSync()) {
+                                if (asyncTable.updateLockFree(k, checkThread.iter)) updateCounter.addAndGet(1);
+                            } else {
+                                if (asyncTable.updateLockFree(k)) updateCounter.addAndGet(1);
+                            }
                         }
                     } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.SUM_COUNT) {
                         for (int k = start; k < end; k++) {
                             if (asyncTable.getDelta(k) < DELTA_FILTER) continue;
                             double delta = asyncTable.getDelta(k);
                             if (delta >= threshold) {
-                                if (asyncTable.updateLockFree(k)) updateCounter.addAndGet(1);
+                                if (asyncConfig.isSync()) {
+                                    if (asyncTable.updateLockFree(k, checkThread.iter)) updateCounter.addAndGet(1);
+                                } else {
+                                    if (asyncTable.updateLockFree(k)) updateCounter.addAndGet(1);
+                                }
                             }
                         }
                     } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.MIN) {
@@ -125,7 +133,11 @@ public abstract class BaseAsyncRuntime implements Runnable {
                             double value = asyncTable.getValue(k);
                             double f = value - Math.min(value, delta);
                             if (f >= threshold) {
-                                if (asyncTable.updateLockFree(k)) updateCounter.addAndGet(1);
+                                if (asyncConfig.isSync()) {
+                                    if (asyncTable.updateLockFree(k, checkThread.iter)) updateCounter.addAndGet(1);
+                                } else {
+                                    if (asyncTable.updateLockFree(k)) updateCounter.addAndGet(1);
+                                }
                             }
                         }
                     } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.MAX) {
@@ -135,7 +147,11 @@ public abstract class BaseAsyncRuntime implements Runnable {
                             double value = asyncTable.getValue(k);
                             double f = value - Math.max(value, delta);
                             if (f >= threshold) {
-                                if (asyncTable.updateLockFree(k)) updateCounter.addAndGet(1);
+                                if (asyncConfig.isSync()) {
+                                    if (asyncTable.updateLockFree(k, checkThread.iter)) updateCounter.addAndGet(1);
+                                } else {
+                                    if (asyncTable.updateLockFree(k)) updateCounter.addAndGet(1);
+                                }
                             }
                         }
                     }
@@ -184,12 +200,14 @@ public abstract class BaseAsyncRuntime implements Runnable {
     protected abstract class CheckThread extends Thread {
         protected StopWatch stopWatch;
         protected final int CHECKER_INTERVAL = AsyncConfig.get().getCheckInterval();
+        protected int iter = 0;
 
         protected CheckThread() {
         }
 
         @Override
         public void run() {
+            iter++;
             if (stopWatch == null) {
                 stopWatch = new StopWatch();
                 stopWatch.start();

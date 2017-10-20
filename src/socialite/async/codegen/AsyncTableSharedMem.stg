@@ -1,5 +1,5 @@
 import "Utils.stg"
-AsyncTableSharedMem(name, keyType, valueType, dynamic, deltaType, aggrType, weightType, extraType, expr) ::= <<
+AsyncTableSharedMem(sync, lock, name, keyType, valueType, dynamic, deltaType, aggrType, weightType, extraType, expr) ::= <<
 package socialite.async.codegen;
 <importForTable()>
 //algorithm <name>
@@ -20,6 +20,7 @@ public class AsyncTable extends BaseAsyncTable{
 
     private <PrimitiveMap.(valueType)> valueList;
     private List\<<TypeAtomicMap.(deltaType)>\> deltaList;
+    <if(sync)>private List\<<TypeAtomicMap.(deltaType)>\> bufferDeltaList;<endif>
     private List\<<if(IsPairKey.(keyType))>List\<Pair><else><PrimitiveMap.(keyType)><endif>\> adjacenciesList; //除了key为int类型的装ind，该字段装邻接点数据
     <if(!IsBoolean.(valueType))> <!暂时忽略2-step程序的weight和extra!>
         <!optional dependent on algorithms!>
@@ -52,6 +53,7 @@ public class AsyncTable extends BaseAsyncTable{
 
        valueList = new <PrimitiveMap.(valueType)>(initSize);
        deltaList = new ArrayList\<>(initSize);
+       <if(sync)>deltaList = new ArrayList\<>(initSize);<endif>
        adjacenciesList = new ArrayList\<>(initSize);
        <if(!IsBoolean.(valueType))>
            <if(weightType)> weightsList = new ArrayList\<>(initSize);<endif>
@@ -61,12 +63,27 @@ public class AsyncTable extends BaseAsyncTable{
     }
 
     @Override
-    public boolean updateLockFree(int localInd) {
+    public boolean updateLockFree(int localInd, <if(sync)>int iter<endif>) {
         <if(IsBoolean.(valueType))>
             if (sentFlagList.get(localInd)){
                 return false;
             }
-            <deltaType> oldDelta = deltaList.get(localInd).get();
+
+            <if(sync)>
+                if (iter % 2 == 0)
+                    <deltaType> oldDelta = deltaList.get(localInd).get();
+                else
+                    <deltaType> oldDelta = bufferDeltaList.get(localInd).get();
+            <else>
+                <if(lock)>
+                synchronized(deltaList) {
+                    <deltaType> oldDelta = deltaList.get(localInd).get();
+                }
+                <else>
+                <deltaType> oldDelta = deltaList.get(localInd).get();
+                <endif>
+            <endif>
+
             if (eval(oldDelta))
                 valueList.set(localInd, true);
             if (!valueList.get(localInd)){
@@ -86,12 +103,32 @@ public class AsyncTable extends BaseAsyncTable{
                         }
                     }
                     <! OTHER AGGREGATE FUNCTIONS IS NOT SUPPORTED !>
-                    <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                    <if(sync)>
+                        if (iter % 2 == 0)
+                            <if(IsCount.(aggrType))>bufferDeltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                        else
+                            <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                    <else>
+                        <if(lock)>
+                        synchronized(deltaList) {
+                            <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                        }
+                        <else>
+                        <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                        <endif>
+                    <endif>
                 }
             }
             sentFlagList.set(localInd, true);
         <else>
-            <deltaType> oldDelta = deltaList.get(localInd).getAndSet(IDENTITY_ELEMENT);
+            <if(sync)>
+            if (iter % 2 == 0)
+                <deltaType> oldDelta = deltaList.get(localInd).getAndSet(IDENTITY_ELEMENT);
+            else
+                <deltaType> oldDelta = bufferDeltaList.get(localInd).getAndSet(IDENTITY_ELEMENT);
+            <else>
+                <deltaType> oldDelta = deltaList.get(localInd).getAndSet(IDENTITY_ELEMENT);
+            <endif>
             if(oldDelta == IDENTITY_ELEMENT)
                 return false;
 
@@ -135,10 +172,32 @@ public class AsyncTable extends BaseAsyncTable{
                 <else>
                     adjacentLocalInd = adjacencies.get(i); //key for adjacent node
                 <endif>
-                <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
-                <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
-                <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
-                <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                <if(sync)>
+                    if (iter % 2 ==0)
+                        <if(IsSum.(aggrType))>bufferDeltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
+                        <if(IsMax.(aggrType))>bufferDeltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
+                        <if(IsMin.(aggrType))>bufferDeltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
+                        <if(IsCount.(aggrType))>bufferDeltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                    else
+                        <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
+                        <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
+                        <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
+                        <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                <else>
+                    <if(lock)>
+                        synchronized(deltaList) {
+                        <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
+                        <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
+                        <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
+                        <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                        }
+                    <else>
+                        <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
+                        <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
+                        <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
+                        <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                    <endif>
+                <endif>
             }
         <endif>
         return true;
