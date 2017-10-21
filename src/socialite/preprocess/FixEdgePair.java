@@ -60,14 +60,14 @@ public class FixEdgePair {
             int reorderedSrc = nodeReorderedMap.get(src);
             int reorderedDst = nodeReorderedMap.get(dst);
 
-            if (src - last > 1)
-                for (int fakeSrc = nodeReorderedMap.get(last) + 1; fakeSrc < reorderedSrc; fakeSrc++) {
+            if (reorderedSrc - last > 1)
+                for (int fakeSrc = last + 1; fakeSrc < reorderedSrc; fakeSrc++) {
                     writer.write(String.format("%d\t%d\n", fakeSrc, random.nextInt(nodeSet.size())));
                 }
             writer.write(String.format("%d\t%d\n", reorderedSrc, reorderedDst));
-            last = src;
+            last = reorderedSrc;
         }
-        for (int fakeSrc = nodeReorderedMap.get(last) + 1; fakeSrc < nodeSet.size(); fakeSrc++) {
+        for (int fakeSrc = last + 1; fakeSrc < nodeSet.size(); fakeSrc++) {
             writer.write(String.format("%d\t%d\n", fakeSrc, random.nextInt(nodeSet.size())));
         }
 

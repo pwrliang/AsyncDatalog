@@ -39,12 +39,12 @@ with open(sys.argv[1], 'r') as fi:
             reordered_src = reordered_node_dic[src]
             reordered_dst = reordered_node_dic[dst]
 
-            if src - last > 1:
-                for fake_node in range(reordered_node_dic[last] + 1, reordered_src):
+            if reordered_src - last > 1:
+                for fake_node in range(last + 1, reordered_src):
                     fo.write('%d\t%d\n' % (fake_node, random.randrange(0, len(reordered_node_dic))))
 
             fo.write('%d\t%d\n' % (reordered_src, reordered_dst))
-            last = src
+            last = reordered_src
 
-        for fake_p in range(reordered_node_dic[last] + 1, len(reordered_node_dic)):
+        for fake_p in range(last + 1, len(reordered_node_dic)):
             fo.write('%d\t%d\n' % (fake_p, random.randrange(0, len(reordered_node_dic))))
