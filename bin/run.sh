@@ -14,7 +14,7 @@ function run(){
     -Dsocialite.master=${MASTER_HOST} \
     -Dlog4j.configuration=file:${SOCIALITE_PREFIX}/conf/log4j.properties \
     -cp ${CODE_CLASSPATH}:${JAR_PATH} \
-    socialite.async.Entry ${SOCIALITE_PREFIX}/$1
+    socialite.async.Entry $1
 }
 
 function run_with_mpi(){
@@ -30,7 +30,7 @@ function run_with_mpi(){
         -Dlog4j.configuration=file:${SOCIALITE_PREFIX}/conf/log4j.properties \
         -cp $MPJ_HOME/lib/mpj.jar:${CODE_CLASSPATH}:${JAR_PATH} \
         socialite.async.Entry \
-        0 0 native ${SOCIALITE_PREFIX}/$1
+        0 0 native $1
 }
 
 

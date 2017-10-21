@@ -15,8 +15,8 @@ if sys.argv[1] == 'pagerank' or sys.argv[1] == 'cc':
                 dst = int(tmp[1])
 
                 if src != last:
-                    s_adj_weight = ' '.join(map(str, adj_list))
-                    fo.write('%d\t%s\n' % (last, s_adj_weight))
+                    s_adj = ' '.join(map(str, adj_list))
+                    fo.write('%d\t%s\n' % (last, s_adj))
                     adj_list = []
                 adj_list.append(dst)
                 last = src

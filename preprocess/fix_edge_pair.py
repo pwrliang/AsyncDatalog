@@ -14,7 +14,7 @@ with open(sys.argv[1], 'r') as fi:
     for line in fi:
         if line.startswith('#') or line.startswith('%'):
             continue
-        tmp = line.strip('\n').strip('\r').split(splitter)
+        tmp = line.strip('\n').strip('\r').strip().split(splitter)
         src = int(tmp[0])
         dst = int(tmp[1])
         node_set.add(src)
