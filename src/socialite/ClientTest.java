@@ -6,13 +6,44 @@ import socialite.engine.LocalEngine;
 import socialite.tables.QueryVisitor;
 import socialite.tables.Tuple;
 
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 public class ClientTest {
     public static void main(String[] args) throws InterruptedException {
-        System.out.println(Integer.MAX_VALUE);
-        System.exit(0);
+        CyclicBarrier barrier = new CyclicBarrier(3,new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("call");
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        System.out.println("in thread");
+                    }
+                });
+                thread.start();
+                try {
+                    Thread.sleep(100);
+                    thread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        IntStream.range(0,3).parallel().forEach(i->{
+            try {
+                barrier.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (BrokenBarrierException e) {
+                e.printStackTrace();
+            }
+        });
+
+
         //-Dsocialite.worker.num=8 -Dsocialite.port=50100 -Dsocialite.master=localhost -Dlog4j.configuration=file:-Dsocialite.port=50100 -Dsocialite.master=master -Dlog4j.configuration=file:/home/gengl/socialite-before-yarn/conf/log4j.properties
 //        MasterNode.startMasterNode();
 //        while (MasterNode.getInstance().getQueryListener().getDistEngine() == null)
@@ -28,20 +59,20 @@ public class ClientTest {
 //            }
 //        },0);
 //        clientEngine.shutdown();
-        LocalEngine localEngine = new LocalEngine();
-        String stats = "seed(int x).\n" +
-                "cite(int y:1..99, int x).\n" +
-                "ancestor(int Y:1..99, int X, int depth).\n" +
-                "cite(y, x) :- l=$read(\"/home/gengl/socialite-before-yarn/examples/prog6_cite.txt\"), (s1,s2)=$split(l, \"\t\"), y=$toInt(s1), x=$toInt(s2).\n" +
-                "seed(x) :- x=5.\n" +
-                "ancestor(Y, X, d) :- cite(Y, X), X<5, d=1.\n";
-        localEngine.run(stats);
-        localEngine.run("?- ancestor(Y, X, d).", new QueryVisitor() {
-            @Override
-            public boolean visit(Tuple _0) {
-                return super.visit(_0);
-            }
-        });
+//        LocalEngine localEngine = new LocalEngine();
+//        String stats = "seed(int x).\n" +
+//                "cite(int y:1..99, int x).\n" +
+//                "ancestor(int Y:1..99, int X, int depth).\n" +
+//                "cite(y, x) :- l=$read(\"/home/gengl/socialite-before-yarn/examples/prog6_cite.txt\"), (s1,s2)=$split(l, \"\t\"), y=$toInt(s1), x=$toInt(s2).\n" +
+//                "seed(x) :- x=5.\n" +
+//                "ancestor(Y, X, d) :- cite(Y, X), X<5, d=1.\n";
+//        localEngine.run(stats);
+//        localEngine.run("?- ancestor(Y, X, d).", new QueryVisitor() {
+//            @Override
+//            public boolean visit(Tuple _0) {
+//                return super.visit(_0);
+//            }
+//        });
 //        String stats = "Node(int n:0..875713).\n" +
 //                "Rank(int n:0..875713, double rank).\n" +
 //                "Edge(int n:0..875713, (int t)).\n" +
@@ -57,6 +88,6 @@ public class ClientTest {
 //                return super.visit(_0);
 //            }
 //        });
-        localEngine.shutdown();
+//        localEngine.shutdown();
     }
 }

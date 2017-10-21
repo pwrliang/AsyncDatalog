@@ -2,8 +2,11 @@ CHECK_INTERVAL = 1500
 CHECK_TYPE = DELTA
 CHECK_COND = E
 CHECK_THRESHOLD = 0
+SYNC = FALSE
+LOCK = TRUE
 DYNAMIC = TRUE
-THREAD_NUM = 1
+THREAD_NUM = 4
+PRINT_RESULT = TRUE
 RULE:
 edge(int src:0..3, (int dst)).
 cpaths(int src:0..3, (int dst, int count)).

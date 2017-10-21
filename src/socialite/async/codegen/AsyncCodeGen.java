@@ -41,6 +41,7 @@ public class AsyncCodeGen {
         st.add("keyType", asyncAn.getKeyType());
         st.add("deltaType", asyncAn.getDeltaType());
         st.add("aggrType", asyncAn.getAggrName());
+        st.add("lock", AsyncConfig.get().isLock());
         return st.render();
     }
 

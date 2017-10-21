@@ -314,8 +314,6 @@ public class AsyncConfig {
                 throw new SociaLiteException("check type is not set");
             if (cond == null)
                 throw new SociaLiteException("condition is not set");
-            if (sync && lock)
-                throw new SociaLiteException("you cannot both use sync and lock option");
             asyncConfig.checkInterval = checkInterval;
             asyncConfig.threshold = threshold;
             asyncConfig.checkType = checkType;

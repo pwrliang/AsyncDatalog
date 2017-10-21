@@ -85,18 +85,19 @@ public class DistAsyncTable extends BaseDistAsyncTable{
             }
 
             <if(sync)>
-                if (iter % 2 == 0)
+                if (iter % 2 == 0) {
+                    <if(lock)>synchronized(deltaList) {<endif>
                     oldDelta = deltaList.get(localInd).get();
-                else
+                    <if(lock)>}<endif>
+                } else {
+                    <if(lock)>synchronized(bufferDeltaList) {<endif>
                     oldDelta = bufferDeltaList.get(localInd).get();
-            <else>
-                <if(lock)>
-                synchronized(deltaList) {
-                    oldDelta = deltaList.get(localInd).get();
+                    <if(lock)>}<endif>
                 }
-                <else>
-                oldDelta = deltaList.get(localInd).get();
-                <endif>
+            <else>
+                <if(lock)>synchronized(deltaList) {<endif>
+                    oldDelta = deltaList.get(localInd).get();
+                <if(lock)>}<endif>
             <endif>
 
             if (eval(oldDelta))
@@ -109,7 +110,6 @@ public class DistAsyncTable extends BaseDistAsyncTable{
                 <! 遍历每个邻接点 !>
                 for(int i = 0; i \< adjacencies.size(); i++){
                     <keyType> adjacency = adjacencies.get(i);
-                    <if(sync)>
                     if(sliceMap.isLocal(indexForTableId, adjacency)){
                         int adjacentLocalInd;
                         synchronized(keyIndMap) {
@@ -119,34 +119,27 @@ public class DistAsyncTable extends BaseDistAsyncTable{
                                 adjacentLocalInd = addEntry(adjacency, false, IDENTITY_ELEMENT);
                             }
                         }
+                    <if(sync)>
                         <! OTHER AGGREGATE FUNCTIONS IS NOT SUPPORTED !>
-                        if(iter % 2 == 0)
-                            <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
-                        else
+                        if(iter % 2 == 0){
+                            <if(lock)>synchronized(bufferDeltaList) {<endif>
                             <if(IsCount.(aggrType))>bufferDeltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                            <if(lock)>}<endif>
+                        }else {
+                            <if(lock)>deltaList(bufferDeltaList) {<endif>
+                            <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                            <if(lock)>}<endif>
+                        }
                     } else {
                         int belongToWorkerId = myIdxWorkerIdMap[sliceMap.machineIndexFor(indexForTableId, adjacency)];
                         MessageTable messageTable = (MessageTable)getWritableMessageTable(belongToWorkerId);
                         messageTable.apply(adjacency);
                     }
                     <else>
-                    if(sliceMap.isLocal(indexForTableId, adjacency)){
-                        int adjacentLocalInd;
-                        synchronized(keyIndMap) {
-                            if(keyIndMap.contains(adjacency))
-                                adjacentLocalInd = keyIndMap.get(adjacency);
-                            else {
-                                adjacentLocalInd = addEntry(adjacency, false, IDENTITY_ELEMENT);
-                            }
-                        }
                         <! OTHER AGGREGATE FUNCTIONS IS NOT SUPPORTED !>
-                        <if(lock)>
-                        synchronized(deltaList) {
-                            <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
-                        }
-                        <else>
+                        <if(lock)>synchronized(deltaList) {<endif>
                         <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
-                        <endif>
+                        <if(lock)>}<endif>
                     } else {
                         int belongToWorkerId = myIdxWorkerIdMap[sliceMap.machineIndexFor(indexForTableId, adjacency)];
                         MessageTable messageTable = (MessageTable)getWritableMessageTable(belongToWorkerId);
@@ -158,12 +151,19 @@ public class DistAsyncTable extends BaseDistAsyncTable{
             sentFlagList.set(localInd, true);
         <else>
             <if(sync)>
-            if (iter %2 == 0)
+            if (iter %2 == 0){
+                <if(lock)>synchronized(deltaList) {<endif>
                 oldDelta = deltaList.get(localInd).getAndSet(IDENTITY_ELEMENT);
-            else
+                <if(lock)>}<endif>
+            } else {
+                <if(lock)>synchronized(bufferDeltaList) {<endif>
                 oldDelta = bufferDeltaList.get(localInd).getAndSet(IDENTITY_ELEMENT);
+                <if(lock)>}<endif>
+            }
             <else>
+                <if(lock)>synchronized(deltaList) {<endif>
                 oldDelta = deltaList.get(localInd).getAndSet(IDENTITY_ELEMENT);
+                <if(lock)>}<endif>
             <endif>
 
             if(oldDelta == IDENTITY_ELEMENT)
@@ -213,17 +213,23 @@ public class DistAsyncTable extends BaseDistAsyncTable{
                     <else>
                         adjacentLocalInd = adjacency - base; //key as index
                     <endif>
-                <if(sync)>
-                        if (iter % 2 == 0)
-                            <if(IsSum.(aggrType))>bufferDeltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
-                            <if(IsMax.(aggrType))>bufferDeltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
-                            <if(IsMin.(aggrType))>bufferDeltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
-                            <if(IsCount.(aggrType))>bufferDeltaList.get(adjacentLocalInd).addAndGet(1);<endif>
-                        else
-                            <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
-                            <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
-                            <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
-                            <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+
+                    <if(sync)>
+                        if (iter % 2 == 0){
+                            <if(lock)>synchronized(bufferDeltaList) {<endif>
+                                <if(IsSum.(aggrType))>bufferDeltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
+                                <if(IsMax.(aggrType))>bufferDeltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
+                                <if(IsMin.(aggrType))>bufferDeltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
+                                <if(IsCount.(aggrType))>bufferDeltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                            <if(lock)>}<endif>
+                        } else {
+                            <if(lock)>synchronized(deltaList) {<endif>
+                                <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
+                                <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
+                                <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
+                                <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                            <if(lock)>}<endif>
+                        }
                     } else {
                         <if(IsPairKey.(keyType))>
                         int belongToWorkerId = myIdxWorkerIdMap[sliceMap.machineIndexFor(indexForTableId, adjacency.getV0())];
@@ -233,23 +239,23 @@ public class DistAsyncTable extends BaseDistAsyncTable{
                         MessageTable messageTable = (MessageTable)getWritableMessageTable(belongToWorkerId);
                         messageTable.apply(adjacency<if(!IsCount.(aggrType))>, newDelta<endif>);
                     }
-                <else><! ASYNC MODE !>
-                        <if(lock)>synchronized(deltaList) {<endif>
-                            <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
-                            <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
-                            <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
-                            <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
-                        <if(lock)>}<endif>
-                    } else {
-                        <if(IsPairKey.(keyType))>
-                        int belongToWorkerId = myIdxWorkerIdMap[sliceMap.machineIndexFor(indexForTableId, adjacency.getV0())];
-                        <else>
-                        int belongToWorkerId = myIdxWorkerIdMap[sliceMap.machineIndexFor(indexForTableId, adjacency)];
-                        <endif>
-                        MessageTable messageTable = (MessageTable)getWritableMessageTable(belongToWorkerId);
-                        messageTable.apply(adjacency<if(!IsCount.(aggrType))>, newDelta<endif>);
-                    }
-                <endif>
+                    <else><! ASYNC MODE !>
+                            <if(lock)>synchronized(deltaList) {<endif>
+                                <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
+                                <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
+                                <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
+                                <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                            <if(lock)>}<endif>
+                        } else {
+                            <if(IsPairKey.(keyType))>
+                            int belongToWorkerId = myIdxWorkerIdMap[sliceMap.machineIndexFor(indexForTableId, adjacency.getV0())];
+                            <else>
+                            int belongToWorkerId = myIdxWorkerIdMap[sliceMap.machineIndexFor(indexForTableId, adjacency)];
+                            <endif>
+                            MessageTable messageTable = (MessageTable)getWritableMessageTable(belongToWorkerId);
+                            messageTable.apply(adjacency<if(!IsCount.(aggrType))>, newDelta<endif>);
+                        }
+                    <endif>
             }
         <endif>
         return true;

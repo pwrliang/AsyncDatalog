@@ -71,18 +71,19 @@ public class AsyncTable extends BaseAsyncTable{
             }
 
             <if(sync)>
-                if (iter % 2 == 0)
+                if (iter % 2 == 0) {
+                    <if(lock)>synchronized(deltaList) {<endif>
                     oldDelta = deltaList.get(localInd).get();
-                else
+                    <if(lock)>}<endif>
+                } else {
+                    <if(lock)>synchronized(bufferDeltaList) {<endif>
                     oldDelta = bufferDeltaList.get(localInd).get();
-            <else>
-                <if(lock)>
-                synchronized(deltaList) {
-                    oldDelta = deltaList.get(localInd).get();
+                    <if(lock)>}<endif>
                 }
-                <else>
-                oldDelta = deltaList.get(localInd).get();
-                <endif>
+            <else>
+                <if(lock)>synchronized(deltaList) {<endif>
+                    oldDelta = deltaList.get(localInd).get();
+                <if(lock)>}<endif>
             <endif>
 
             if (eval(oldDelta))
@@ -105,30 +106,38 @@ public class AsyncTable extends BaseAsyncTable{
                     }
                     <! OTHER AGGREGATE FUNCTIONS IS NOT SUPPORTED !>
                     <if(sync)>
-                        if (iter % 2 == 0)
+                        if (iter % 2 == 0) {
+                            <if(lock)>synchronized(bufferDeltaList) {<endif>
                             <if(IsCount.(aggrType))>bufferDeltaList.get(adjacentLocalInd).addAndGet(1);<endif>
-                        else
+                            <if(lock)>}<endif>
+                        } else {
+                            <if(lock)>synchronized(deltaList) {<endif>
                             <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
-                    <else>
-                        <if(lock)>
-                        synchronized(deltaList) {
-                            <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                            <if(lock)>}<endif>
                         }
-                        <else>
-                        <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
-                        <endif>
+                    <else>
+                        <if(lock)>synchronized(deltaList) {<endif>
+                            <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                        <if(lock)>}<endif>
                     <endif>
                 }
             }
             sentFlagList.set(localInd, true);
         <else>
             <if(sync)>
-            if (iter % 2 == 0)
+            if (iter % 2 == 0) {
+                <if(lock)>synchronized(deltaList) {<endif>
                 oldDelta = deltaList.get(localInd).getAndSet(IDENTITY_ELEMENT);
-            else
+                <if(lock)>}<endif>
+            } else {
+                <if(lock)>synchronized(bufferDeltaList) {<endif>
                 oldDelta = bufferDeltaList.get(localInd).getAndSet(IDENTITY_ELEMENT);
+                <if(lock)>}<endif>
+            }
             <else>
+                <if(lock)>synchronized(deltaList) {<endif>
                 oldDelta = deltaList.get(localInd).getAndSet(IDENTITY_ELEMENT);
+                <if(lock)>}<endif>
             <endif>
 
             if(oldDelta == IDENTITY_ELEMENT)
@@ -175,16 +184,21 @@ public class AsyncTable extends BaseAsyncTable{
                     adjacentLocalInd = adjacencies.get(i); //key for adjacent node
                 <endif>
                 <if(sync)>
-                    if (iter % 2 == 0)
-                        <if(IsSum.(aggrType))>bufferDeltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
-                        <if(IsMax.(aggrType))>bufferDeltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
-                        <if(IsMin.(aggrType))>bufferDeltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
-                        <if(IsCount.(aggrType))>bufferDeltaList.get(adjacentLocalInd).addAndGet(1);<endif>
-                    else
-                        <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
-                        <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
-                        <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
-                        <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                    if (iter % 2 == 0) {
+                        <if(lock)>synchronized(bufferDeltaList) {<endif>
+                            <if(IsSum.(aggrType))>bufferDeltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
+                            <if(IsMax.(aggrType))>bufferDeltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
+                            <if(IsMin.(aggrType))>bufferDeltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
+                            <if(IsCount.(aggrType))>bufferDeltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                        <if(lock)>}<endif>
+                    } else {
+                        <if(lock)>synchronized(deltaList) {<endif>
+                            <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
+                            <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
+                            <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
+                            <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                        <if(lock)>}<endif>
+                    }
                 <else>
                      <if(lock)>synchronized(deltaList) {<endif>
                         <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
