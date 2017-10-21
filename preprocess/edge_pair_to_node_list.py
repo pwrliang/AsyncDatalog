@@ -15,11 +15,11 @@ with open(sys.argv[1], 'r') as fi:
 
 if sys.argv[3] == 'pagerank':
     with open(sys.argv[2], 'w') as fo:
-        for node_id in node_set:
+        for node_id in sorted(node_set):
             fo.write('%d\n' % node_id)
 elif sys.argv[3] == 'sssp':
     with open(sys.argv[2], 'w') as fo:
-        for node_id in node_set:
+        for node_id in sorted(node_set):
             if node_id == 0:
                 fo.write('%d\t0\n' % node_id)
             else:
