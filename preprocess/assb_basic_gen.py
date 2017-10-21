@@ -3,6 +3,7 @@ import sys
 
 if len(sys.argv) != 3:
     print 'usage: [node num] [output folder]'
+    exit(1)
 N = int(sys.argv[1])
 
 start_cost = 1
