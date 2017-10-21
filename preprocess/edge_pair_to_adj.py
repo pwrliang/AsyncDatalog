@@ -34,7 +34,7 @@ elif sys.argv[1] == 'sssp':
 
                 if src != last:
                     fo.write('%d\t%s\n' % (last, ' '.join(map(str, adj_weight_list))))
-                    adj_list = []
+                    adj_weight_list = []
                 adj_weight_list.append(dst)
                 adj_weight_list.append(weight)
                 last = src
