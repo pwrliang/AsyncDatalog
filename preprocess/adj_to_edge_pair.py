@@ -20,8 +20,9 @@ elif sys.argv[3] == 'sssp':
             for line in fi:
                 tmp = line.strip('\n').strip('\r').split('\t')
                 src = int(tmp[0])
-                sDsts = tmp[1].strip(' ').split(' ')
-                for ind in range(0, len(sDsts) - 1, 2):
-                    dst = int(sDsts[ind])
-                    weight = int(sDsts[ind + 1])
+                sDstWeights = tmp[1].strip(' ').split(' ')
+                for sDstWeight in sDstWeights:
+                    tmp = sDstWeight.split(',')
+                    dst = int(tmp[0])
+                    weight = int(tmp[1])
                     fo_e.write('%d\t%d\t%d\n' % (src, dst, weight))
