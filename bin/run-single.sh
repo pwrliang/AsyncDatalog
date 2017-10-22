@@ -7,7 +7,8 @@ BIN=`cd "$BIN"; pwd`
 function run_single(){
     ${BIN}/kill-all.sh ${MACHINES}
 
-    java -Dsocialite.output.dir=${SOCIALITE_PREFIX}/gen \
+    java -Xmx 28G \
+    -Dsocialite.output.dir=${SOCIALITE_PREFIX}/gen \
     -Dlog4j.configuration=file:${SOCIALITE_PREFIX}/conf/log4j.properties \
     -cp ${CODE_CLASSPATH}:${JAR_PATH} \
     socialite.async.Entry $1
