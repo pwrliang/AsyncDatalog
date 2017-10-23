@@ -9,7 +9,7 @@ LOCK = FALSE
 MESSAGE_TABLE_INIT_SIZE = 10000
 MESSAGE_TABLE_UPDATE_THRESHOLD = 1
 MESSAGE_TABLE_WAITING_INTERVAL = 1000
-SAVE_PATH = "hdfs://master:9000/res/sssp"
+#SAVE_PATH = "hdfs://master:9000/res/sssp"
 PRINT_RESULT = TRUE
 RULE:
 edge(int src:0..4, (int dst, int weight)).
