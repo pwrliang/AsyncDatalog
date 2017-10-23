@@ -162,7 +162,7 @@ public class DistAsyncEngine implements Runnable {
                                 MPI.COMM_WORLD.Send(termOrNot, 0, 1, MPI.BOOLEAN, dest, MsgType.TERM_CHECK_FEEDBACK.ordinal()));
                         if (termOrNot[0]) {
                             stopWatch.stop();
-                            L.info("SYNC MODE - TERM_CHECK_DETERMINED_TO_STOP ELAPSED " + stopWatch.getTime());
+                            L.info("SYNC/BARRIER MODE - TERM_CHECK_DETERMINED_TO_STOP ELAPSED " + stopWatch.getTime());
                             break;
                         }
                     } else {
