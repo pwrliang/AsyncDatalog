@@ -21,6 +21,7 @@ public class AsyncConfig {
     private double sampleRate;
     private double schedulePortion;
     private boolean sync;
+    private boolean barrier;
     private boolean debugging;
     private boolean lock;
     private int threadNum;
@@ -51,6 +52,7 @@ public class AsyncConfig {
         sb.append(sync ? "SYNC" : "ASYNC").append(", ");
         sb.append(lock ? "LOCK" : "NON-LOCK").append(", ");
         sb.append(dynamic ? "DYNAMIC" : "STATIC").append(", ");
+        sb.append(barrier ? "BARRIER" : "NON-BARRIER").append(", ");
         sb.append("THREAD_NUM:").append(threadNum).append(", ");
         sb.append("INIT_SIZE:").append(initSize).append(", ");
         sb.append("MESSAGE_INIT_SIZE:").append(messageTableInitSize).append(", ");
@@ -116,6 +118,10 @@ public class AsyncConfig {
 
     public boolean isSync() {
         return sync;
+    }
+
+    public boolean isBarrier() {
+        return barrier;
     }
 
     public boolean isLock() {
@@ -200,6 +206,7 @@ public class AsyncConfig {
         private boolean debugging;
         private int threadNum;
         private int initSize;
+        private boolean barrier;
         private boolean priority;
         private boolean lock;
         private double sampleRate;
@@ -248,6 +255,11 @@ public class AsyncConfig {
 
         public Builder setSchedulePortion(double schedulePortion) {
             this.schedulePortion = schedulePortion;
+            return this;
+        }
+
+        public Builder setBarrier(boolean barrier) {
+            this.barrier = barrier;
             return this;
         }
 
@@ -325,6 +337,7 @@ public class AsyncConfig {
             asyncConfig.sampleRate = sampleRate;
             asyncConfig.schedulePortion = schedulePortion;
             asyncConfig.dynamic = dynamic;
+            asyncConfig.barrier = barrier;
             asyncConfig.sync = sync;
             asyncConfig.debugging = debugging;
             asyncConfig.threadNum = threadNum;
@@ -335,6 +348,8 @@ public class AsyncConfig {
             asyncConfig.savePath = savePath;
             asyncConfig.printResult = printResult;
             asyncConfig.datalogProg = datalogProg;
+            if(sync && barrier)
+                throw new SociaLiteException("can not user both of sync and barrier");
             if (AsyncConfig.asyncConfig != null)
                 throw new SociaLiteException("AsyncConfig already built");
             AsyncConfig.asyncConfig = asyncConfig;
@@ -423,6 +438,13 @@ public class AsyncConfig {
                         asyncConfig.setLock(true);
                     else if (val.equals("FALSE"))
                         asyncConfig.setLock(false);
+                    else throw new SociaLiteException("unknown val: " + val);
+                    break;
+                case "BARRIER":
+                    if (val.equals("TRUE"))
+                        asyncConfig.setBarrier(true);
+                    else if (val.equals("FALSE"))
+                        asyncConfig.setBarrier(false);
                     else throw new SociaLiteException("unknown val: " + val);
                     break;
                 case "SAMPLE_RATE":

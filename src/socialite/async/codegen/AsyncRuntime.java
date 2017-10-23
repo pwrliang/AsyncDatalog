@@ -59,7 +59,7 @@ public class AsyncRuntime extends BaseAsyncRuntime {
         IntStream.range(0, threadNum).forEach(i -> computingThreads[i] = new ComputingThread(i));
         checkerThread = new CheckThread();
         //checkerThread.setPriority(Thread.MAX_PRIORITY);
-        if (AsyncConfig.get().isSync()) barrier = new CyclicBarrier(threadNum, checkerThread);
+        if (AsyncConfig.get().isSync() || AsyncConfig.get().isBarrier()) barrier = new CyclicBarrier(threadNum, checkerThread);
     }
 
 
@@ -69,7 +69,7 @@ public class AsyncRuntime extends BaseAsyncRuntime {
         loadData(initTableInstArr, edgeTableInstArr);
         createThreads();
         L.info("Data Loaded size:" + asyncTable.getSize());
-        if (!AsyncConfig.get().isSync())
+        if (!AsyncConfig.get().isSync() && !AsyncConfig.get().isBarrier())
             checkerThread.start();
         Arrays.stream(computingThreads).forEach(ComputingThread::start);
         L.info("Worker started");
@@ -98,7 +98,7 @@ public class AsyncRuntime extends BaseAsyncRuntime {
                     double sum = 0.0d;
                     boolean skipFirst = false;
                     //sleep first to prevent stop before compute
-                    if (!asyncConfig.isSync())
+                    if (barrier == null)
                         Thread.sleep(CHECKER_INTERVAL);
                     if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.VALUE) {
                         sum = asyncTable.accumulateValue();
@@ -130,7 +130,7 @@ public class AsyncRuntime extends BaseAsyncRuntime {
                         L.info("diff sum of delta: " + new BigDecimal(sum));
                     }
                     L.info("UPDATE TIMES:" + updateCounter.get());
-                    if (asyncConfig.isSync())
+                    if (asyncConfig.isSync() || asyncConfig.isBarrier())
                         L.info("ITER: " + iter);
                     if (!skipFirst && eval(sum)) {
                         done();

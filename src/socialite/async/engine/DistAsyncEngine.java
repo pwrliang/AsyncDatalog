@@ -145,7 +145,7 @@ public class DistAsyncEngine implements Runnable {
             try {
                 while (true) {
                     accumulatedSum = 0;
-                    if (asyncConfig.isSync()) {
+                    if (asyncConfig.isSync() || asyncConfig.isBarrier()) {
                         for (int source = 1; source <= workerNum; source++) {
                             MPI.COMM_WORLD.Recv(partialValue, 0, 2, MPI.DOUBLE, source, MsgType.REQUIRE_TERM_CHECK.ordinal());
                             accumulatedSum += partialValue[0];
@@ -198,7 +198,7 @@ public class DistAsyncEngine implements Runnable {
 
         private boolean isTerm() {
             L.info("TOTAL UPDATE TIMES " + totalUpdateTimes);
-            if (asyncConfig.isSync()) {
+            if (asyncConfig.isSync() || asyncConfig.isBarrier()) {
                 L.info("ITER: " + ++iter);
             }
             if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.VALUE)

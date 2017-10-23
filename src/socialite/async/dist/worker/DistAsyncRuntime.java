@@ -154,7 +154,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         IntStream.range(0, threadNum).forEach(i -> computingThreads[i] = new ComputingThread(i));
         checkerThread = new CheckThread();
         createNetworkThreads();
-        if (asyncConfig.isSync()) barrier = new CyclicBarrier(threadNum, checkerThread);
+        if (asyncConfig.isSync() || asyncConfig.isBarrier()) barrier = new CyclicBarrier(threadNum, checkerThread);
     }
 
     private void createNetworkThreads() {
@@ -169,11 +169,11 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
 
     private void startThreads() {
         Arrays.stream(computingThreads).filter(Objects::nonNull).forEach(Thread::start);
-        if (!AsyncConfig.get().isSync()) {
+        if (!AsyncConfig.get().isSync() && !AsyncConfig.get().isBarrier()) {
             Arrays.stream(receiveThreads).filter(Objects::nonNull).forEach(Thread::start);
             Arrays.stream(sendThreads).filter(Objects::nonNull).forEach(Thread::start);
         }
-        if (!AsyncConfig.get().isSync())
+        if (!AsyncConfig.get().isSync() && !AsyncConfig.get().isBarrier())
             checkerThread.start();
         L.info(String.format("Worker %d all threads started.", myWorkerId));
         try {
@@ -201,7 +201,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                 while (!stopNetworkThread) {
                     byte[] data = ((BaseDistAsyncTable) asyncTable).getSendableMessageTableBytes(sendToWorkerId, serializeTool);
                     MPI.COMM_WORLD.Send(data, 0, data.length, MPI.BYTE, sendToWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal());
-                    if (AsyncConfig.get().isSync()) break;
+                    if (AsyncConfig.get().isSync() || AsyncConfig.get().isBarrier()) break;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -233,7 +233,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                     MPI.COMM_WORLD.Recv(data, 0, size, MPI.BYTE, source, MsgType.MESSAGE_TABLE.ordinal());
                     MessageTableBase messageTable = (MessageTableBase) serializeTool.fromBytesToObject(data, klass);
                     ((BaseDistAsyncTable) asyncTable).applyBuffer(messageTable);
-                    if (AsyncConfig.get().isSync()) break;
+                    if (AsyncConfig.get().isSync() || AsyncConfig.get().isBarrier()) break;
                 }
             } catch (MPIException e) {
                 e.printStackTrace();
@@ -254,7 +254,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
             super.run();
             boolean[] feedback = new boolean[2];
             while (true) {
-                if (asyncConfig.isSync()) {//sync mode
+                if (asyncConfig.isSync() || asyncConfig.isBarrier()) {//sync mode
                     Arrays.stream(receiveThreads).filter(Objects::nonNull).forEach(ReceiveThread::start);
                     Arrays.stream(sendThreads).filter(Objects::nonNull).forEach(SendThread::start);
                     Arrays.stream(receiveThreads).filter(Objects::nonNull).forEach(recvThread -> {
