@@ -58,7 +58,7 @@ public class AsyncRuntime extends BaseAsyncRuntime {
         computingThreads = new ComputingThread[threadNum];
         IntStream.range(0, threadNum).forEach(i -> computingThreads[i] = new ComputingThread(i));
         checkerThread = new CheckThread();
-        checkerThread.setPriority(Thread.MAX_PRIORITY);
+        //checkerThread.setPriority(Thread.MAX_PRIORITY);
         if (AsyncConfig.get().isSync()) barrier = new CyclicBarrier(threadNum, checkerThread);
     }
 
