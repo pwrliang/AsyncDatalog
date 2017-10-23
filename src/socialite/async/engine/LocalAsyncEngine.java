@@ -7,6 +7,7 @@ import socialite.async.codegen.AsyncRuntime;
 import socialite.async.codegen.BaseAsyncTable;
 import socialite.async.util.TextUtils;
 import socialite.codegen.Analysis;
+import socialite.engine.Config;
 import socialite.engine.LocalEngine;
 import socialite.parser.DeltaRule;
 import socialite.parser.Parser;
@@ -29,7 +30,7 @@ public class LocalAsyncEngine {
     private LocalEngine localEngine;
 
     public LocalAsyncEngine(String program) {
-        localEngine = new LocalEngine();
+        localEngine = new LocalEngine(Config.par(AsyncConfig.get().getThreadNum()));
         Parser parser = new Parser(program);
         parser.parse(program);
         Analysis tmpAn = new Analysis(parser);
