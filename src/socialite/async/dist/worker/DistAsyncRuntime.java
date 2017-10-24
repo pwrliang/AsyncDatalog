@@ -39,7 +39,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
     private SendThread[] sendThreads;
     private ReceiveThread[] receiveThreads;
     private Payload payload;
-    private boolean stopNetworkThread;
+    private volatile boolean stopNetworkThread;
 
     DistAsyncRuntime() {
         workerNum = MPI.COMM_WORLD.Size() - 1;
@@ -169,7 +169,9 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         if (!AsyncConfig.get().isSync() && !AsyncConfig.get().isBarrier()) {
             Arrays.stream(receiveThreads).filter(Objects::nonNull).forEach(Thread::start);
             Arrays.stream(sendThreads).filter(Objects::nonNull).forEach(Thread::start);
+            L.info("network thread started");
             checkerThread.start();
+            L.info("checker started");
         }
 
         if (AsyncConfig.get().isPriority() && !AsyncConfig.get().isPriorityLocal()) schedulerThread.start();
@@ -177,6 +179,10 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         try {
             for (ComputingThread computingThread : computingThreads) computingThread.join();
             L.info("Worker " + myWorkerId + " Computing Threads exited.");
+
+            if (!AsyncConfig.get().isSync() && AsyncConfig.get().isBarrier()) {
+                checkerThread.join();
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -255,27 +261,12 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                 if (asyncConfig.isSync() || asyncConfig.isBarrier()) {//sync mode
                     Arrays.stream(receiveThreads).filter(Objects::nonNull).forEach(ReceiveThread::start);
                     Arrays.stream(sendThreads).filter(Objects::nonNull).forEach(SendThread::start);
-                    Arrays.stream(receiveThreads).filter(Objects::nonNull).forEach(recvThread -> {
-                        try {
-                            recvThread.join();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    });
-                    Arrays.stream(sendThreads).filter(Objects::nonNull).forEach(sendThread -> {
-                        try {
-                            sendThread.join();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    });
-
+                    waitNetworkThread();
 
                     double partialSum = update();
                     MPI.COMM_WORLD.Sendrecv(new double[]{partialSum, updateCounter.get()}, 0, 2, MPI.DOUBLE, AsyncMaster.ID, MsgType.REQUIRE_TERM_CHECK.ordinal(),
                             feedback, 0, 1, MPI.BOOLEAN, AsyncMaster.ID, MsgType.TERM_CHECK_FEEDBACK.ordinal());
                     if (feedback[0]) {
-                        flush();
                         done();
                     } else {
                         createNetworkThreads();//cannot reuse dead thread, we need recreate
@@ -287,12 +278,32 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                     MPI.COMM_WORLD.Sendrecv(new double[]{partialSum, updateCounter.get()}, 0, 2, MPI.DOUBLE, AsyncMaster.ID, MsgType.TERM_CHECK_PARTIAL_VALUE.ordinal(),
                             feedback, 0, 1, MPI.BOOLEAN, AsyncMaster.ID, MsgType.TERM_CHECK_FEEDBACK.ordinal());
                     if (feedback[0]) {
-                        flush();
+                        stopNetworkThread = true;
+                        waitNetworkThread();
+                        L.info("flushed");
+                        L.info("before done");
                         done();
                         break;
                     }
                 }
             }
+        }
+
+        private void waitNetworkThread() {
+            Arrays.stream(receiveThreads).filter(Objects::nonNull).forEach(recvThread -> {
+                try {
+                    recvThread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+            Arrays.stream(sendThreads).filter(Objects::nonNull).forEach(sendThread -> {
+                try {
+                    sendThread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
         }
 
         private double update() {
@@ -318,17 +329,6 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
             return partialSum;
         }
 
-        //ensure all messages flushed to remote workers
-        private void flush() {
-            int sleepTime = asyncConfig.getMessageTableWaitingInterval() + 1000;
-            L.info("Wait " + sleepTime + "ms to flush");
-            try {
-                Thread.sleep(sleepTime);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            stopNetworkThread = true;
-        }
     }
 
 

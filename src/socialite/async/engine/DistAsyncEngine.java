@@ -163,7 +163,6 @@ public class DistAsyncEngine implements Runnable {
                         if (termOrNot[0]) {
                             stopWatch.stop();
                             L.info("SYNC/BARRIER MODE - TERM_CHECK_DETERMINED_TO_STOP ELAPSED " + stopWatch.getTime());
-                            Thread.sleep(5555);
                             break;
                         }
                     } else {

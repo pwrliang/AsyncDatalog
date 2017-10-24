@@ -49,10 +49,6 @@ public abstract class BaseAsyncRuntime implements Runnable {
         if (AsyncConfig.get().isPriority()) schedulerThread = new SchedulerThread();
     }
 
-    protected boolean isStop() {
-        return stop;
-    }
-
     public BaseAsyncTable getAsyncTable() {
         return asyncTable;
     }
@@ -174,7 +170,7 @@ public abstract class BaseAsyncRuntime implements Runnable {
                                 }
                             }
                         }
-                        if (barrier != null && !stop) barrier.await();
+                        if (barrier != null) barrier.await();
                         else {
                             if (tid == 0) {
                                 if (System.currentTimeMillis() - lastCheckTime >= checkerThread.CHECKER_INTERVAL) {
@@ -495,9 +491,11 @@ public abstract class BaseAsyncRuntime implements Runnable {
         }
 
         protected void done() {
+            L.info("call done");
             stop = true;
             stopWatch.stop();
-            L.info("CHECKER THREAD EXIT");
+            L.info("what the fuck!!");
+            L.info("checker thread exited");
             L.info("UPDATE_TIMES:" + updateCounter.get());
             L.info("DONE ELAPSED:" + stopWatch.getTime());
         }
