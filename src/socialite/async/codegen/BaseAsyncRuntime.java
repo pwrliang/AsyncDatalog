@@ -8,6 +8,7 @@ import org.apache.commons.logging.LogFactory;
 import socialite.async.AsyncConfig;
 import socialite.async.util.ResettableCountDownLatch;
 import socialite.tables.TableInst;
+import socialite.util.Assert;
 
 import java.util.Arrays;
 import java.util.concurrent.BrokenBarrierException;
@@ -29,24 +30,23 @@ public abstract class BaseAsyncRuntime implements Runnable {
     protected ResettableCountDownLatch countDownLatch;
     private volatile double priorityThreshold;
 
+    private volatile boolean check;
+    private final Object lock = new Object();
+    private long lastCheckTime;
 
-    protected BaseAsyncRuntime() {
+    protected abstract boolean loadData(TableInst[] initTableInstArr, TableInst[] edgeTableInstArr);
+
+    protected void createThreads() {
         asyncConfig = AsyncConfig.get();
         updateCounter = new AtomicInteger();
         int half = asyncConfig.getThreadNum() / 2;
         if (asyncConfig.isPriority()) countDownLatch = new ResettableCountDownLatch(half == 0 ? 1 : half);
         priorityThreshold = -Double.MAX_VALUE;
-    }
 
-    protected abstract boolean loadData(TableInst[] initTableInstArr, TableInst[] edgeTableInstArr);
-
-    protected void createThreads() {
         int threadNum = asyncConfig.getThreadNum();
         computingThreads = new ComputingThread[threadNum];
         IntStream.range(0, threadNum).forEach(i -> computingThreads[i] = new ComputingThread(i));
         if (AsyncConfig.get().isPriority()) schedulerThread = new SchedulerThread();
-        if (AsyncConfig.get().isSync() || AsyncConfig.get().isBarrier())
-            barrier = new CyclicBarrier(threadNum, checkerThread);
     }
 
     protected boolean isStop() {
@@ -79,6 +79,7 @@ public abstract class BaseAsyncRuntime implements Runnable {
 
         @Override
         public void run() {
+            if (tid == 0) lastCheckTime = System.currentTimeMillis();
             if (!asyncConfig.isPriority() || asyncConfig.isPriorityLocal()) {
                 if (asyncConfig.isPriority())
                     L.info("PRIORITY LOCAL!!!!!!!!!!!!!!");
@@ -173,7 +174,15 @@ public abstract class BaseAsyncRuntime implements Runnable {
                                 }
                             }
                         }
-                        if (barrier != null) barrier.await();
+                        if (barrier != null && !stop) barrier.await();
+                        else {
+                            if (tid == 0) {
+                                if (System.currentTimeMillis() - lastCheckTime >= checkerThread.CHECKER_INTERVAL) {
+                                    checkerThread.notifyCheck();
+                                    lastCheckTime = System.currentTimeMillis();
+                                }
+                            }
+                        }
                     }
                 } catch (InterruptedException | BrokenBarrierException e) {
                     e.printStackTrace();
@@ -244,8 +253,16 @@ public abstract class BaseAsyncRuntime implements Runnable {
                                 }
                             }
                         }
-                        if (barrier != null) barrier.await();
                         if (countDownLatch != null) countDownLatch.countDown();
+                        if (barrier != null) barrier.await();
+                        else {
+                            if (tid == 0) {
+                                if (System.currentTimeMillis() - lastCheckTime >= checkerThread.CHECKER_INTERVAL) {
+                                    checkerThread.notifyCheck();
+                                    lastCheckTime = System.currentTimeMillis();
+                                }
+                            }
+                        }
                     }
                 } catch (InterruptedException | BrokenBarrierException e) {
                     e.printStackTrace();
@@ -480,9 +497,25 @@ public abstract class BaseAsyncRuntime implements Runnable {
         protected void done() {
             stop = true;
             stopWatch.stop();
+            L.info("CHECKER THREAD EXIT");
             L.info("UPDATE_TIMES:" + updateCounter.get());
             L.info("DONE ELAPSED:" + stopWatch.getTime());
-            L.info("CHECKER THREAD EXIT");
+        }
+
+        void waitingCheck() throws InterruptedException {
+            synchronized (lock) {
+                while (!check) {
+                    lock.wait();
+                }
+            }
+            check = false;
+        }
+
+        void notifyCheck() {
+            synchronized (lock) {
+                check = true;
+                lock.notify();
+            }
         }
     }
 

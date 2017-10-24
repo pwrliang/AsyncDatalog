@@ -35,11 +35,13 @@ public class Entry {
                 MasterNode.startMasterNode();
                 AsyncMaster asyncMaster = new AsyncMaster(AsyncConfig.get().getDatalogProg());
                 asyncMaster.startMaster();
+                L.info("master end");
             } else {
                 L.info("Worker Started " + machineId);
                 WorkerNode.startWorkerNode();
                 AsyncWorker worker = new AsyncWorker();
                 worker.startWorker();
+                L.info("Worker end"+machineId);
             }
             Thread.sleep(5000);
             MPI.Finalize();

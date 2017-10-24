@@ -10,6 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.concurrent.CyclicBarrier;
 
 public class AsyncRuntime extends BaseAsyncRuntime {
     private static final Log L = LogFactory.getLog(AsyncRuntime.class);
@@ -54,13 +55,16 @@ public class AsyncRuntime extends BaseAsyncRuntime {
     public void run() {
         L.info("RECV CMD NOTIFY_INIT CONFIG:" + AsyncConfig.get());
         loadData(initTableInstArr, edgeTableInstArr);
+        super.createThreads();
         checkerThread = new AsyncRuntime.CheckThread();
-        createThreads();
+        if (AsyncConfig.get().isSync() || AsyncConfig.get().isBarrier())
+            barrier = new CyclicBarrier(asyncConfig.getThreadNum(), checkerThread);
+
         L.info("Data Loaded size:" + asyncTable.getSize());
+        Arrays.stream(computingThreads).forEach(ComputingThread::start);
+        if (AsyncConfig.get().isPriority() && !AsyncConfig.get().isPriorityLocal()) schedulerThread.start();
         if (!AsyncConfig.get().isSync() && !AsyncConfig.get().isBarrier())
             checkerThread.start();
-        if (AsyncConfig.get().isPriority() && !AsyncConfig.get().isPriorityLocal()) schedulerThread.start();
-        Arrays.stream(computingThreads).forEach(ComputingThread::start);
         L.info("Worker started");
         try {
             for (ComputingThread worker : computingThreads)
@@ -68,8 +72,8 @@ public class AsyncRuntime extends BaseAsyncRuntime {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
     }
+
 
     protected class CheckThread extends BaseAsyncRuntime.CheckThread {
         private AsyncConfig asyncConfig;
@@ -84,11 +88,10 @@ public class AsyncRuntime extends BaseAsyncRuntime {
             super.run();
             while (true) {
                 try {
+                    if (barrier == null)
+                        waitingCheck();
                     double sum = 0.0d;
                     boolean skipFirst = false;
-                    //sleep first to prevent stop before compute
-                    if (barrier == null)
-                        Thread.sleep(CHECKER_INTERVAL);
                     if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.VALUE) {
                         sum = asyncTable.accumulateValue();
                         L.info("sum of value: " + new BigDecimal(sum));

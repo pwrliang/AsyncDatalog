@@ -50,7 +50,7 @@ public class AsyncConfig {
             sb.append("SAMPLE_RATE:").append(sampleRate).append(", ");
             sb.append("SCHEDULE_PORTION:").append(schedulePortion).append(", ");
         }
-        sb.append(priorityLocal?"PRIORITY_LOCAL":"PRIORITY_GLOBAL").append(", ");
+        sb.append(priorityLocal ? "PRIORITY_LOCAL" : "PRIORITY_GLOBAL").append(", ");
         sb.append(sync ? "SYNC" : "ASYNC").append(", ");
         sb.append(lock ? "LOCK" : "NON-LOCK").append(", ");
         sb.append(dynamic ? "DYNAMIC" : "STATIC").append(", ");
@@ -361,12 +361,14 @@ public class AsyncConfig {
             asyncConfig.savePath = savePath;
             asyncConfig.printResult = printResult;
             asyncConfig.datalogProg = datalogProg;
-            if(sync && barrier)
+            if (sync && barrier)
                 throw new SociaLiteException("can not user both of sync and barrier");
             if (AsyncConfig.asyncConfig != null)
                 throw new SociaLiteException("AsyncConfig already built");
-            if(!priority && priorityLocal)
+            if (!priority && priorityLocal)
                 throw new SociaLiteException("priority = false but priority local = true");
+            if ((sync || barrier) && priority)
+                throw new SociaLiteException("can not user both of sync/barrier and priority");
             AsyncConfig.asyncConfig = asyncConfig;
             return asyncConfig;
         }

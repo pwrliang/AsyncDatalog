@@ -31,7 +31,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CyclicBarrier;
-import java.util.stream.IntStream;
 
 public class DistAsyncRuntime extends BaseAsyncRuntime {
     private static final Log L = LogFactory.getLog(DistAsyncRuntime.class);
@@ -151,6 +150,8 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         super.createThreads();
         checkerThread = new CheckThread();
         createNetworkThreads();
+        if (AsyncConfig.get().isSync() || AsyncConfig.get().isBarrier())
+            barrier = new CyclicBarrier(asyncConfig.getThreadNum(), checkerThread);
     }
 
     private void createNetworkThreads() {
@@ -168,10 +169,9 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         if (!AsyncConfig.get().isSync() && !AsyncConfig.get().isBarrier()) {
             Arrays.stream(receiveThreads).filter(Objects::nonNull).forEach(Thread::start);
             Arrays.stream(sendThreads).filter(Objects::nonNull).forEach(Thread::start);
+            checkerThread.start();
         }
 
-        if (!AsyncConfig.get().isSync() && !AsyncConfig.get().isBarrier())
-            checkerThread.start();
         if (AsyncConfig.get().isPriority() && !AsyncConfig.get().isPriorityLocal()) schedulerThread.start();
         L.info(String.format("Worker %d all threads started.", myWorkerId));
         try {
@@ -269,7 +269,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                             e.printStackTrace();
                         }
                     });
-                    createNetworkThreads();//cannot reuse dead thread, we need recreate
+
 
                     double partialSum = update();
                     MPI.COMM_WORLD.Sendrecv(new double[]{partialSum, updateCounter.get()}, 0, 2, MPI.DOUBLE, AsyncMaster.ID, MsgType.REQUIRE_TERM_CHECK.ordinal(),
@@ -277,6 +277,8 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                     if (feedback[0]) {
                         flush();
                         done();
+                    } else {
+                        createNetworkThreads();//cannot reuse dead thread, we need recreate
                     }
                     break;//exit function, run will be called next round
                 } else {
@@ -318,7 +320,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
 
         //ensure all messages flushed to remote workers
         private void flush() {
-            int sleepTime = asyncConfig.getMessageTableWaitingInterval() + 5000;
+            int sleepTime = asyncConfig.getMessageTableWaitingInterval() + 1000;
             L.info("Wait " + sleepTime + "ms to flush");
             try {
                 Thread.sleep(sleepTime);
