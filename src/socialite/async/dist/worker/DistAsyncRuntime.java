@@ -169,8 +169,10 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
             Arrays.stream(receiveThreads).filter(Objects::nonNull).forEach(Thread::start);
             Arrays.stream(sendThreads).filter(Objects::nonNull).forEach(Thread::start);
         }
+
         if (!AsyncConfig.get().isSync() && !AsyncConfig.get().isBarrier())
             checkerThread.start();
+        if (AsyncConfig.get().isPriority() && !AsyncConfig.get().isPriorityLocal()) schedulerThread.start();
         L.info(String.format("Worker %d all threads started.", myWorkerId));
         try {
             for (ComputingThread computingThread : computingThreads) computingThread.join();
