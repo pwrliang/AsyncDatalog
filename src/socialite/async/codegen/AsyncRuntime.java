@@ -10,8 +10,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.Arrays;
-import java.util.concurrent.CyclicBarrier;
-import java.util.stream.IntStream;
 
 public class AsyncRuntime extends BaseAsyncRuntime {
     private static final Log L = LogFactory.getLog(AsyncRuntime.class);
@@ -53,24 +51,15 @@ public class AsyncRuntime extends BaseAsyncRuntime {
     }
 
     @Override
-    protected void createThreads() {
-        int threadNum = AsyncConfig.get().getThreadNum();
-        computingThreads = new ComputingThread[threadNum];
-        IntStream.range(0, threadNum).forEach(i -> computingThreads[i] = new ComputingThread(i));
-        checkerThread = new CheckThread();
-        //checkerThread.setPriority(Thread.MAX_PRIORITY);
-        if (AsyncConfig.get().isSync() || AsyncConfig.get().isBarrier()) barrier = new CyclicBarrier(threadNum, checkerThread);
-    }
-
-
-    @Override
     public void run() {
         L.info("RECV CMD NOTIFY_INIT CONFIG:" + AsyncConfig.get());
         loadData(initTableInstArr, edgeTableInstArr);
+        checkerThread = new AsyncRuntime.CheckThread();
         createThreads();
         L.info("Data Loaded size:" + asyncTable.getSize());
         if (!AsyncConfig.get().isSync() && !AsyncConfig.get().isBarrier())
             checkerThread.start();
+        if (AsyncConfig.get().isPriority() && !AsyncConfig.get().isPriorityLocal()) schedulerThread.start();
         Arrays.stream(computingThreads).forEach(ComputingThread::start);
         L.info("Worker started");
         try {

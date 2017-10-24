@@ -148,13 +148,9 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
 
     @Override
     protected void createThreads() {
-        AsyncConfig asyncConfig = AsyncConfig.get();
-        int threadNum = asyncConfig.getThreadNum();
-        computingThreads = new ComputingThread[threadNum];
-        IntStream.range(0, threadNum).forEach(i -> computingThreads[i] = new ComputingThread(i));
+        super.createThreads();
         checkerThread = new CheckThread();
         createNetworkThreads();
-        if (asyncConfig.isSync() || asyncConfig.isBarrier()) barrier = new CyclicBarrier(threadNum, checkerThread);
     }
 
     private void createNetworkThreads() {

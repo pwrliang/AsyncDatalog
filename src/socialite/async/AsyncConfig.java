@@ -17,6 +17,7 @@ public class AsyncConfig {
     private Cond cond;
     private boolean dynamic;
     private boolean priority;
+    private boolean priorityLocal;
     private PriorityType priorityType = PriorityType.NONE;
     private double sampleRate;
     private double schedulePortion;
@@ -49,6 +50,7 @@ public class AsyncConfig {
             sb.append("SAMPLE_RATE:").append(sampleRate).append(", ");
             sb.append("SCHEDULE_PORTION:").append(schedulePortion).append(", ");
         }
+        sb.append(priorityLocal?"PRIORITY_LOCAL":"PRIORITY_GLOBAL").append(", ");
         sb.append(sync ? "SYNC" : "ASYNC").append(", ");
         sb.append(lock ? "LOCK" : "NON-LOCK").append(", ");
         sb.append(dynamic ? "DYNAMIC" : "STATIC").append(", ");
@@ -110,6 +112,10 @@ public class AsyncConfig {
 
     public boolean isPriority() {
         return priority;
+    }
+
+    public boolean isPriorityLocal() {
+        return priorityLocal;
     }
 
     public PriorityType getPriorityType() {
@@ -208,6 +214,7 @@ public class AsyncConfig {
         private int initSize;
         private boolean barrier;
         private boolean priority;
+        private boolean priorityLocal;
         private boolean lock;
         private double sampleRate;
         private double schedulePortion;
@@ -240,6 +247,11 @@ public class AsyncConfig {
 
         public Builder setPriority(boolean priority) {
             this.priority = priority;
+            return this;
+        }
+
+        public Builder setPriorityLocal(boolean priorityLocal) {
+            this.priorityLocal = priorityLocal;
             return this;
         }
 
@@ -333,6 +345,7 @@ public class AsyncConfig {
             asyncConfig.checkType = checkType;
             asyncConfig.cond = cond;
             asyncConfig.priority = priority;
+            asyncConfig.priorityLocal = priorityLocal;
             asyncConfig.lock = lock;
             asyncConfig.sampleRate = sampleRate;
             asyncConfig.schedulePortion = schedulePortion;
@@ -352,6 +365,8 @@ public class AsyncConfig {
                 throw new SociaLiteException("can not user both of sync and barrier");
             if (AsyncConfig.asyncConfig != null)
                 throw new SociaLiteException("AsyncConfig already built");
+            if(!priority && priorityLocal)
+                throw new SociaLiteException("priority = false but priority local = true");
             AsyncConfig.asyncConfig = asyncConfig;
             return asyncConfig;
         }
@@ -431,6 +446,13 @@ public class AsyncConfig {
                         asyncConfig.setPriority(true);
                     else if (val.equals("FALSE"))
                         asyncConfig.setPriority(false);
+                    else throw new SociaLiteException("unknown val: " + val);
+                    break;
+                case "PRIORITY_LOCAL":
+                    if (val.equals("TRUE"))
+                        asyncConfig.setPriorityLocal(true);
+                    else if (val.equals("FALSE"))
+                        asyncConfig.setPriorityLocal(false);
                     else throw new SociaLiteException("unknown val: " + val);
                     break;
                 case "LOCK":
