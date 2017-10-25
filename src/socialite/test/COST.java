@@ -53,17 +53,7 @@ public class COST {
             }
             stopWatch.stop();
             System.out.println("elapsed " + stopWatch.getTime());
-            StringBuilder sb = new StringBuilder();
-            en.run("?- cost(partId, 0, sum).", new QueryVisitor() {
-                @Override
-                public boolean visit(Tuple _0) {
-                    sb.append(_0);
-                    L.info(_0);
-                    return true;
-                }
-            });
             en.shutdown();
-            TextUtils.writeText("/home/gengl/cost_5000000.txt", sb.toString());
         } else if (args[0].equals("dist")) {
             ClientEngine en = new ClientEngine();
             int nodeCount = Integer.parseInt(args[1]);
