@@ -281,7 +281,6 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                         stopNetworkThread = true;
                         waitNetworkThread();
                         L.info("flushed");
-                        L.info("before done");
                         done();
                         break;
                     }

@@ -8,7 +8,6 @@ import org.apache.commons.logging.LogFactory;
 import socialite.async.AsyncConfig;
 import socialite.async.util.ResettableCountDownLatch;
 import socialite.tables.TableInst;
-import socialite.util.Assert;
 
 import java.util.Arrays;
 import java.util.concurrent.BrokenBarrierException;
@@ -110,6 +109,7 @@ public abstract class BaseAsyncRuntime implements Runnable {
                             }
                             if (deltaSample.length == 0) {//no sample, schedule all
                                 threshold = -Double.MAX_VALUE;
+                                L.warn("SCHEDULE ALL");
                             } else {
                                 Arrays.sort(deltaSample);
                                 int cutIndex = (int) (deltaSample.length * (1 - SCHEDULE_PORTION));
@@ -260,6 +260,7 @@ public abstract class BaseAsyncRuntime implements Runnable {
                             }
                         }
                     }
+                    if (countDownLatch != null) countDownLatch.countDown();
                 } catch (InterruptedException | BrokenBarrierException e) {
                     e.printStackTrace();
                 }
@@ -491,13 +492,11 @@ public abstract class BaseAsyncRuntime implements Runnable {
         }
 
         protected void done() {
-            L.info("call done");
             stop = true;
             stopWatch.stop();
-            L.info("what the fuck!!");
-            L.info("checker thread exited");
             L.info("UPDATE_TIMES:" + updateCounter.get());
             L.info("DONE ELAPSED:" + stopWatch.getTime());
+            L.info("CHECKER THREAD EXITED");
         }
 
         void waitingCheck() throws InterruptedException {

@@ -3,7 +3,7 @@ package socialite.async;
 import mpi.MPI;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import socialite.async.analysis.MyVisitorImpl;
+import socialite.async.dist.MsgType;
 import socialite.async.dist.master.AsyncMaster;
 import socialite.async.dist.worker.AsyncWorker;
 import socialite.async.engine.LocalAsyncEngine;
@@ -11,10 +11,9 @@ import socialite.async.util.TextUtils;
 import socialite.dist.master.MasterNode;
 import socialite.dist.worker.WorkerNode;
 import socialite.engine.Config;
-import socialite.engine.LocalEngine;
-import socialite.tables.*;
-import socialite.util.Assert;
 import socialite.util.SociaLiteException;
+
+import java.util.stream.IntStream;
 
 public class Entry {
     private static final Log L = LogFactory.getLog(Entry.class);
@@ -35,15 +34,16 @@ public class Entry {
                 MasterNode.startMasterNode();
                 AsyncMaster asyncMaster = new AsyncMaster(AsyncConfig.get().getDatalogProg());
                 asyncMaster.startMaster();
-                L.info("master end");
+                IntStream.rangeClosed(1, workerNum).parallel().forEach(dest ->
+                        MPI.COMM_WORLD.Send(new byte[1], 0, 1, MPI.BYTE, dest, MsgType.EXIT.ordinal()));
             } else {
                 L.info("Worker Started " + machineId);
                 WorkerNode.startWorkerNode();
                 AsyncWorker worker = new AsyncWorker();
                 worker.startWorker();
-                L.info("Worker end"+machineId);
+                MPI.COMM_WORLD.Recv(new byte[1], 0, 1, MPI.BYTE, 0, MsgType.EXIT.ordinal());
             }
-            Thread.sleep(5000);
+
             MPI.Finalize();
             L.info("process " + machineId + " exit.");
             System.exit(0);
