@@ -165,6 +165,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
     }
 
     private void startThreads() {
+        if (AsyncConfig.get().isPriority() && !AsyncConfig.get().isPriorityLocal()) schedulerThread.start();
         Arrays.stream(computingThreads).filter(Objects::nonNull).forEach(Thread::start);
         if (!AsyncConfig.get().isSync() && !AsyncConfig.get().isBarrier()) {
             Arrays.stream(receiveThreads).filter(Objects::nonNull).forEach(Thread::start);
@@ -174,7 +175,6 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
             L.info("checker started");
         }
 
-        if (AsyncConfig.get().isPriority() && !AsyncConfig.get().isPriorityLocal()) schedulerThread.start();
         L.info(String.format("Worker %d all threads started.", myWorkerId));
         try {
             for (ComputingThread computingThread : computingThreads) computingThread.join();
