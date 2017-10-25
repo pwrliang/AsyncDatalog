@@ -1,59 +1,14 @@
 package socialite;
 
-public class ClientTest {
-   static boolean waiting = true;
-    public static void main(String[] args) throws InterruptedException {
-//        CyclicBarrier barrier = new CyclicBarrier(3,new Runnable() {
-//            @Override
-//            public void run() {
-//                System.out.println("call");
-//                Thread thread = new Thread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        System.out.println("in thread");
-//                    }
-//                });
-//                thread.start();
-//                try {
-//                    Thread.sleep(100);
-//                    thread.join();
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        });
-//        IntStream.range(0,3).parallel().forEach(i->{
-//            try {
-//                barrier.await();
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            } catch (BrokenBarrierException e) {
-//                e.printStackTrace();
-//            }
-//        });
-        final Object obj = new Object();
+import org.apache.commons.lang3.time.StopWatch;
+import socialite.async.util.SerializeTool;
+import socialite.engine.Config;
+import socialite.engine.LocalEngine;
 
-        new Thread(() -> {
-            while (true) {
-                synchronized (obj) {
-                    while (waiting) {
-                        try {
-                            obj.wait();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-                System.out.println("ok");
-                waiting = true;
-            }
-        }).start();
-        while (true) {
-            waiting = false;
-            synchronized (obj) {
-                obj.notify();
-            }
-        }
+public class ClientTest {
+    static boolean waiting = true;
+
+    public static void main(String[] args) throws InterruptedException {
         //-Dsocialite.worker.num=8 -Dsocialite.port=50100 -Dsocialite.master=localhost -Dlog4j.configuration=file:-Dsocialite.port=50100 -Dsocialite.master=master -Dlog4j.configuration=file:/home/gengl/socialite-before-yarn/conf/log4j.properties
 //        MasterNode.startMasterNode();
 //        while (MasterNode.getInstance().getQueryListener().getDistEngine() == null)
@@ -69,7 +24,8 @@ public class ClientTest {
 //            }
 //        },0);
 //        clientEngine.shutdown();
-//        LocalEngine localEngine = new LocalEngine();
+
+
 //        String stats = "seed(int x).\n" +
 //                "cite(int y:1..99, int x).\n" +
 //                "ancestor(int Y:1..99, int X, int depth).\n" +
@@ -98,6 +54,5 @@ public class ClientTest {
 //                return super.visit(_0);
 //            }
 //        });
-//        localEngine.shutdown();
     }
 }

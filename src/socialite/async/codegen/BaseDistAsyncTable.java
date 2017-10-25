@@ -72,7 +72,7 @@ public abstract class BaseDistAsyncTable extends BaseAsyncTable {
         //in sync mode, all computing thread write to message table when barrier is triggered, so we don't have to wait
         while (sendableMessageTable.getUpdateTimes() < messageTableUpdateThreshold
                 && !AsyncConfig.get().isSync() && !AsyncConfig.get().isBarrier()) {
-            Thread.sleep(10);
+            Thread.sleep(1);
             if ((System.currentTimeMillis() - startTime) >= AsyncConfig.get().getMessageTableWaitingInterval())
                 break;
         }
@@ -80,7 +80,7 @@ public abstract class BaseDistAsyncTable extends BaseAsyncTable {
         // sleep to ensure switched, this is important
         // even though selector is atomic type, but computing thread cannot see the switched result immediately, i don't know why :(
         Thread.sleep(10);
-        byte[] data = serializeTool.toBytes(sendableMessageTable);
+        byte[] data = serializeTool.toBytes(sendableMessageTable.size() * (4 + 8), sendableMessageTable);
         sendableMessageTable.resetDelta();
         return data;
     }

@@ -492,6 +492,7 @@ public abstract class BaseAsyncRuntime implements Runnable {
         }
 
         protected void done() {
+            L.info("call done");
             stop = true;
             stopWatch.stop();
             L.info("UPDATE_TIMES:" + updateCounter.get());

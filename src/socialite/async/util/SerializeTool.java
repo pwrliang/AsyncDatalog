@@ -161,11 +161,6 @@ public class SerializeTool {
             kryo = new Kryo();
         }
 
-        public Builder setBufferSize(int initSize) {
-            this.initSize = initSize;
-            return this;
-        }
-
         /**
          * 注册被序列、反序列化的类，序列化和反序列化需要相同的注册顺序
          *
