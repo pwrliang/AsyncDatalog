@@ -279,6 +279,12 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                     MPI.COMM_WORLD.Sendrecv(new double[]{partialSum, updateCounter.get()}, 0, 2, MPI.DOUBLE, AsyncMaster.ID, MsgType.TERM_CHECK_PARTIAL_VALUE.ordinal(),
                             feedback, 0, 1, MPI.BOOLEAN, AsyncMaster.ID, MsgType.TERM_CHECK_FEEDBACK.ordinal());
                     if (feedback[0]) {
+                        L.info("waiting for flush");
+                        try {
+                            Thread.sleep(1000+AsyncConfig.get().getMessageTableWaitingInterval());
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                         stopNetworkThread = true;
                         waitNetworkThread();
                         L.info("flushed");

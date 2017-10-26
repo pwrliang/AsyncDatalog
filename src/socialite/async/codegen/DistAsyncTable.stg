@@ -189,7 +189,9 @@ public class DistAsyncTable extends BaseDistAsyncTable{
             <! 遍历每个邻接点 !>
             if(adjacencies == null) return true;
             for(int i = 0; i \< adjacencies.size(); i++){
-                <if(!IsCount.(aggrType))>
+                <if(IsCount.(aggrType))>
+                <valueType> newDelta = oldDelta;
+                <else>
                 <valueType> newDelta = eval(oldDelta <if(weightType)>, weights.get(i)<endif> <if(extraType)>, extra<endif>);
                 <endif>
                 <keyType> adjacency = adjacencies.get(i);
@@ -220,14 +222,14 @@ public class DistAsyncTable extends BaseDistAsyncTable{
                                 <if(IsSum.(aggrType))>bufferDeltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
                                 <if(IsMax.(aggrType))>bufferDeltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
                                 <if(IsMin.(aggrType))>bufferDeltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
-                                <if(IsCount.(aggrType))>bufferDeltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                                <if(IsCount.(aggrType))>bufferDeltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
                             <if(lock)>}<endif>
                         } else {
                             <if(lock)>synchronized(deltaList) {<endif>
                                 <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
                                 <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
                                 <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
-                                <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                                <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
                             <if(lock)>}<endif>
                         }
                     } else {
@@ -237,14 +239,14 @@ public class DistAsyncTable extends BaseDistAsyncTable{
                         int belongToWorkerId = myIdxWorkerIdMap[sliceMap.machineIndexFor(indexForTableId, adjacency)];
                         <endif>
                         MessageTable messageTable = (MessageTable)getWritableMessageTable(belongToWorkerId);
-                        messageTable.apply(adjacency<if(!IsCount.(aggrType))>, newDelta<endif>);
+                        messageTable.apply(adjacency, newDelta);
                     }
                     <else><! ASYNC MODE !>
                             <if(lock)>synchronized(deltaList) {<endif>
                                 <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
                                 <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
                                 <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
-                                <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                                <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
                             <if(lock)>}<endif>
                         } else {
                             <if(IsPairKey.(keyType))>
@@ -253,7 +255,7 @@ public class DistAsyncTable extends BaseDistAsyncTable{
                             int belongToWorkerId = myIdxWorkerIdMap[sliceMap.machineIndexFor(indexForTableId, adjacency)];
                             <endif>
                             MessageTable messageTable = (MessageTable)getWritableMessageTable(belongToWorkerId);
-                            messageTable.apply(adjacency<if(!IsCount.(aggrType))>, newDelta<endif>);
+                            messageTable.apply(adjacency, newDelta);
                         }
                     <endif>
             }

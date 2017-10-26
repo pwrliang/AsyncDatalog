@@ -24,7 +24,7 @@ public class MessageTable extends MessageTableBase {
         keyDeltaMap = new ConcurrentHashMap\<>(initSize);
     }
 
-    public void apply(<keyType> key<if(!IsCount.(aggrType))>, <deltaType> delta<endif>) {
+    public void apply(<keyType> key, <deltaType> delta) {
         <TypeAtomicMap.(deltaType)> atomicDelta = keyDeltaMap.putIfAbsent(key, new <TypeAtomicMap.(deltaType)>(<if(!IsCount.(aggrType))>delta<else>1<endif>));
         if (atomicDelta != null) {
             <if(lock)>synchronized(atomicDelta) {<endif>
@@ -35,7 +35,7 @@ public class MessageTable extends MessageTableBase {
             <elseif(IsMin.(aggrType))>
             atomicDelta.accumulateAndGet(delta, <WrappedTypeMap.(deltaType)>::min);
             <elseif(IsCount.(aggrType))>
-            atomicDelta.addAndGet(1);
+            atomicDelta.addAndGet(delta);
             <endif>
             <if(lock)>}<endif>
         }

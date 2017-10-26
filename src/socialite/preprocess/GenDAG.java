@@ -10,7 +10,7 @@ import java.util.Set;
 public class GenDAG {
     public static void main(String[] args) throws IOException {
         int MIN_PER_RANK = 1; /* Nodes/Rank: How 'fat' the DAG should be.  */
-        int MAX_PER_RANK = 100;
+        int MAX_PER_RANK = 30;
         int MIN_RANKS = 3;    /* Ranks: How 'tall' the DAG should be.  */
         int MAX_RANKS = 100;
         int PERCENT = 30;     /* Chance of having an Edge.  */
@@ -34,6 +34,7 @@ public class GenDAG {
                     if (random.nextInt(100) < PERCENT) {
 //                        System.out.printf("  %d -> %d;\n", j, k + nodes); /* An Edge.  */
                         node.add(j);
+                        node.add(k + nodes);
                         bufferedWriter.write(String.format("%d\t%d\n", j, k + nodes));
                     }
             nodes += new_nodes; /* Accumulate into old node set.  */

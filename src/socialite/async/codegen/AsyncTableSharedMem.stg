@@ -73,11 +73,13 @@ public class AsyncTable extends BaseAsyncTable{
             <if(sync)>
                 if (iter % 2 == 0) {
                     <if(lock)>synchronized(deltaList) {<endif>
-                    oldDelta = deltaList.get(localInd).get();
+                    oldDelta = deltaList.get(localInd).getAndSet(0);
+                    oldDelta = bufferDeltaList.get(localInd).addAndGet(oldDelta);
                     <if(lock)>}<endif>
                 } else {
                     <if(lock)>synchronized(bufferDeltaList) {<endif>
-                    oldDelta = bufferDeltaList.get(localInd).get();
+                    oldDelta = bufferDeltaList.get(localInd).getAndSet(0);
+                    oldDelta = deltaList.get(localInd).addAndGet(oldDelta);
                     <if(lock)>}<endif>
                 }
             <else>
@@ -85,11 +87,12 @@ public class AsyncTable extends BaseAsyncTable{
                     oldDelta = deltaList.get(localInd).get();
                 <if(lock)>}<endif>
             <endif>
-
-            if (eval(oldDelta))
-                valueList.set(localInd, true);
-            if (!valueList.get(localInd)){
-                return false;
+            synchronized(valueList){
+                if (eval(oldDelta))
+                    valueList.set(localInd, true);
+                if (!valueList.get(localInd)){
+                    return false;
+                }
             }
             <PrimitiveMap.(keyType)> adjacencies = adjacenciesList.get(localInd);
             if(adjacencies!=null){
@@ -162,7 +165,9 @@ public class AsyncTable extends BaseAsyncTable{
             <! 遍历每个邻接点 !>
             if(adjacencies == null) return true;
             for(int i = 0; i \< adjacencies.size(); i++){
-                <if(!IsCount.(aggrType))>
+                <if(IsCount.(aggrType))>
+                <valueType> newDelta=oldDelta;
+                <else>
                 <valueType> newDelta = eval(oldDelta <if(weightType)>, weights.get(i)<endif> <if(extraType)>, extra<endif>);
                 <endif>
                 int adjacentLocalInd;
@@ -204,7 +209,7 @@ public class AsyncTable extends BaseAsyncTable{
                         <if(IsSum.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(newDelta);<endif>
                         <if(IsMax.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::max);<endif>
                         <if(IsMin.(aggrType))>deltaList.get(adjacentLocalInd).accumulateAndGet(newDelta, Math::min);<endif>
-                        <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                        <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(oldDelta);<endif>
                      <if(lock)>}<endif>
                 <endif>
             }
@@ -238,7 +243,7 @@ public class AsyncTable extends BaseAsyncTable{
         return size++;
     }
     
-    private synchronized <if(IsPairKey.(keyType))>List\<Pair><else><PrimitiveMap.(keyType)><endif> join(<if(IsPairKey.(keyType))>int col1OfKey, int col2OfKey<else><keyType> key<endif>){
+    private <if(IsPairKey.(keyType))>List\<Pair><else><PrimitiveMap.(keyType)><endif> join(<if(IsPairKey.(keyType))>int col1OfKey, int col2OfKey<else><keyType> key<endif>){
         <if(IsPairKey.(keyType))>
             <PrimitiveMap.(keyType)> dstList = srcDstListMap.get(col2OfKey);
             if(dstList==null) return null;
@@ -344,10 +349,12 @@ public class AsyncTable extends BaseAsyncTable{
     <if(IsBoolean.(valueType))>
     public double accumulateValue(){
         double sum = 0;
-        for(int i=0;i\<size;i++)
-            if(valueList.get(i)){
-                sum++;
-            }
+        synchronized(valueList){
+            for(int i=0;i\<size;i++)
+                if(valueList.get(i)){
+                    sum++;
+                }
+        }
         return sum;
     }
     <else>
