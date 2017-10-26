@@ -237,7 +237,6 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                     MPI.COMM_WORLD.Recv(data, 0, size, MPI.BYTE, source, MsgType.MESSAGE_TABLE.ordinal());
                     MessageTableBase messageTable = (MessageTableBase) serializeTool.fromBytesToObject(data, klass);
                     ((BaseDistAsyncTable) asyncTable).applyBuffer(messageTable);
-//                    L.info("apply message table updates:" + messageTable.getUpdateTimes());
                     if (AsyncConfig.get().isSync() || AsyncConfig.get().isBarrier()) break;
                 }
             } catch (MPIException e) {
@@ -281,12 +280,11 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                     if (feedback[0]) {
                         L.info("waiting for flush");
                         try {
-                            Thread.sleep(1000+AsyncConfig.get().getMessageTableWaitingInterval());
+                            Thread.sleep(1000 + AsyncConfig.get().getMessageTableWaitingInterval());
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
                         stopNetworkThread = true;
-                        waitNetworkThread();
                         L.info("flushed");
                         done();
                         break;

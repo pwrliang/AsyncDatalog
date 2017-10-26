@@ -87,12 +87,10 @@ public class AsyncTable extends BaseAsyncTable{
                     oldDelta = deltaList.get(localInd).get();
                 <if(lock)>}<endif>
             <endif>
-            synchronized(valueList){
-                if (eval(oldDelta))
-                    valueList.set(localInd, true);
-                if (!valueList.get(localInd)){
-                    return false;
-                }
+            if (eval(oldDelta))
+                valueList.set(localInd, true);
+            if (!valueList.get(localInd)){
+                return false;
             }
             <PrimitiveMap.(keyType)> adjacencies = adjacenciesList.get(localInd);
             if(adjacencies!=null){
@@ -349,12 +347,10 @@ public class AsyncTable extends BaseAsyncTable{
     <if(IsBoolean.(valueType))>
     public double accumulateValue(){
         double sum = 0;
-        synchronized(valueList){
-            for(int i=0;i\<size;i++)
-                if(valueList.get(i)){
-                    sum++;
-                }
-        }
+        for(int i=0;i\<size;i++)
+            if(valueList.get(i)){
+                sum++;
+            }
         return sum;
     }
     <else>
