@@ -73,7 +73,9 @@ elif [ "$#" == "2" ] || [ "$#" == "3" ]; then
     if [ "$#" == "3" ] && [ "$2" == "-native" ]; then
         run_with_mpi $2
     else
+        mpjboot ${MACHINES}
         run $2
+        mpjhalt ${MACHINES}
     fi
 else
     echo "please specify [-copy-jar/-copy-classes] or [-run/-debug] [Datalog_Program]"
