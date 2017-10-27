@@ -110,7 +110,7 @@ public abstract class BaseAsyncRuntime implements Runnable {
                             }
                             if (deltaSample.length == 0) {//no sample, schedule all
                                 threshold = -Double.MAX_VALUE;
-                                L.warn("SCHEDULE ALL");
+//                                L.warn("SCHEDULE ALL");
                             } else {
                                 Arrays.sort(deltaSample);
                                 int cutIndex = (int) (deltaSample.length * (1 - SCHEDULE_PORTION));
