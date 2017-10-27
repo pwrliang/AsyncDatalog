@@ -87,11 +87,13 @@ public class DistAsyncTable extends BaseDistAsyncTable{
             <if(sync)>
                 if (iter % 2 == 0) {
                     <if(lock)>synchronized(deltaList) {<endif>
-                    oldDelta = deltaList.get(localInd).get();
+                    oldDelta = deltaList.get(localInd).getAndSet(0);
+                    oldDelta = bufferDeltaList.get(localInd).addAndGet(oldDelta);
                     <if(lock)>}<endif>
                 } else {
                     <if(lock)>synchronized(bufferDeltaList) {<endif>
-                    oldDelta = bufferDeltaList.get(localInd).get();
+                    oldDelta = bufferDeltaList.get(localInd).getAndSet(0);
+                    oldDelta = deltaList.get(localInd).addAndGet(oldDelta);
                     <if(lock)>}<endif>
                 }
             <else>
@@ -133,7 +135,7 @@ public class DistAsyncTable extends BaseDistAsyncTable{
                     } else {
                         int belongToWorkerId = myIdxWorkerIdMap[sliceMap.machineIndexFor(indexForTableId, adjacency)];
                         MessageTable messageTable = (MessageTable)getWritableMessageTable(belongToWorkerId);
-                        messageTable.apply(adjacency);
+                        messageTable.apply(adjacency, 1);
                     }
                     <else>
                         <! OTHER AGGREGATE FUNCTIONS IS NOT SUPPORTED !>
@@ -143,7 +145,7 @@ public class DistAsyncTable extends BaseDistAsyncTable{
                     } else {
                         int belongToWorkerId = myIdxWorkerIdMap[sliceMap.machineIndexFor(indexForTableId, adjacency)];
                         MessageTable messageTable = (MessageTable)getWritableMessageTable(belongToWorkerId);
-                        messageTable.apply(adjacency);
+                        messageTable.apply(adjacency, 1);
                     }
                     <endif>
                 }
@@ -435,7 +437,7 @@ public class DistAsyncTable extends BaseDistAsyncTable{
     public double accumulateValue(){
         double sum = 0;
         for(int i=0;i\<size;i++)
-            if(valueList.get(i) && !sentFlagList.get(i)){ //可见性问题，只能这么解决
+            if(valueList.get(i)){
                 sum++;
             }
         return sum;
