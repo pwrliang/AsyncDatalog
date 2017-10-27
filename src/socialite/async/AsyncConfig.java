@@ -25,6 +25,7 @@ public class AsyncConfig {
     private boolean barrier;
     private boolean debugging;
     private boolean lock;
+    private int networkThreadNum = 1;
     private int threadNum;
     private int initSize;
     private int messageTableInitSize;
@@ -56,6 +57,7 @@ public class AsyncConfig {
         sb.append(dynamic ? "DYNAMIC" : "STATIC").append(", ");
         sb.append(barrier ? "BARRIER" : "NON-BARRIER").append(", ");
         sb.append("THREAD_NUM:").append(threadNum).append(", ");
+        sb.append("NETWORK_THREAD_NUM:").append(networkThreadNum).append(", ");
         sb.append("INIT_SIZE:").append(initSize).append(", ");
         sb.append("MESSAGE_INIT_SIZE:").append(messageTableInitSize).append(", ");
         sb.append("MESSAGE_UPDATE_THRESHOLD:").append(messageTableUpdateThreshold).append(", ");
@@ -146,6 +148,10 @@ public class AsyncConfig {
         return threadNum;
     }
 
+    public int getNetworkThreadNum() {
+        return networkThreadNum;
+    }
+
     public int getInitSize() {
         return initSize;
     }
@@ -211,6 +217,7 @@ public class AsyncConfig {
         private boolean sync;
         private boolean debugging;
         private int threadNum;
+        private int networkThreadNum;
         private int initSize;
         private boolean barrier;
         private boolean priority;
@@ -295,6 +302,10 @@ public class AsyncConfig {
             return this;
         }
 
+        public void setNetworkThreadNum(int networkThreadNum) {
+            this.networkThreadNum = networkThreadNum;
+        }
+
         public Builder setInitSize(int initSize) {
             this.initSize = initSize;
             return this;
@@ -355,6 +366,7 @@ public class AsyncConfig {
             asyncConfig.debugging = debugging;
             asyncConfig.threadNum = threadNum;
             asyncConfig.initSize = initSize;
+            asyncConfig.networkThreadNum = networkThreadNum;
             asyncConfig.messageTableInitSize = messageTableInitSize;
             asyncConfig.messageTableUpdateThreshold = messageTableUpdateThreshold;
             asyncConfig.messageTableWaitingInterval = messageTableWaitingInterval;
@@ -501,6 +513,9 @@ public class AsyncConfig {
                 case "THREAD_NUM":
                     asyncConfig.setThreadNum(Integer.parseInt(val));
                     break;
+                case "NETWORK_THREAD_NUM":
+                    asyncConfig.setNetworkThreadNum(Integer.parseInt(val));
+                    break;
                 case "INIT_SIZE":
                     asyncConfig.setInitSize(Integer.parseInt(val));
                     break;
@@ -530,13 +545,5 @@ public class AsyncConfig {
         });
         asyncConfig.setDatalogProg(prog.toString());
         asyncConfig.build();
-    }
-
-
-    public static void main(String[] args) {
-        AsyncConfig.parse(TextUtils.readText(args[0]));
-        SerializeTool serializeTool = new SerializeTool.Builder().build();
-        AsyncConfig asyncConfig = serializeTool.fromBytes(serializeTool.toBytes(AsyncConfig.get()), AsyncConfig.class);
-        System.out.println();
     }
 }

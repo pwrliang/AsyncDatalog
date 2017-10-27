@@ -479,9 +479,9 @@ public class DistAsyncTable extends BaseDistAsyncTable{
     public double getPriority(int localInd){
         <if(IsSum.(aggrType))>
         <PrimitiveMap.(keyType)> adjacencies = adjacenciesList.get(localInd);
-        if (adjacencies == null)
+        //if (adjacencies == null)
             return deltaList.get(localInd).get();
-        return deltaList.get(localInd).get() / adjacencies.size();
+        //return deltaList.get(localInd).get() / adjacencies.size();
         <elseif(IsMax.(aggrType))>
         double val = valueList.get(localInd);
         double delta = deltaList.get(localInd).get();

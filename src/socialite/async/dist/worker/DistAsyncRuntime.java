@@ -46,7 +46,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
     private ReceiveThreadSingle[] receiveThreads;
     private Payload payload;
     private volatile boolean stopNetworkThread;
-    public static final int NETWORK_THREADS = 2;
+    public static int NETWORK_THREADS;
 
     DistAsyncRuntime() {
         workerNum = MPI.COMM_WORLD.Size() - 1;
@@ -177,6 +177,9 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
 //            sendThreads[wid] = new SendThread(wid);
 //            receiveThreads[wid] = new ReceiveThread(wid);
 //        }
+        NETWORK_THREADS = asyncConfig.getNetworkThreadNum();
+        if (NETWORK_THREADS > workerNum)
+            throw new SociaLiteException("error network thread num");
         sendThreads = new SendThreadSingle[NETWORK_THREADS];
         receiveThreads = new ReceiveThreadSingle[NETWORK_THREADS];
         IntStream.range(0, NETWORK_THREADS).forEach(tid -> sendThreads[tid] = new SendThreadSingle(tid));
