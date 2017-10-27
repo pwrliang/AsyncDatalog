@@ -137,6 +137,13 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                     initTableNum++;
                 }
             }
+
+            for (TableInst tableInst : edgeTableInstArr) {
+                if (!tableInst.isEmpty()) {
+                    tableInst.clear();
+                }
+            }
+            System.gc();
             if (initTableNum > 1)
                 Assert.impossible();
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException | NoSuchFieldException e) {

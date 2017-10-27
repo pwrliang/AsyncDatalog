@@ -97,16 +97,7 @@ public abstract class BaseAsyncRuntime implements Runnable {
                             deltaSample = new double[(int) ((end - start) * SAMPLE_RATE)];
                             for (int i = 0; i < deltaSample.length; i++) {
                                 int ind = randomGenerator.nextInt(start, end);
-                                double delta = asyncTable.getDelta(ind);
-                                if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.SUM_COUNT)
-                                    deltaSample[i] = delta;
-                                else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.MIN) {
-                                    double value = asyncTable.getValue(ind);
-                                    deltaSample[i] = value - Math.min(value, delta);
-                                } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.MAX) {
-                                    double value = asyncTable.getValue(ind);
-                                    deltaSample[i] = value - Math.max(value, delta);
-                                }
+                                deltaSample[i] = asyncTable.getPriority(ind);
                             }
                             if (deltaSample.length == 0) {//no sample, schedule all
                                 threshold = -Double.MAX_VALUE;
@@ -118,7 +109,6 @@ public abstract class BaseAsyncRuntime implements Runnable {
                                     threshold = -Double.MAX_VALUE;
                                 else
                                     threshold = deltaSample[cutIndex];
-
                             }
                         }
 
@@ -130,38 +120,10 @@ public abstract class BaseAsyncRuntime implements Runnable {
                                     if (asyncTable.updateLockFree(k)) updateCounter.addAndGet(1);
                                 }
                             }
-                        } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.SUM_COUNT) {
+                        } else {
                             for (int k = start; k < end; k++) {
-                                double delta = asyncTable.getDelta(k);
+                                double delta = asyncTable.getPriority(k);
                                 if (delta >= threshold) {
-                                    if (asyncConfig.isSync()) {
-                                        if (asyncTable.updateLockFree(k, checkerThread.iter))
-                                            updateCounter.addAndGet(1);
-                                    } else {
-                                        if (asyncTable.updateLockFree(k)) updateCounter.addAndGet(1);
-                                    }
-                                }
-                            }
-                        } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.MIN) {
-                            for (int k = start; k < end; k++) {
-                                double delta = asyncTable.getDelta(k);
-                                double value = asyncTable.getValue(k);
-                                double f = value - Math.min(value, delta);
-                                if (f >= threshold) {
-                                    if (asyncConfig.isSync()) {
-                                        if (asyncTable.updateLockFree(k, checkerThread.iter))
-                                            updateCounter.addAndGet(1);
-                                    } else {
-                                        if (asyncTable.updateLockFree(k)) updateCounter.addAndGet(1);
-                                    }
-                                }
-                            }
-                        } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.MAX) {
-                            for (int k = start; k < end; k++) {
-                                double delta = asyncTable.getDelta(k);
-                                double value = asyncTable.getValue(k);
-                                double f = value - Math.max(value, delta);
-                                if (f >= threshold) {
                                     if (asyncConfig.isSync()) {
                                         if (asyncTable.updateLockFree(k, checkerThread.iter))
                                             updateCounter.addAndGet(1);
@@ -209,38 +171,10 @@ public abstract class BaseAsyncRuntime implements Runnable {
                                     if (asyncTable.updateLockFree(k)) updateCounter.addAndGet(1);
                                 }
                             }
-                        } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.SUM_COUNT) {
+                        } else {
                             for (int k = start; k < end; k++) {
-                                double delta = asyncTable.getDelta(k);
+                                double delta = asyncTable.getPriority(k);
                                 if (delta >= priorityThreshold) {
-                                    if (asyncConfig.isSync()) {
-                                        if (asyncTable.updateLockFree(k, checkerThread.iter))
-                                            updateCounter.addAndGet(1);
-                                    } else {
-                                        if (asyncTable.updateLockFree(k)) updateCounter.addAndGet(1);
-                                    }
-                                }
-                            }
-                        } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.MIN) {
-                            for (int k = start; k < end; k++) {
-                                double delta = asyncTable.getDelta(k);
-                                double value = asyncTable.getValue(k);
-                                double f = value - Math.min(value, delta);
-                                if (f >= priorityThreshold) {
-                                    if (asyncConfig.isSync()) {
-                                        if (asyncTable.updateLockFree(k, checkerThread.iter))
-                                            updateCounter.addAndGet(1);
-                                    } else {
-                                        if (asyncTable.updateLockFree(k)) updateCounter.addAndGet(1);
-                                    }
-                                }
-                            }
-                        } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.MAX) {
-                            for (int k = start; k < end; k++) {
-                                double delta = asyncTable.getDelta(k);
-                                double value = asyncTable.getValue(k);
-                                double f = value - Math.max(value, delta);
-                                if (f >= priorityThreshold) {
                                     if (asyncConfig.isSync()) {
                                         if (asyncTable.updateLockFree(k, checkerThread.iter))
                                             updateCounter.addAndGet(1);
@@ -445,16 +379,7 @@ public abstract class BaseAsyncRuntime implements Runnable {
 
                 for (int i = 0; i < deltaSample.length; i++) {
                     int ind = randomGenerator.nextInt(0, size);
-                    double delta = asyncTable.getDelta(ind);
-                    if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.SUM_COUNT)
-                        deltaSample[i] = delta;
-                    else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.MIN) {
-                        double value = asyncTable.getValue(ind);
-                        deltaSample[i] = value - Math.min(value, delta);
-                    } else if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.MAX) {
-                        double value = asyncTable.getValue(ind);
-                        deltaSample[i] = value - Math.max(value, delta);
-                    }
+                    deltaSample[i] = asyncTable.getPriority(ind);
                 }
 
                 if (deltaSample.length == 0) {//no sample, schedule all

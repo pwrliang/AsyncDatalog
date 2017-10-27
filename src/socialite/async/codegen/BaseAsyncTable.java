@@ -22,9 +22,7 @@ public abstract class BaseAsyncTable {
     }
 
 
-    public abstract double getValue(int localInd);
-
-    public abstract double getDelta(int localInd);
+    public abstract double getPriority(int localInd);
 
     public abstract double accumulateValue();
 

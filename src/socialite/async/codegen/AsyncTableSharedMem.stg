@@ -368,19 +368,24 @@ public class AsyncTable extends BaseAsyncTable{
     <endif>
 
     @Override
-    public double getValue(int localInd) {
-        <if(IsBoolean.(valueType))>
-            throw new UnsupportedOperationException();
-        <else>
-            return valueList.get(localInd);
+    public double getPriority(int localInd){
+        <if(IsSum.(aggrType))>
+        <PrimitiveMap.(keyType)> adjacencies = adjacenciesList.get(localInd);
+        if (adjacencies == null)
+            return deltaList.get(localInd).get();
+        return deltaList.get(localInd).get() / adjacencies.size();
+        <elseif(IsMax.(aggrType))>
+        double val = valueList.get(localInd);
+        double delta = deltaList.get(localInd).get();
+        return val - Math.max(val, delta);
+        <elseif(IsMin.(aggrType))>
+        double val = valueList.get(localInd);
+        double delta = deltaList.get(localInd).get();
+        return val - Math.min(val, delta);
+        <elseif(IsCount.(aggrType))>
+        return deltaList.get(localInd).get();
         <endif>
     }
-
-    @Override
-    public double getDelta(int localInd) {
-        return (double)deltaList.get(localInd).get();
-    }
-
 
     @Override
     public double accumulateDelta(){
