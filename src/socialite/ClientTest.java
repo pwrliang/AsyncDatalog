@@ -1,14 +1,44 @@
 package socialite;
 
-import org.apache.commons.lang3.time.StopWatch;
-import socialite.async.util.SerializeTool;
-import socialite.engine.Config;
-import socialite.engine.LocalEngine;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ClientTest {
     static boolean waiting = true;
 
-    public static void main(String[] args) throws InterruptedException {
+    static long[] getNetwork() {
+        Runtime runtime = Runtime.getRuntime();
+        String[] commands = {"ifconfig", "eth0"};
+        long rx = 0, tx = 0;
+        try {
+            Process process = runtime.exec(commands);
+
+            BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            Pattern p = Pattern.compile("RX bytes:(\\d+).*?TX bytes:(\\d+).*?");
+
+            while ((line = stdInput.readLine()) != null) {
+                Matcher matcher = p.matcher(line);
+                if (matcher.find()) {
+                    rx = Long.parseLong(matcher.group(1));
+                    tx = Long.parseLong(matcher.group(2));
+                    break;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return new long[]{rx, tx};
+    }
+
+    public static void main(String[] args) throws InterruptedException, IOException {
+        long rx = getNetwork()[0];
+        long tx = getNetwork()[1];
+        System.out.printf("RX: %d TX: %d\b", rx, tx);
+
         //-Dsocialite.worker.num=8 -Dsocialite.port=50100 -Dsocialite.master=localhost -Dlog4j.configuration=file:-Dsocialite.port=50100 -Dsocialite.master=master -Dlog4j.configuration=file:/home/gengl/socialite-before-yarn/conf/log4j.properties
 //        MasterNode.startMasterNode();
 //        while (MasterNode.getInstance().getQueryListener().getDistEngine() == null)

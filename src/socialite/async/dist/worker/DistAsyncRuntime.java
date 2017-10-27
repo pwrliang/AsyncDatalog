@@ -12,6 +12,7 @@ import socialite.async.codegen.MessageTableBase;
 import socialite.async.dist.MsgType;
 import socialite.async.dist.Payload;
 import socialite.async.dist.master.AsyncMaster;
+import socialite.async.util.NetworkUtil;
 import socialite.async.util.SerializeTool;
 import socialite.parser.Table;
 import socialite.resource.DistTableSliceMap;
@@ -261,13 +262,15 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
             while (true) {
                 if (asyncConfig.isDynamic())
                     arrangeTask();
+                long[] rxTx = NetworkUtil.getNetwork();
                 if (asyncConfig.isSync() || asyncConfig.isBarrier()) {//sync mode
                     Arrays.stream(receiveThreads).filter(Objects::nonNull).forEach(ReceiveThread::start);
                     Arrays.stream(sendThreads).filter(Objects::nonNull).forEach(SendThread::start);
                     waitNetworkThread();
 
                     double partialSum = update();
-                    MPI.COMM_WORLD.Sendrecv(new double[]{partialSum, updateCounter.get()}, 0, 2, MPI.DOUBLE, AsyncMaster.ID, MsgType.REQUIRE_TERM_CHECK.ordinal(),
+
+                    MPI.COMM_WORLD.Sendrecv(new double[]{partialSum, updateCounter.get(), rxTx[0], rxTx[1]}, 0, 4, MPI.DOUBLE, AsyncMaster.ID, MsgType.REQUIRE_TERM_CHECK.ordinal(),
                             feedback, 0, 1, MPI.BOOLEAN, AsyncMaster.ID, MsgType.TERM_CHECK_FEEDBACK.ordinal());
                     if (feedback[0]) {
                         done();
@@ -278,7 +281,8 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                 } else {
                     double partialSum = update();
                     MPI.COMM_WORLD.Recv(new byte[1], 0, 1, MPI.BYTE, AsyncMaster.ID, MsgType.REQUIRE_TERM_CHECK.ordinal());
-                    MPI.COMM_WORLD.Sendrecv(new double[]{partialSum, updateCounter.get()}, 0, 2, MPI.DOUBLE, AsyncMaster.ID, MsgType.TERM_CHECK_PARTIAL_VALUE.ordinal(),
+
+                    MPI.COMM_WORLD.Sendrecv(new double[]{partialSum, updateCounter.get(), rxTx[0], rxTx[1]}, 0, 4, MPI.DOUBLE, AsyncMaster.ID, MsgType.TERM_CHECK_PARTIAL_VALUE.ordinal(),
                             feedback, 0, 1, MPI.BOOLEAN, AsyncMaster.ID, MsgType.TERM_CHECK_FEEDBACK.ordinal());
                     if (feedback[0]) {
                         L.info("waiting for flush");

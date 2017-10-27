@@ -139,25 +139,28 @@ public class DistAsyncEngine implements Runnable {
         @Override
         public void run() {
 
-            double[] partialValue = new double[2];
+            double[] partialValue = new double[4];
             boolean[] termOrNot = new boolean[1];
 
             try {
                 while (true) {
                     accumulatedSum = 0;
+                    double totalRx = 0, totalTx = 0;
                     if (asyncConfig.isSync() || asyncConfig.isBarrier()) {
                         for (int source = 1; source <= workerNum; source++) {
-                            MPI.COMM_WORLD.Recv(partialValue, 0, 2, MPI.DOUBLE, source, MsgType.REQUIRE_TERM_CHECK.ordinal());
+                            MPI.COMM_WORLD.Recv(partialValue, 0, 4, MPI.DOUBLE, source, MsgType.REQUIRE_TERM_CHECK.ordinal());
                             accumulatedSum += partialValue[0];
                             totalUpdateTimes += partialValue[1];
+                            totalRx += partialValue[2];
+                            totalTx += partialValue[3];
                         }
-
                         //when first received feedback, we start stopwatch
                         if (stopWatch == null) {
                             stopWatch = new StopWatch();
                             stopWatch.start();
                         }
                         termOrNot[0] = isTerm();
+                        L.info(String.format("RX: %f MB TX: %f MB", totalRx / 1024 / 1024, totalTx / 1024 / 1024));
                         IntStream.rangeClosed(1, workerNum).forEach(dest ->
                                 MPI.COMM_WORLD.Send(termOrNot, 0, 1, MPI.BOOLEAN, dest, MsgType.TERM_CHECK_FEEDBACK.ordinal()));
                         if (termOrNot[0]) {
@@ -170,9 +173,11 @@ public class DistAsyncEngine implements Runnable {
                         Thread.sleep(AsyncConfig.get().getCheckInterval());
                         for (int dest = 1; dest <= workerNum; dest++) {
                             MPI.COMM_WORLD.Sendrecv(new byte[1], 0, 1, MPI.BYTE, dest, MsgType.REQUIRE_TERM_CHECK.ordinal(),
-                                    partialValue, 0, 2, MPI.DOUBLE, dest, MsgType.TERM_CHECK_PARTIAL_VALUE.ordinal());//send term check request and receive partial value
+                                    partialValue, 0, 4, MPI.DOUBLE, dest, MsgType.TERM_CHECK_PARTIAL_VALUE.ordinal());//send term check request and receive partial value
                             accumulatedSum += partialValue[0];
                             totalUpdateTimes += partialValue[1];
+                            totalRx += partialValue[2];
+                            totalTx += partialValue[3];
                         }
                         //when first received partial value, we start stopwatch
                         if (stopWatch == null) {
@@ -181,6 +186,7 @@ public class DistAsyncEngine implements Runnable {
                         }
 
                         termOrNot[0] = isTerm();
+                        L.info(String.format("RX: %f MB TX: %f MB", totalRx / 1024 / 1024, totalTx / 1024 / 1024));
 
                         IntStream.rangeClosed(1, workerNum).parallel().forEach(dest -> MPI.COMM_WORLD.Send(termOrNot, 0, 1, MPI.BOOLEAN, dest, MsgType.TERM_CHECK_FEEDBACK.ordinal()));
                         if (termOrNot[0]) {
