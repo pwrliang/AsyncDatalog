@@ -1,0 +1,1164 @@
+ssh: Could not resolve hostname master: Name or service not known
+ssh: Could not resolve hostname hadoop0: Name or service not known
+ssh: Could not resolve hostname hadoop1: Name or service not known
+ssh: Could not resolve hostname hadoop2: Name or service not known
+ssh: Could not resolve hostname hadoop3: Name or service not known
+15:20:15 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=2)
+15:20:15 INFO LocalEngine: epoch Epoch (2) [], , new table(CC)
+elapsed 1
+15:20:15 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=3)
+15:20:15 INFO LocalEngine: epoch Epoch (3) [], , new table(Node)
+elapsed 0
+15:20:16 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=4)
+15:20:16 INFO LocalEngine: epoch Epoch (4) [], , new table(Edge)
+elapsed 0
+15:20:16 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=5)
+15:24:32 INFO LocalEngine: epoch Epoch (5) [RuleComp {Edge(s,t) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/edge_pair.txt"),(s1, s2)=$Builtin.split(l, "	"),s=$Builtin.toInt(s1),t=$Builtin.toInt(s2).,}, ], 
+elapsed 255580
+15:24:32 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=6)
+15:24:39 INFO LocalEngine: epoch Epoch (6) [RuleComp {Node(n) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/node.txt"),n=$Builtin.toInt(l).,}, ], 
+elapsed 7130
+15:24:39 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=7)
+15:24:39 INFO LocalEngine: epoch Epoch (7) [RuleComp {CC(X,X) :- Node(X).,}, ], 
+elapsed 211
+15:24:40 INFO AsyncCodeGenMain: AsyncTable compiled
+15:24:40 INFO AsyncCodeGenMain: AsyncRuntime compiled
+15:24:40 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=8)
+15:24:40 INFO LocalEngine: epoch Epoch (8) [], , new table(InitTable)
+elapsed 0
+15:24:40 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=9)
+15:25:41 INFO LocalEngine: epoch Epoch (9) [RuleComp {InitTable(key,delta,adjacency) :- CC(key,delta),Edge(key,adjacency).,}, ], 
+elapsed 61279
+15:25:41 INFO AsyncRuntime: RECV CMD NOTIFY_INIT CONFIG:CHECK_COND:DELTA== 0.0, CHECK_INTERVAL:1000, PRIORITY_TYPE:VALUE -  MIN(VALUE, DELTA), SAMPLE_RATE:1.0E-4, SCHEDULE_PORTION:0.5, PRIORITY_LOCAL, ASYNC, NON-LOCK, STATIC, NON-BARRIER, THREAD_NUM:32, INIT_SIZE:0, MESSAGE_INIT_SIZE:0, MESSAGE_UPDATE_THRESHOLD:0, MESSAGE_TABLE_WAITING_INTERVAL:-1, PRINT_RESULT:FALSE, SAVE_PATH:null
+15:25:49 INFO AsyncRuntime: Data Loaded size:19991625
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:49 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:25:50 INFO AsyncRuntime: Worker started
+15:26:08 INFO AsyncRuntime: sum of delta: 0
+15:26:08 INFO AsyncRuntime: UPDATE TIMES:23828197
+15:26:08 INFO BaseAsyncRuntime: call done
+15:26:08 INFO BaseAsyncRuntime: UPDATE_TIMES:23828197
+15:26:08 INFO BaseAsyncRuntime: DONE ELAPSED:18205
+15:26:08 INFO BaseAsyncRuntime: CHECKER THREAD EXITED
+ssh: Could not resolve hostname master: Name or service not known
+ssh: Could not resolve hostname hadoop0: Name or service not known
+ssh: Could not resolve hostname hadoop1: Name or service not known
+ssh: Could not resolve hostname hadoop2: Name or service not known
+ssh: Could not resolve hostname hadoop3: Name or service not known
+15:26:11 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=2)
+15:26:11 INFO LocalEngine: epoch Epoch (2) [], , new table(CC)
+elapsed 1
+15:26:11 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=3)
+15:26:11 INFO LocalEngine: epoch Epoch (3) [], , new table(Node)
+elapsed 0
+15:26:11 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=4)
+15:26:11 INFO LocalEngine: epoch Epoch (4) [], , new table(Edge)
+elapsed 0
+15:26:12 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=5)
+15:30:26 INFO LocalEngine: epoch Epoch (5) [RuleComp {Edge(s,t) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/edge_pair.txt"),(s1, s2)=$Builtin.split(l, "	"),s=$Builtin.toInt(s1),t=$Builtin.toInt(s2).,}, ], 
+elapsed 254681
+15:30:26 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=6)
+15:30:29 INFO LocalEngine: epoch Epoch (6) [RuleComp {Node(n) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/node.txt"),n=$Builtin.toInt(l).,}, ], 
+elapsed 2488
+15:30:29 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=7)
+15:30:29 INFO LocalEngine: epoch Epoch (7) [RuleComp {CC(X,X) :- Node(X).,}, ], 
+elapsed 315
+15:30:30 INFO AsyncCodeGenMain: AsyncTable compiled
+15:30:30 INFO AsyncCodeGenMain: AsyncRuntime compiled
+15:30:30 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=8)
+15:30:30 INFO LocalEngine: epoch Epoch (8) [], , new table(InitTable)
+elapsed 0
+15:30:30 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=9)
+15:32:01 INFO LocalEngine: epoch Epoch (9) [RuleComp {InitTable(key,delta,adjacency) :- CC(key,delta),Edge(key,adjacency).,}, ], 
+elapsed 90739
+15:32:01 INFO AsyncRuntime: RECV CMD NOTIFY_INIT CONFIG:CHECK_COND:DELTA== 0.0, CHECK_INTERVAL:1000, PRIORITY_TYPE:VALUE -  MIN(VALUE, DELTA), SAMPLE_RATE:1.0E-4, SCHEDULE_PORTION:0.5, PRIORITY_LOCAL, ASYNC, NON-LOCK, STATIC, NON-BARRIER, THREAD_NUM:32, INIT_SIZE:0, MESSAGE_INIT_SIZE:0, MESSAGE_UPDATE_THRESHOLD:0, MESSAGE_TABLE_WAITING_INTERVAL:-1, PRINT_RESULT:FALSE, SAVE_PATH:null
+15:32:10 INFO AsyncRuntime: Data Loaded size:19991625
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO AsyncRuntime: Worker started
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:10 INFO BaseAsyncRuntime: PRIORITY LOCAL!!!!!!!!!!!!!!
+15:32:31 INFO AsyncRuntime: sum of delta: 0
+15:32:31 INFO AsyncRuntime: UPDATE TIMES:24188136
+15:32:31 INFO BaseAsyncRuntime: call done
+15:32:31 INFO BaseAsyncRuntime: UPDATE_TIMES:24188136
+15:32:31 INFO BaseAsyncRuntime: DONE ELAPSED:20942
+15:32:31 INFO BaseAsyncRuntime: CHECKER THREAD EXITED
+ssh: Could not resolve hostname master: Name or service not known
+ssh: Could not resolve hostname hadoop0: Name or service not known
+ssh: Could not resolve hostname hadoop1: Name or service not known
+ssh: Could not resolve hostname hadoop2: Name or service not known
+ssh: Could not resolve hostname hadoop3: Name or service not known
+15:32:35 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=2)
+15:32:35 INFO LocalEngine: epoch Epoch (2) [], , new table(CC)
+elapsed 1
+15:32:35 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=3)
+15:32:35 INFO LocalEngine: epoch Epoch (3) [], , new table(Node)
+elapsed 0
+15:32:35 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=4)
+15:32:35 INFO LocalEngine: epoch Epoch (4) [], , new table(Edge)
+elapsed 0
+15:32:35 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=5)
+15:36:53 INFO LocalEngine: epoch Epoch (5) [RuleComp {Edge(s,t) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/edge_pair.txt"),(s1, s2)=$Builtin.split(l, "	"),s=$Builtin.toInt(s1),t=$Builtin.toInt(s2).,}, ], 
+elapsed 257848
+15:36:53 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=6)
+15:36:56 INFO LocalEngine: epoch Epoch (6) [RuleComp {Node(n) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/node.txt"),n=$Builtin.toInt(l).,}, ], 
+elapsed 2289
+15:36:56 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=7)
+15:36:56 INFO LocalEngine: epoch Epoch (7) [RuleComp {CC(X,X) :- Node(X).,}, ], 
+elapsed 267
+15:36:56 INFO AsyncCodeGenMain: AsyncTable compiled
+15:36:56 INFO AsyncCodeGenMain: AsyncRuntime compiled
+15:36:57 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=8)
+15:36:57 INFO LocalEngine: epoch Epoch (8) [], , new table(InitTable)
+elapsed 0
+15:36:57 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=9)
+15:38:09 INFO LocalEngine: epoch Epoch (9) [RuleComp {InitTable(key,delta,adjacency) :- CC(key,delta),Edge(key,adjacency).,}, ], 
+elapsed 71989
+15:38:09 INFO AsyncRuntime: RECV CMD NOTIFY_INIT CONFIG:CHECK_COND:DELTA== 0.0, CHECK_INTERVAL:1000, PRIORITY_TYPE:VALUE -  MIN(VALUE, DELTA), SAMPLE_RATE:1.0E-4, SCHEDULE_PORTION:0.01, PRIORITY_GLOBAL, ASYNC, NON-LOCK, STATIC, NON-BARRIER, THREAD_NUM:32, INIT_SIZE:0, MESSAGE_INIT_SIZE:0, MESSAGE_UPDATE_THRESHOLD:0, MESSAGE_TABLE_WAITING_INTERVAL:-1, PRINT_RESULT:FALSE, SAVE_PATH:null
+15:38:17 INFO AsyncRuntime: Data Loaded size:19991625
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO AsyncRuntime: Worker started
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:17 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:38:33 INFO AsyncRuntime: sum of delta: 118177137701
+15:38:33 INFO AsyncRuntime: UPDATE TIMES:24226220
+15:38:36 INFO AsyncRuntime: sum of delta: 225843047
+15:38:36 INFO AsyncRuntime: UPDATE TIMES:24444338
+15:38:38 INFO AsyncRuntime: sum of delta: 0
+15:38:38 INFO AsyncRuntime: UPDATE TIMES:24444338
+15:38:38 INFO BaseAsyncRuntime: call done
+15:38:38 INFO BaseAsyncRuntime: UPDATE_TIMES:24444338
+15:38:38 INFO BaseAsyncRuntime: DONE ELAPSED:20812
+15:38:38 INFO BaseAsyncRuntime: CHECKER THREAD EXITED
+ssh: Could not resolve hostname master: Name or service not known
+ssh: Could not resolve hostname hadoop0: Name or service not known
+ssh: Could not resolve hostname hadoop1: Name or service not known
+ssh: Could not resolve hostname hadoop2: Name or service not known
+ssh: Could not resolve hostname hadoop3: Name or service not known
+15:38:41 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=2)
+15:38:41 INFO LocalEngine: epoch Epoch (2) [], , new table(CC)
+elapsed 1
+15:38:41 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=3)
+15:38:41 INFO LocalEngine: epoch Epoch (3) [], , new table(Node)
+elapsed 0
+15:38:41 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=4)
+15:38:41 INFO LocalEngine: epoch Epoch (4) [], , new table(Edge)
+elapsed 0
+15:38:42 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=5)
+15:42:51 INFO LocalEngine: epoch Epoch (5) [RuleComp {Edge(s,t) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/edge_pair.txt"),(s1, s2)=$Builtin.split(l, "	"),s=$Builtin.toInt(s1),t=$Builtin.toInt(s2).,}, ], 
+elapsed 249227
+15:42:51 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=6)
+15:42:53 INFO LocalEngine: epoch Epoch (6) [RuleComp {Node(n) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/node.txt"),n=$Builtin.toInt(l).,}, ], 
+elapsed 2111
+15:42:53 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=7)
+15:42:54 INFO LocalEngine: epoch Epoch (7) [RuleComp {CC(X,X) :- Node(X).,}, ], 
+elapsed 281
+15:42:54 INFO AsyncCodeGenMain: AsyncTable compiled
+15:42:54 INFO AsyncCodeGenMain: AsyncRuntime compiled
+15:42:54 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=8)
+15:42:54 INFO LocalEngine: epoch Epoch (8) [], , new table(InitTable)
+elapsed 0
+15:42:54 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=9)
+15:44:46 INFO LocalEngine: epoch Epoch (9) [RuleComp {InitTable(key,delta,adjacency) :- CC(key,delta),Edge(key,adjacency).,}, ], 
+elapsed 111834
+15:44:46 INFO AsyncRuntime: RECV CMD NOTIFY_INIT CONFIG:CHECK_COND:DELTA== 0.0, CHECK_INTERVAL:1000, PRIORITY_TYPE:VALUE -  MIN(VALUE, DELTA), SAMPLE_RATE:1.0E-4, SCHEDULE_PORTION:0.01, PRIORITY_GLOBAL, ASYNC, NON-LOCK, STATIC, NON-BARRIER, THREAD_NUM:32, INIT_SIZE:0, MESSAGE_INIT_SIZE:0, MESSAGE_UPDATE_THRESHOLD:0, MESSAGE_TABLE_WAITING_INTERVAL:-1, PRINT_RESULT:FALSE, SAVE_PATH:null
+15:44:57 INFO AsyncRuntime: Data Loaded size:19991625
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO AsyncRuntime: Worker started
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:44:57 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:45:13 INFO AsyncRuntime: sum of delta: 120312089970
+15:45:13 INFO AsyncRuntime: UPDATE TIMES:23873316
+15:45:15 INFO AsyncRuntime: sum of delta: 1936667641
+15:45:15 INFO AsyncRuntime: UPDATE TIMES:24542046
+15:45:17 INFO AsyncRuntime: sum of delta: 0
+15:45:17 INFO AsyncRuntime: UPDATE TIMES:24542046
+15:45:17 INFO BaseAsyncRuntime: call done
+15:45:17 INFO BaseAsyncRuntime: UPDATE_TIMES:24542046
+15:45:17 INFO BaseAsyncRuntime: DONE ELAPSED:19991
+15:45:17 INFO BaseAsyncRuntime: CHECKER THREAD EXITED
+ssh: Could not resolve hostname master: Name or service not known
+ssh: Could not resolve hostname hadoop0: Name or service not known
+ssh: Could not resolve hostname hadoop1: Name or service not known
+ssh: Could not resolve hostname hadoop2: Name or service not known
+ssh: Could not resolve hostname hadoop3: Name or service not known
+15:45:20 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=2)
+15:45:20 INFO LocalEngine: epoch Epoch (2) [], , new table(CC)
+elapsed 1
+15:45:20 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=3)
+15:45:20 INFO LocalEngine: epoch Epoch (3) [], , new table(Node)
+elapsed 0
+15:45:21 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=4)
+15:45:21 INFO LocalEngine: epoch Epoch (4) [], , new table(Edge)
+elapsed 0
+15:45:21 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=5)
+15:49:35 INFO LocalEngine: epoch Epoch (5) [RuleComp {Edge(s,t) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/edge_pair.txt"),(s1, s2)=$Builtin.split(l, "	"),s=$Builtin.toInt(s1),t=$Builtin.toInt(s2).,}, ], 
+elapsed 253608
+15:49:35 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=6)
+15:49:37 INFO LocalEngine: epoch Epoch (6) [RuleComp {Node(n) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/node.txt"),n=$Builtin.toInt(l).,}, ], 
+elapsed 2300
+15:49:37 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=7)
+15:49:38 INFO LocalEngine: epoch Epoch (7) [RuleComp {CC(X,X) :- Node(X).,}, ], 
+elapsed 252
+15:49:38 INFO AsyncCodeGenMain: AsyncTable compiled
+15:49:38 INFO AsyncCodeGenMain: AsyncRuntime compiled
+15:49:38 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=8)
+15:49:38 INFO LocalEngine: epoch Epoch (8) [], , new table(InitTable)
+elapsed 0
+15:49:38 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=9)
+15:50:54 INFO LocalEngine: epoch Epoch (9) [RuleComp {InitTable(key,delta,adjacency) :- CC(key,delta),Edge(key,adjacency).,}, ], 
+elapsed 75370
+15:50:54 INFO AsyncRuntime: RECV CMD NOTIFY_INIT CONFIG:CHECK_COND:DELTA== 0.0, CHECK_INTERVAL:1000, PRIORITY_TYPE:VALUE -  MIN(VALUE, DELTA), SAMPLE_RATE:1.0E-4, SCHEDULE_PORTION:0.02, PRIORITY_GLOBAL, ASYNC, NON-LOCK, STATIC, NON-BARRIER, THREAD_NUM:32, INIT_SIZE:0, MESSAGE_INIT_SIZE:0, MESSAGE_UPDATE_THRESHOLD:0, MESSAGE_TABLE_WAITING_INTERVAL:-1, PRINT_RESULT:FALSE, SAVE_PATH:null
+15:51:02 INFO AsyncRuntime: Data Loaded size:19991625
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO AsyncRuntime: Worker started
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:02 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:51:14 INFO AsyncRuntime: sum of delta: 361611
+15:51:14 INFO AsyncRuntime: UPDATE TIMES:24321475
+15:51:16 INFO AsyncRuntime: sum of delta: 0
+15:51:16 INFO AsyncRuntime: UPDATE TIMES:24321475
+15:51:16 INFO BaseAsyncRuntime: call done
+15:51:16 INFO BaseAsyncRuntime: UPDATE_TIMES:24321475
+15:51:16 INFO BaseAsyncRuntime: DONE ELAPSED:14902
+15:51:16 INFO BaseAsyncRuntime: CHECKER THREAD EXITED
+ssh: Could not resolve hostname master: Name or service not known
+ssh: Could not resolve hostname hadoop0: Name or service not known
+ssh: Could not resolve hostname hadoop1: Name or service not known
+ssh: Could not resolve hostname hadoop2: Name or service not known
+ssh: Could not resolve hostname hadoop3: Name or service not known
+15:51:20 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=2)
+15:51:20 INFO LocalEngine: epoch Epoch (2) [], , new table(CC)
+elapsed 3
+15:51:20 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=3)
+15:51:20 INFO LocalEngine: epoch Epoch (3) [], , new table(Node)
+elapsed 0
+15:51:20 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=4)
+15:51:20 INFO LocalEngine: epoch Epoch (4) [], , new table(Edge)
+elapsed 0
+15:51:20 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=5)
+15:55:37 INFO LocalEngine: epoch Epoch (5) [RuleComp {Edge(s,t) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/edge_pair.txt"),(s1, s2)=$Builtin.split(l, "	"),s=$Builtin.toInt(s1),t=$Builtin.toInt(s2).,}, ], 
+elapsed 256026
+15:55:37 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=6)
+15:55:39 INFO LocalEngine: epoch Epoch (6) [RuleComp {Node(n) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/node.txt"),n=$Builtin.toInt(l).,}, ], 
+elapsed 2844
+15:55:40 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=7)
+15:55:40 INFO LocalEngine: epoch Epoch (7) [RuleComp {CC(X,X) :- Node(X).,}, ], 
+elapsed 198
+15:55:40 INFO AsyncCodeGenMain: AsyncTable compiled
+15:55:40 INFO AsyncCodeGenMain: AsyncRuntime compiled
+15:55:40 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=8)
+15:55:40 INFO LocalEngine: epoch Epoch (8) [], , new table(InitTable)
+elapsed 0
+15:55:41 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=9)
+15:56:58 INFO LocalEngine: epoch Epoch (9) [RuleComp {InitTable(key,delta,adjacency) :- CC(key,delta),Edge(key,adjacency).,}, ], 
+elapsed 77294
+15:56:58 INFO AsyncRuntime: RECV CMD NOTIFY_INIT CONFIG:CHECK_COND:DELTA== 0.0, CHECK_INTERVAL:1000, PRIORITY_TYPE:VALUE -  MIN(VALUE, DELTA), SAMPLE_RATE:1.0E-4, SCHEDULE_PORTION:0.02, PRIORITY_GLOBAL, ASYNC, NON-LOCK, STATIC, NON-BARRIER, THREAD_NUM:32, INIT_SIZE:0, MESSAGE_INIT_SIZE:0, MESSAGE_UPDATE_THRESHOLD:0, MESSAGE_TABLE_WAITING_INTERVAL:-1, PRINT_RESULT:FALSE, SAVE_PATH:null
+15:57:08 INFO AsyncRuntime: Data Loaded size:19991625
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO AsyncRuntime: Worker started
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:08 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+15:57:26 INFO AsyncRuntime: sum of delta: 58974
+15:57:26 INFO AsyncRuntime: UPDATE TIMES:24284781
+15:57:29 INFO AsyncRuntime: sum of delta: 0
+15:57:29 INFO AsyncRuntime: UPDATE TIMES:24284781
+15:57:29 INFO BaseAsyncRuntime: call done
+15:57:29 INFO BaseAsyncRuntime: UPDATE_TIMES:24284781
+15:57:29 INFO BaseAsyncRuntime: DONE ELAPSED:20850
+15:57:29 INFO BaseAsyncRuntime: CHECKER THREAD EXITED
+ssh: Could not resolve hostname master: Name or service not known
+ssh: Could not resolve hostname hadoop0: Name or service not known
+ssh: Could not resolve hostname hadoop1: Name or service not known
+ssh: Could not resolve hostname hadoop2: Name or service not known
+ssh: Could not resolve hostname hadoop3: Name or service not known
+15:57:32 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=2)
+15:57:32 INFO LocalEngine: epoch Epoch (2) [], , new table(CC)
+elapsed 1
+15:57:32 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=3)
+15:57:32 INFO LocalEngine: epoch Epoch (3) [], , new table(Node)
+elapsed 0
+15:57:32 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=4)
+15:57:32 INFO LocalEngine: epoch Epoch (4) [], , new table(Edge)
+elapsed 0
+15:57:33 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=5)
+16:01:42 INFO LocalEngine: epoch Epoch (5) [RuleComp {Edge(s,t) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/edge_pair.txt"),(s1, s2)=$Builtin.split(l, "	"),s=$Builtin.toInt(s1),t=$Builtin.toInt(s2).,}, ], 
+elapsed 249434
+16:01:42 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=6)
+16:01:45 INFO LocalEngine: epoch Epoch (6) [RuleComp {Node(n) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/node.txt"),n=$Builtin.toInt(l).,}, ], 
+elapsed 2550
+16:01:45 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=7)
+16:01:45 INFO LocalEngine: epoch Epoch (7) [RuleComp {CC(X,X) :- Node(X).,}, ], 
+elapsed 291
+16:01:46 INFO AsyncCodeGenMain: AsyncTable compiled
+16:01:46 INFO AsyncCodeGenMain: AsyncRuntime compiled
+16:01:46 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=8)
+16:01:46 INFO LocalEngine: epoch Epoch (8) [], , new table(InitTable)
+elapsed 0
+16:01:46 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=9)
+16:03:00 INFO LocalEngine: epoch Epoch (9) [RuleComp {InitTable(key,delta,adjacency) :- CC(key,delta),Edge(key,adjacency).,}, ], 
+elapsed 74287
+16:03:00 INFO AsyncRuntime: RECV CMD NOTIFY_INIT CONFIG:CHECK_COND:DELTA== 0.0, CHECK_INTERVAL:1000, PRIORITY_TYPE:VALUE -  MIN(VALUE, DELTA), SAMPLE_RATE:1.0E-4, SCHEDULE_PORTION:0.05, PRIORITY_GLOBAL, ASYNC, NON-LOCK, STATIC, NON-BARRIER, THREAD_NUM:32, INIT_SIZE:0, MESSAGE_INIT_SIZE:0, MESSAGE_UPDATE_THRESHOLD:0, MESSAGE_TABLE_WAITING_INTERVAL:-1, PRINT_RESULT:FALSE, SAVE_PATH:null
+16:03:09 INFO AsyncRuntime: Data Loaded size:19991625
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO AsyncRuntime: Worker started
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:09 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:03:26 INFO AsyncRuntime: sum of delta: 0
+16:03:26 INFO AsyncRuntime: UPDATE TIMES:24637399
+16:03:26 INFO BaseAsyncRuntime: call done
+16:03:26 INFO BaseAsyncRuntime: UPDATE_TIMES:24637399
+16:03:26 INFO BaseAsyncRuntime: DONE ELAPSED:17063
+16:03:26 INFO BaseAsyncRuntime: CHECKER THREAD EXITED
+ssh: Could not resolve hostname master: Name or service not known
+ssh: Could not resolve hostname hadoop0: Name or service not known
+ssh: Could not resolve hostname hadoop1: Name or service not known
+ssh: Could not resolve hostname hadoop2: Name or service not known
+ssh: Could not resolve hostname hadoop3: Name or service not known
+16:03:29 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=2)
+16:03:29 INFO LocalEngine: epoch Epoch (2) [], , new table(CC)
+elapsed 1
+16:03:29 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=3)
+16:03:29 INFO LocalEngine: epoch Epoch (3) [], , new table(Node)
+elapsed 0
+16:03:30 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=4)
+16:03:30 INFO LocalEngine: epoch Epoch (4) [], , new table(Edge)
+elapsed 0
+16:03:30 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=5)
+16:07:48 INFO LocalEngine: epoch Epoch (5) [RuleComp {Edge(s,t) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/edge_pair.txt"),(s1, s2)=$Builtin.split(l, "	"),s=$Builtin.toInt(s1),t=$Builtin.toInt(s2).,}, ], 
+elapsed 257694
+16:07:48 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=6)
+16:07:50 INFO LocalEngine: epoch Epoch (6) [RuleComp {Node(n) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/node.txt"),n=$Builtin.toInt(l).,}, ], 
+elapsed 2590
+16:07:50 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=7)
+16:07:51 INFO LocalEngine: epoch Epoch (7) [RuleComp {CC(X,X) :- Node(X).,}, ], 
+elapsed 204
+16:07:51 INFO AsyncCodeGenMain: AsyncTable compiled
+16:07:51 INFO AsyncCodeGenMain: AsyncRuntime compiled
+16:07:55 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=8)
+16:07:55 INFO LocalEngine: epoch Epoch (8) [], , new table(InitTable)
+elapsed 0
+16:07:55 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=9)
+16:08:56 INFO LocalEngine: epoch Epoch (9) [RuleComp {InitTable(key,delta,adjacency) :- CC(key,delta),Edge(key,adjacency).,}, ], 
+elapsed 60773
+16:08:56 INFO AsyncRuntime: RECV CMD NOTIFY_INIT CONFIG:CHECK_COND:DELTA== 0.0, CHECK_INTERVAL:1000, PRIORITY_TYPE:VALUE -  MIN(VALUE, DELTA), SAMPLE_RATE:1.0E-4, SCHEDULE_PORTION:0.05, PRIORITY_GLOBAL, ASYNC, NON-LOCK, STATIC, NON-BARRIER, THREAD_NUM:32, INIT_SIZE:0, MESSAGE_INIT_SIZE:0, MESSAGE_UPDATE_THRESHOLD:0, MESSAGE_TABLE_WAITING_INTERVAL:-1, PRINT_RESULT:FALSE, SAVE_PATH:null
+16:09:06 INFO AsyncRuntime: Data Loaded size:19991625
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO AsyncRuntime: Worker started
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:06 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:09:23 INFO AsyncRuntime: sum of delta: 0
+16:09:23 INFO AsyncRuntime: UPDATE TIMES:24566511
+16:09:23 INFO BaseAsyncRuntime: call done
+16:09:23 INFO BaseAsyncRuntime: UPDATE_TIMES:24566511
+16:09:23 INFO BaseAsyncRuntime: DONE ELAPSED:17408
+16:09:23 INFO BaseAsyncRuntime: CHECKER THREAD EXITED
+ssh: Could not resolve hostname master: Name or service not known
+ssh: Could not resolve hostname hadoop0: Name or service not known
+ssh: Could not resolve hostname hadoop1: Name or service not known
+ssh: Could not resolve hostname hadoop2: Name or service not known
+ssh: Could not resolve hostname hadoop3: Name or service not known
+16:09:27 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=2)
+16:09:27 INFO LocalEngine: epoch Epoch (2) [], , new table(CC)
+elapsed 1
+16:09:27 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=3)
+16:09:27 INFO LocalEngine: epoch Epoch (3) [], , new table(Node)
+elapsed 0
+16:09:27 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=4)
+16:09:27 INFO LocalEngine: epoch Epoch (4) [], , new table(Edge)
+elapsed 0
+16:09:27 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=5)
+16:13:45 INFO LocalEngine: epoch Epoch (5) [RuleComp {Edge(s,t) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/edge_pair.txt"),(s1, s2)=$Builtin.split(l, "	"),s=$Builtin.toInt(s1),t=$Builtin.toInt(s2).,}, ], 
+elapsed 257149
+16:13:45 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=6)
+16:13:47 INFO LocalEngine: epoch Epoch (6) [RuleComp {Node(n) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/node.txt"),n=$Builtin.toInt(l).,}, ], 
+elapsed 2401
+16:13:47 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=7)
+16:13:47 INFO LocalEngine: epoch Epoch (7) [RuleComp {CC(X,X) :- Node(X).,}, ], 
+elapsed 228
+16:13:48 INFO AsyncCodeGenMain: AsyncTable compiled
+16:13:48 INFO AsyncCodeGenMain: AsyncRuntime compiled
+16:13:48 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=8)
+16:13:48 INFO LocalEngine: epoch Epoch (8) [], , new table(InitTable)
+elapsed 0
+16:13:48 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=9)
+16:15:04 INFO LocalEngine: epoch Epoch (9) [RuleComp {InitTable(key,delta,adjacency) :- CC(key,delta),Edge(key,adjacency).,}, ], 
+elapsed 75549
+16:15:04 INFO AsyncRuntime: RECV CMD NOTIFY_INIT CONFIG:CHECK_COND:DELTA== 0.0, CHECK_INTERVAL:1000, PRIORITY_TYPE:VALUE -  MIN(VALUE, DELTA), SAMPLE_RATE:1.0E-4, SCHEDULE_PORTION:0.1, PRIORITY_GLOBAL, ASYNC, NON-LOCK, STATIC, NON-BARRIER, THREAD_NUM:32, INIT_SIZE:0, MESSAGE_INIT_SIZE:0, MESSAGE_UPDATE_THRESHOLD:0, MESSAGE_TABLE_WAITING_INTERVAL:-1, PRINT_RESULT:FALSE, SAVE_PATH:null
+16:15:13 INFO AsyncRuntime: Data Loaded size:19991625
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO AsyncRuntime: Worker started
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:13 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:15:25 INFO AsyncRuntime: sum of delta: 0
+16:15:25 INFO AsyncRuntime: UPDATE TIMES:24445647
+16:15:26 INFO BaseAsyncRuntime: call done
+16:15:26 INFO BaseAsyncRuntime: UPDATE_TIMES:24445647
+16:15:26 INFO BaseAsyncRuntime: DONE ELAPSED:12050
+16:15:26 INFO BaseAsyncRuntime: CHECKER THREAD EXITED
+ssh: Could not resolve hostname master: Name or service not known
+ssh: Could not resolve hostname hadoop0: Name or service not known
+ssh: Could not resolve hostname hadoop1: Name or service not known
+ssh: Could not resolve hostname hadoop2: Name or service not known
+ssh: Could not resolve hostname hadoop3: Name or service not known
+16:15:29 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=2)
+16:15:29 INFO LocalEngine: epoch Epoch (2) [], , new table(CC)
+elapsed 3
+16:15:29 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=3)
+16:15:29 INFO LocalEngine: epoch Epoch (3) [], , new table(Node)
+elapsed 0
+16:15:29 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=4)
+16:15:29 INFO LocalEngine: epoch Epoch (4) [], , new table(Edge)
+elapsed 0
+16:15:30 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=5)
+16:19:49 INFO LocalEngine: epoch Epoch (5) [RuleComp {Edge(s,t) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/edge_pair.txt"),(s1, s2)=$Builtin.split(l, "	"),s=$Builtin.toInt(s1),t=$Builtin.toInt(s2).,}, ], 
+elapsed 259701
+16:19:49 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=6)
+16:19:52 INFO LocalEngine: epoch Epoch (6) [RuleComp {Node(n) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/node.txt"),n=$Builtin.toInt(l).,}, ], 
+elapsed 2729
+16:19:52 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=7)
+16:19:53 INFO LocalEngine: epoch Epoch (7) [RuleComp {CC(X,X) :- Node(X).,}, ], 
+elapsed 270
+16:19:53 INFO AsyncCodeGenMain: AsyncTable compiled
+16:19:53 INFO AsyncCodeGenMain: AsyncRuntime compiled
+16:19:53 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=8)
+16:19:53 INFO LocalEngine: epoch Epoch (8) [], , new table(InitTable)
+elapsed 0
+16:19:53 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=9)
+16:21:11 INFO LocalEngine: epoch Epoch (9) [RuleComp {InitTable(key,delta,adjacency) :- CC(key,delta),Edge(key,adjacency).,}, ], 
+elapsed 77530
+16:21:11 INFO AsyncRuntime: RECV CMD NOTIFY_INIT CONFIG:CHECK_COND:DELTA== 0.0, CHECK_INTERVAL:1000, PRIORITY_TYPE:VALUE -  MIN(VALUE, DELTA), SAMPLE_RATE:1.0E-4, SCHEDULE_PORTION:0.1, PRIORITY_GLOBAL, ASYNC, NON-LOCK, STATIC, NON-BARRIER, THREAD_NUM:32, INIT_SIZE:0, MESSAGE_INIT_SIZE:0, MESSAGE_UPDATE_THRESHOLD:0, MESSAGE_TABLE_WAITING_INTERVAL:-1, PRINT_RESULT:FALSE, SAVE_PATH:null
+16:21:20 INFO AsyncRuntime: Data Loaded size:19991625
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:21:20 INFO AsyncRuntime: Worker started
+16:21:34 INFO AsyncRuntime: sum of delta: 0
+16:21:34 INFO AsyncRuntime: UPDATE TIMES:24481355
+16:21:34 INFO BaseAsyncRuntime: call done
+16:21:34 INFO BaseAsyncRuntime: UPDATE_TIMES:24481355
+16:21:34 INFO BaseAsyncRuntime: DONE ELAPSED:14013
+16:21:34 INFO BaseAsyncRuntime: CHECKER THREAD EXITED
+ssh: Could not resolve hostname master: Name or service not known
+ssh: Could not resolve hostname hadoop0: Name or service not known
+ssh: Could not resolve hostname hadoop1: Name or service not known
+ssh: Could not resolve hostname hadoop2: Name or service not known
+ssh: Could not resolve hostname hadoop3: Name or service not known
+16:21:37 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=2)
+16:21:37 INFO LocalEngine: epoch Epoch (2) [], , new table(CC)
+elapsed 1
+16:21:38 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=3)
+16:21:38 INFO LocalEngine: epoch Epoch (3) [], , new table(Node)
+elapsed 0
+16:21:38 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=4)
+16:21:38 INFO LocalEngine: epoch Epoch (4) [], , new table(Edge)
+elapsed 0
+16:21:38 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=5)
+16:25:54 INFO LocalEngine: epoch Epoch (5) [RuleComp {Edge(s,t) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/edge_pair.txt"),(s1, s2)=$Builtin.split(l, "	"),s=$Builtin.toInt(s1),t=$Builtin.toInt(s2).,}, ], 
+elapsed 256187
+16:25:55 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=6)
+16:25:57 INFO LocalEngine: epoch Epoch (6) [RuleComp {Node(n) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/node.txt"),n=$Builtin.toInt(l).,}, ], 
+elapsed 2556
+16:25:57 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=7)
+16:25:58 INFO LocalEngine: epoch Epoch (7) [RuleComp {CC(X,X) :- Node(X).,}, ], 
+elapsed 284
+16:25:58 INFO AsyncCodeGenMain: AsyncTable compiled
+16:25:58 INFO AsyncCodeGenMain: AsyncRuntime compiled
+16:25:58 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=8)
+16:25:58 INFO LocalEngine: epoch Epoch (8) [], , new table(InitTable)
+elapsed 0
+16:25:58 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=9)
+16:27:15 INFO LocalEngine: epoch Epoch (9) [RuleComp {InitTable(key,delta,adjacency) :- CC(key,delta),Edge(key,adjacency).,}, ], 
+elapsed 76620
+16:27:15 INFO AsyncRuntime: RECV CMD NOTIFY_INIT CONFIG:CHECK_COND:DELTA== 0.0, CHECK_INTERVAL:1000, PRIORITY_TYPE:VALUE -  MIN(VALUE, DELTA), SAMPLE_RATE:1.0E-4, SCHEDULE_PORTION:0.2, PRIORITY_GLOBAL, ASYNC, NON-LOCK, STATIC, NON-BARRIER, THREAD_NUM:32, INIT_SIZE:0, MESSAGE_INIT_SIZE:0, MESSAGE_UPDATE_THRESHOLD:0, MESSAGE_TABLE_WAITING_INTERVAL:-1, PRINT_RESULT:FALSE, SAVE_PATH:null
+16:27:25 INFO AsyncRuntime: Data Loaded size:19991625
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO AsyncRuntime: Worker started
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:25 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:27:39 INFO AsyncRuntime: sum of delta: 0
+16:27:39 INFO AsyncRuntime: UPDATE TIMES:24455139
+16:27:39 INFO BaseAsyncRuntime: call done
+16:27:39 INFO BaseAsyncRuntime: UPDATE_TIMES:24455139
+16:27:39 INFO BaseAsyncRuntime: DONE ELAPSED:14317
+16:27:39 INFO BaseAsyncRuntime: CHECKER THREAD EXITED
+ssh: Could not resolve hostname master: Name or service not known
+ssh: Could not resolve hostname hadoop0: Name or service not known
+ssh: Could not resolve hostname hadoop1: Name or service not known
+ssh: Could not resolve hostname hadoop2: Name or service not known
+ssh: Could not resolve hostname hadoop3: Name or service not known
+16:27:42 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=2)
+16:27:42 INFO LocalEngine: epoch Epoch (2) [], , new table(CC)
+elapsed 3
+16:27:42 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=3)
+16:27:42 INFO LocalEngine: epoch Epoch (3) [], , new table(Node)
+elapsed 0
+16:27:43 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=4)
+16:27:43 INFO LocalEngine: epoch Epoch (4) [], , new table(Edge)
+elapsed 0
+16:27:43 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=5)
+16:32:09 INFO LocalEngine: epoch Epoch (5) [RuleComp {Edge(s,t) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/edge_pair.txt"),(s1, s2)=$Builtin.split(l, "	"),s=$Builtin.toInt(s1),t=$Builtin.toInt(s2).,}, ], 
+elapsed 265963
+16:32:09 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=6)
+16:32:28 INFO LocalEngine: epoch Epoch (6) [RuleComp {Node(n) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/node.txt"),n=$Builtin.toInt(l).,}, ], 
+elapsed 18756
+16:32:28 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=7)
+16:32:29 INFO LocalEngine: epoch Epoch (7) [RuleComp {CC(X,X) :- Node(X).,}, ], 
+elapsed 301
+16:32:29 INFO AsyncCodeGenMain: AsyncTable compiled
+16:32:29 INFO AsyncCodeGenMain: AsyncRuntime compiled
+16:32:29 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=8)
+16:32:29 INFO LocalEngine: epoch Epoch (8) [], , new table(InitTable)
+elapsed 0
+16:32:29 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=9)
+16:33:31 INFO LocalEngine: epoch Epoch (9) [RuleComp {InitTable(key,delta,adjacency) :- CC(key,delta),Edge(key,adjacency).,}, ], 
+elapsed 61308
+16:33:31 INFO AsyncRuntime: RECV CMD NOTIFY_INIT CONFIG:CHECK_COND:DELTA== 0.0, CHECK_INTERVAL:1000, PRIORITY_TYPE:VALUE -  MIN(VALUE, DELTA), SAMPLE_RATE:1.0E-4, SCHEDULE_PORTION:0.2, PRIORITY_GLOBAL, ASYNC, NON-LOCK, STATIC, NON-BARRIER, THREAD_NUM:32, INIT_SIZE:0, MESSAGE_INIT_SIZE:0, MESSAGE_UPDATE_THRESHOLD:0, MESSAGE_TABLE_WAITING_INTERVAL:-1, PRINT_RESULT:FALSE, SAVE_PATH:null
+16:33:39 INFO AsyncRuntime: Data Loaded size:19991625
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO AsyncRuntime: Worker started
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:39 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:33:52 INFO AsyncRuntime: sum of delta: 0
+16:33:52 INFO AsyncRuntime: UPDATE TIMES:24429775
+16:33:52 INFO BaseAsyncRuntime: call done
+16:33:52 INFO BaseAsyncRuntime: UPDATE_TIMES:24429775
+16:33:52 INFO BaseAsyncRuntime: DONE ELAPSED:13335
+16:33:52 INFO BaseAsyncRuntime: CHECKER THREAD EXITED
+ssh: Could not resolve hostname master: Name or service not known
+ssh: Could not resolve hostname hadoop0: Name or service not known
+ssh: Could not resolve hostname hadoop1: Name or service not known
+ssh: Could not resolve hostname hadoop2: Name or service not known
+ssh: Could not resolve hostname hadoop3: Name or service not known
+16:33:55 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=2)
+16:33:55 INFO LocalEngine: epoch Epoch (2) [], , new table(CC)
+elapsed 1
+16:33:55 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=3)
+16:33:55 INFO LocalEngine: epoch Epoch (3) [], , new table(Node)
+elapsed 0
+16:33:56 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=4)
+16:33:56 INFO LocalEngine: epoch Epoch (4) [], , new table(Edge)
+elapsed 0
+16:33:56 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=5)
+16:38:14 INFO LocalEngine: epoch Epoch (5) [RuleComp {Edge(s,t) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/edge_pair.txt"),(s1, s2)=$Builtin.split(l, "	"),s=$Builtin.toInt(s1),t=$Builtin.toInt(s2).,}, ], 
+elapsed 257829
+16:38:14 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=6)
+16:38:17 INFO LocalEngine: epoch Epoch (6) [RuleComp {Node(n) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/node.txt"),n=$Builtin.toInt(l).,}, ], 
+elapsed 2901
+16:38:17 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=7)
+16:38:17 INFO LocalEngine: epoch Epoch (7) [RuleComp {CC(X,X) :- Node(X).,}, ], 
+elapsed 194
+16:38:18 INFO AsyncCodeGenMain: AsyncTable compiled
+16:38:18 INFO AsyncCodeGenMain: AsyncRuntime compiled
+16:38:18 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=8)
+16:38:18 INFO LocalEngine: epoch Epoch (8) [], , new table(InitTable)
+elapsed 0
+16:38:18 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=9)
+16:39:33 INFO LocalEngine: epoch Epoch (9) [RuleComp {InitTable(key,delta,adjacency) :- CC(key,delta),Edge(key,adjacency).,}, ], 
+elapsed 74792
+16:39:33 INFO AsyncRuntime: RECV CMD NOTIFY_INIT CONFIG:CHECK_COND:DELTA== 0.0, CHECK_INTERVAL:1000, PRIORITY_TYPE:VALUE -  MIN(VALUE, DELTA), SAMPLE_RATE:1.0E-4, SCHEDULE_PORTION:0.3, PRIORITY_GLOBAL, ASYNC, NON-LOCK, STATIC, NON-BARRIER, THREAD_NUM:32, INIT_SIZE:0, MESSAGE_INIT_SIZE:0, MESSAGE_UPDATE_THRESHOLD:0, MESSAGE_TABLE_WAITING_INTERVAL:-1, PRINT_RESULT:FALSE, SAVE_PATH:null
+16:39:43 INFO AsyncRuntime: Data Loaded size:19991625
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:39:43 INFO AsyncRuntime: Worker started
+16:39:55 INFO AsyncRuntime: sum of delta: 0
+16:39:55 INFO AsyncRuntime: UPDATE TIMES:24439207
+16:39:55 INFO BaseAsyncRuntime: call done
+16:39:55 INFO BaseAsyncRuntime: UPDATE_TIMES:24439207
+16:39:55 INFO BaseAsyncRuntime: DONE ELAPSED:11554
+16:39:55 INFO BaseAsyncRuntime: CHECKER THREAD EXITED
+ssh: Could not resolve hostname master: Name or service not known
+ssh: Could not resolve hostname hadoop0: Name or service not known
+ssh: Could not resolve hostname hadoop1: Name or service not known
+ssh: Could not resolve hostname hadoop2: Name or service not known
+ssh: Could not resolve hostname hadoop3: Name or service not known
+16:39:58 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=2)
+16:39:58 INFO LocalEngine: epoch Epoch (2) [], , new table(CC)
+elapsed 1
+16:39:58 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=3)
+16:39:58 INFO LocalEngine: epoch Epoch (3) [], , new table(Node)
+elapsed 0
+16:39:58 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=4)
+16:39:58 INFO LocalEngine: epoch Epoch (4) [], , new table(Edge)
+elapsed 0
+16:39:59 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=5)
+16:44:23 INFO LocalEngine: epoch Epoch (5) [RuleComp {Edge(s,t) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/edge_pair.txt"),(s1, s2)=$Builtin.split(l, "	"),s=$Builtin.toInt(s1),t=$Builtin.toInt(s2).,}, ], 
+elapsed 264464
+16:44:23 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=6)
+16:44:26 INFO LocalEngine: epoch Epoch (6) [RuleComp {Node(n) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/node.txt"),n=$Builtin.toInt(l).,}, ], 
+elapsed 2489
+16:44:26 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=7)
+16:44:26 INFO LocalEngine: epoch Epoch (7) [RuleComp {CC(X,X) :- Node(X).,}, ], 
+elapsed 193
+16:44:26 INFO AsyncCodeGenMain: AsyncTable compiled
+16:44:26 INFO AsyncCodeGenMain: AsyncRuntime compiled
+16:44:27 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=8)
+16:44:27 INFO LocalEngine: epoch Epoch (8) [], , new table(InitTable)
+elapsed 0
+16:44:27 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=9)
+16:45:24 INFO LocalEngine: epoch Epoch (9) [RuleComp {InitTable(key,delta,adjacency) :- CC(key,delta),Edge(key,adjacency).,}, ], 
+elapsed 56788
+16:45:24 INFO AsyncRuntime: RECV CMD NOTIFY_INIT CONFIG:CHECK_COND:DELTA== 0.0, CHECK_INTERVAL:1000, PRIORITY_TYPE:VALUE -  MIN(VALUE, DELTA), SAMPLE_RATE:1.0E-4, SCHEDULE_PORTION:0.3, PRIORITY_GLOBAL, ASYNC, NON-LOCK, STATIC, NON-BARRIER, THREAD_NUM:32, INIT_SIZE:0, MESSAGE_INIT_SIZE:0, MESSAGE_UPDATE_THRESHOLD:0, MESSAGE_TABLE_WAITING_INTERVAL:-1, PRINT_RESULT:FALSE, SAVE_PATH:null
+16:45:32 INFO AsyncRuntime: Data Loaded size:19991625
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:45:32 INFO AsyncRuntime: Worker started
+16:45:45 INFO AsyncRuntime: sum of delta: 0
+16:45:45 INFO AsyncRuntime: UPDATE TIMES:24419075
+16:45:45 INFO BaseAsyncRuntime: call done
+16:45:45 INFO BaseAsyncRuntime: UPDATE_TIMES:24419075
+16:45:45 INFO BaseAsyncRuntime: DONE ELAPSED:12744
+16:45:45 INFO BaseAsyncRuntime: CHECKER THREAD EXITED
+ssh: Could not resolve hostname master: Name or service not known
+ssh: Could not resolve hostname hadoop0: Name or service not known
+ssh: Could not resolve hostname hadoop1: Name or service not known
+ssh: Could not resolve hostname hadoop2: Name or service not known
+ssh: Could not resolve hostname hadoop3: Name or service not known
+16:45:48 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=2)
+16:45:48 INFO LocalEngine: epoch Epoch (2) [], , new table(CC)
+elapsed 1
+16:45:48 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=3)
+16:45:48 INFO LocalEngine: epoch Epoch (3) [], , new table(Node)
+elapsed 0
+16:45:49 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=4)
+16:45:49 INFO LocalEngine: epoch Epoch (4) [], , new table(Edge)
+elapsed 2
+16:45:49 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=5)
+16:50:07 INFO LocalEngine: epoch Epoch (5) [RuleComp {Edge(s,t) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/edge_pair.txt"),(s1, s2)=$Builtin.split(l, "	"),s=$Builtin.toInt(s1),t=$Builtin.toInt(s2).,}, ], 
+elapsed 258383
+16:50:08 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=6)
+16:50:10 INFO LocalEngine: epoch Epoch (6) [RuleComp {Node(n) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/node.txt"),n=$Builtin.toInt(l).,}, ], 
+elapsed 2418
+16:50:10 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=7)
+16:50:10 INFO LocalEngine: epoch Epoch (7) [RuleComp {CC(X,X) :- Node(X).,}, ], 
+elapsed 214
+16:50:11 INFO AsyncCodeGenMain: AsyncTable compiled
+16:50:11 INFO AsyncCodeGenMain: AsyncRuntime compiled
+16:50:11 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=8)
+16:50:11 INFO LocalEngine: epoch Epoch (8) [], , new table(InitTable)
+elapsed 0
+16:50:11 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=9)
+16:51:41 INFO LocalEngine: epoch Epoch (9) [RuleComp {InitTable(key,delta,adjacency) :- CC(key,delta),Edge(key,adjacency).,}, ], 
+elapsed 90131
+16:51:41 INFO AsyncRuntime: RECV CMD NOTIFY_INIT CONFIG:CHECK_COND:DELTA== 0.0, CHECK_INTERVAL:1000, PRIORITY_TYPE:VALUE -  MIN(VALUE, DELTA), SAMPLE_RATE:1.0E-4, SCHEDULE_PORTION:0.5, PRIORITY_GLOBAL, ASYNC, NON-LOCK, STATIC, NON-BARRIER, THREAD_NUM:32, INIT_SIZE:0, MESSAGE_INIT_SIZE:0, MESSAGE_UPDATE_THRESHOLD:0, MESSAGE_TABLE_WAITING_INTERVAL:-1, PRINT_RESULT:FALSE, SAVE_PATH:null
+16:51:51 INFO AsyncRuntime: Data Loaded size:19991625
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:51:51 INFO AsyncRuntime: Worker started
+16:51:51 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:52:02 INFO AsyncRuntime: sum of delta: 0
+16:52:02 INFO AsyncRuntime: UPDATE TIMES:24377978
+16:52:02 INFO BaseAsyncRuntime: call done
+16:52:02 INFO BaseAsyncRuntime: UPDATE_TIMES:24377978
+16:52:02 INFO BaseAsyncRuntime: DONE ELAPSED:11176
+16:52:02 INFO BaseAsyncRuntime: CHECKER THREAD EXITED
+ssh: Could not resolve hostname master: Name or service not known
+ssh: Could not resolve hostname hadoop0: Name or service not known
+ssh: Could not resolve hostname hadoop1: Name or service not known
+ssh: Could not resolve hostname hadoop2: Name or service not known
+ssh: Could not resolve hostname hadoop3: Name or service not known
+16:52:05 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=2)
+16:52:05 INFO LocalEngine: epoch Epoch (2) [], , new table(CC)
+elapsed 3
+16:52:05 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=3)
+16:52:05 INFO LocalEngine: epoch Epoch (3) [], , new table(Node)
+elapsed 0
+16:52:06 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=4)
+16:52:06 INFO LocalEngine: epoch Epoch (4) [], , new table(Edge)
+elapsed 0
+16:52:06 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=5)
+16:56:21 INFO LocalEngine: epoch Epoch (5) [RuleComp {Edge(s,t) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/edge_pair.txt"),(s1, s2)=$Builtin.split(l, "	"),s=$Builtin.toInt(s1),t=$Builtin.toInt(s2).,}, ], 
+elapsed 255347
+16:56:21 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=6)
+16:56:24 INFO LocalEngine: epoch Epoch (6) [RuleComp {Node(n) :- l=$Builtin.read("/clueweb/CC/clueweb_20M/node.txt"),n=$Builtin.toInt(l).,}, ], 
+elapsed 2542
+16:56:24 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=7)
+16:56:25 INFO LocalEngine: epoch Epoch (7) [RuleComp {CC(X,X) :- Node(X).,}, ], 
+elapsed 314
+16:56:25 INFO AsyncCodeGenMain: AsyncTable compiled
+16:56:25 INFO AsyncCodeGenMain: AsyncRuntime compiled
+16:56:25 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=8)
+16:56:25 INFO LocalEngine: epoch Epoch (8) [], , new table(InitTable)
+elapsed 0
+16:56:25 INFO EvalParallel:  NOTICE set epoch ready (epoch.id=9)
+16:57:42 INFO LocalEngine: epoch Epoch (9) [RuleComp {InitTable(key,delta,adjacency) :- CC(key,delta),Edge(key,adjacency).,}, ], 
+elapsed 76916
+16:57:42 INFO AsyncRuntime: RECV CMD NOTIFY_INIT CONFIG:CHECK_COND:DELTA== 0.0, CHECK_INTERVAL:1000, PRIORITY_TYPE:VALUE -  MIN(VALUE, DELTA), SAMPLE_RATE:1.0E-4, SCHEDULE_PORTION:0.5, PRIORITY_GLOBAL, ASYNC, NON-LOCK, STATIC, NON-BARRIER, THREAD_NUM:32, INIT_SIZE:0, MESSAGE_INIT_SIZE:0, MESSAGE_UPDATE_THRESHOLD:0, MESSAGE_TABLE_WAITING_INTERVAL:-1, PRINT_RESULT:FALSE, SAVE_PATH:null
+16:57:52 INFO AsyncRuntime: Data Loaded size:19991625
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO AsyncRuntime: Worker started
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:57:52 INFO BaseAsyncRuntime: PRIORITY GLOBALLLLLLLLLLL
+16:58:02 INFO AsyncRuntime: sum of delta: 0
+16:58:02 INFO AsyncRuntime: UPDATE TIMES:24483871
+16:58:02 INFO BaseAsyncRuntime: call done
+16:58:02 INFO BaseAsyncRuntime: UPDATE_TIMES:24483871
+16:58:02 INFO BaseAsyncRuntime: DONE ELAPSED:10569
+16:58:02 INFO BaseAsyncRuntime: CHECKER THREAD EXITED

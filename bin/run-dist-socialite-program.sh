@@ -3,9 +3,9 @@ BIN=`dirname "$0"`
 BIN=`cd "$BIN"; pwd`
 
 . ${BIN}/common.sh
-#CODE_CLASSPATH=${SOCIALITE_PREFIX}/classes/socialite.jar
-CODE_CLASSPATH=${SOCIALITE_PREFIX}/out/production/socialite
-PROG="java -Xmx28G"
+CODE_CLASSPATH=${SOCIALITE_PREFIX}/classes/socialite.jar
+#CODE_CLASSPATH=${SOCIALITE_PREFIX}/out/production/socialite
+PROG="java -Xmx220G"
 PROG+=" -Dsocialite.output.dir=${SOCIALITE_PREFIX}/gen"
 PROG+=" -Dsocialite.port=50100"
 PROG+=" -Dsocialite.master=${MASTER_HOST}"
@@ -17,7 +17,7 @@ PROG+=" $1"
 
 # PageRank
 #single threadnum  node-count edge-path   iter-num
-#$PROG socialite.test.PageRank single 4 4 hdfs://master:9000/examples/prog2_edge.txt 10
+#$PROG socialite.test.PageRank single 32 19991625 /clueweb/PageRank/clueweb_20M/edge_pair.txt 42
 
 #dist   node-count   edge-path iter-num
 #${BIN}/start-nodes.sh -copy-classes
@@ -28,7 +28,8 @@ PROG+=" $1"
 
 # SSSP
 # single      thread-num      node-num        edge-path
-#$PROG socialite.test.SSSP single 4 685230 hdfs://master:9000/Datasets/SSSP/BerkStan/edge.txt
+#$PROG socialite.test.SSSP single 32 19991625 /clueweb/SSSP/clueweb_20M/edge_pair.txt
+#$PROG socialite.test.SSSP single 32 12150976 /vol/Datasets/SSSP/Wikipedia_link_en/edge_pair.txt
 
 # dist         node-num         edge-path
 #${BIN}/start-nodes.sh -copy-classes
@@ -38,7 +39,7 @@ PROG+=" $1"
 
 # CC
 # single threadnum      node-count   node-path   edge-path
-$PROG socialite.test.CC single 4 685230 hdfs://master:9000/Datasets/CC/BerkStan/node.txt hdfs://master:9000/Datasets/CC/BerkStan/edge.txt
+$PROG socialite.test.CC single 64 19991625 /clueweb/CC/clueweb_20M/node.txt /clueweb/CC/clueweb_20M/edge_pair.txt
 
 # dist node-count      node-path     edge-path
 #${BIN}/start-nodes.sh -copy-classes
@@ -46,7 +47,7 @@ $PROG socialite.test.CC single 4 685230 hdfs://master:9000/Datasets/CC/BerkStan/
 #$PROG socialite.test.CC dist 685230 hdfs://master:9000/Datasets/CC/BerkStan/node.txt hdfs://master:9000/Datasets/CC/BerkStan/edge.txt
 #${BIN}/kill-all.sh "${SOCIALITE_PREFIX}/conf/machines"
 
-
+#$PROG socialite.test.COST single 32 30000000 /vol/Datasets/COST/30M/basic_30000000.txt /vol/Datasets/COST/30M/assb_30000000_soc.txt 41
 #for i in `seq 1 5`;
 #do
 #	bin/start-nodes.sh -copy-jar

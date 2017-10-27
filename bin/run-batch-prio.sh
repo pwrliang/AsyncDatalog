@@ -1,0 +1,16 @@
+/home/ubuntu/AsyncDatalog/bin/run-single.sh /home/ubuntu/AsyncDatalog/examples/priority/CC/local/CC_50.txt
+/home/ubuntu/AsyncDatalog/bin/run-single.sh /home/ubuntu/AsyncDatalog/examples/priority/CC/local/CC_50.txt
+/home/ubuntu/AsyncDatalog/bin/run-single.sh /home/ubuntu/AsyncDatalog/examples/priority/CC/global/CC_1.txt
+/home/ubuntu/AsyncDatalog/bin/run-single.sh /home/ubuntu/AsyncDatalog/examples/priority/CC/global/CC_1.txt
+/home/ubuntu/AsyncDatalog/bin/run-single.sh /home/ubuntu/AsyncDatalog/examples/priority/CC/global/CC_2.txt
+/home/ubuntu/AsyncDatalog/bin/run-single.sh /home/ubuntu/AsyncDatalog/examples/priority/CC/global/CC_2.txt
+/home/ubuntu/AsyncDatalog/bin/run-single.sh /home/ubuntu/AsyncDatalog/examples/priority/CC/global/CC_5.txt
+/home/ubuntu/AsyncDatalog/bin/run-single.sh /home/ubuntu/AsyncDatalog/examples/priority/CC/global/CC_5.txt
+/home/ubuntu/AsyncDatalog/bin/run-single.sh /home/ubuntu/AsyncDatalog/examples/priority/CC/global/CC_10.txt
+/home/ubuntu/AsyncDatalog/bin/run-single.sh /home/ubuntu/AsyncDatalog/examples/priority/CC/global/CC_10.txt
+/home/ubuntu/AsyncDatalog/bin/run-single.sh /home/ubuntu/AsyncDatalog/examples/priority/CC/global/CC_20.txt
+/home/ubuntu/AsyncDatalog/bin/run-single.sh /home/ubuntu/AsyncDatalog/examples/priority/CC/global/CC_20.txt
+/home/ubuntu/AsyncDatalog/bin/run-single.sh /home/ubuntu/AsyncDatalog/examples/priority/CC/global/CC_30.txt
+/home/ubuntu/AsyncDatalog/bin/run-single.sh /home/ubuntu/AsyncDatalog/examples/priority/CC/global/CC_30.txt
+/home/ubuntu/AsyncDatalog/bin/run-single.sh /home/ubuntu/AsyncDatalog/examples/priority/CC/global/CC_50.txt
+/home/ubuntu/AsyncDatalog/bin/run-single.sh /home/ubuntu/AsyncDatalog/examples/priority/CC/global/CC_50.txt

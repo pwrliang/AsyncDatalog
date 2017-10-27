@@ -7,8 +7,8 @@ BIN=`cd "$BIN"; pwd`
 function run(){
     ${BIN}/kill-all.sh ${MACHINES}
 
-    mpjrun.sh -Xmx28G \
-    -machinesfile ${MACHINES} -np $((MACHINES_NUM+1)) -dev niodev \
+    mpjrun.sh -Xmx6G \
+    -machinesfile ${MACHINES} -np $((MACHINES_NUM)) -dev niodev \
     -Dsocialite.output.dir=${SOCIALITE_PREFIX}/gen \
     -Dsocialite.port=50100 \
     -Dsocialite.master=${MASTER_HOST} \
