@@ -59,17 +59,13 @@ public class AsyncTable extends BaseAsyncTable{
            <if(weightType)> weightsList = new ArrayList\<>(initSize);<endif>
            <if(extraType)> extraList = new <PrimitiveMap.(extraType)>(initSize);<endif>
        <endif>
-       <if(IsBoolean.(valueType))>sentFlagList = new ArrayList\<>();<endif>
+       <if(IsBoolean.(valueType))>sentFlagList = new ArrayList\<>(initSize);<endif>
     }
 
     @Override
     public boolean updateLockFree(int localInd<if(sync)>, int iter<endif>) {
         <deltaType> oldDelta;
         <if(IsBoolean.(valueType))>
-            if (sentFlagList.get(localInd)){
-                return false;
-            }
-
             <if(sync)>
                 if (iter % 2 == 0) {
                     <if(lock)>synchronized(deltaList) {<endif>
@@ -87,43 +83,47 @@ public class AsyncTable extends BaseAsyncTable{
                     oldDelta = deltaList.get(localInd).get();
                 <if(lock)>}<endif>
             <endif>
-            if (eval(oldDelta))
+
+            if (eval(oldDelta)){
                 valueList.set(localInd, true);
-            if (!valueList.get(localInd)){
-                return false;
             }
-            <PrimitiveMap.(keyType)> adjacencies = adjacenciesList.get(localInd);
-            if(adjacencies!=null){
-                <! 遍历每个邻接点 !>
-                for(int i = 0; i \< adjacencies.size(); i++){
-                    int adjacentLocalInd;
-                    <keyType> adjacency = adjacencies.get(i);
+
+            if(valueList.get(localInd) && !sentFlagList.get(localInd)){
+                <PrimitiveMap.(keyType)> adjacencies = adjacenciesList.get(localInd);
+                if(adjacencies!=null){
+                    <! 遍历每个邻接点 !>
                     synchronized(keyIndMap) {
-                        if(keyIndMap.contains(adjacency))
-                            adjacentLocalInd = keyIndMap.get(adjacency);
-                        else {
-                            adjacentLocalInd = addEntry(adjacency, false, IDENTITY_ELEMENT);
+                        for(int i = 0; i \< adjacencies.size(); i++){
+                            int adjacentLocalInd;
+                            <keyType> adjacency = adjacencies.get(i);
+
+                                if(keyIndMap.contains(adjacency))
+                                    adjacentLocalInd = keyIndMap.get(adjacency);
+                                else {
+                                    adjacentLocalInd = addEntry(adjacency, false, IDENTITY_ELEMENT);
+                                }
+
+                            <! OTHER AGGREGATE FUNCTIONS IS NOT SUPPORTED !>
+                            <if(sync)>
+                                if (iter % 2 == 0) {
+                                    <if(lock)>synchronized(bufferDeltaList) {<endif>
+                                    <if(IsCount.(aggrType))>bufferDeltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                                    <if(lock)>}<endif>
+                                } else {
+                                    <if(lock)>synchronized(deltaList) {<endif>
+                                    <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                                    <if(lock)>}<endif>
+                                }
+                            <else>
+                                <if(lock)>synchronized(deltaList) {<endif>
+                                    <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
+                                <if(lock)>}<endif>
+                            <endif>
                         }
                     }
-                    <! OTHER AGGREGATE FUNCTIONS IS NOT SUPPORTED !>
-                    <if(sync)>
-                        if (iter % 2 == 0) {
-                            <if(lock)>synchronized(bufferDeltaList) {<endif>
-                            <if(IsCount.(aggrType))>bufferDeltaList.get(adjacentLocalInd).addAndGet(1);<endif>
-                            <if(lock)>}<endif>
-                        } else {
-                            <if(lock)>synchronized(deltaList) {<endif>
-                            <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
-                            <if(lock)>}<endif>
-                        }
-                    <else>
-                        <if(lock)>synchronized(deltaList) {<endif>
-                            <if(IsCount.(aggrType))>deltaList.get(adjacentLocalInd).addAndGet(1);<endif>
-                        <if(lock)>}<endif>
-                    <endif>
                 }
+                sentFlagList.set(localInd, true);
             }
-            sentFlagList.set(localInd, true);
         <else>
             <if(sync)>
             if (iter % 2 == 0) {

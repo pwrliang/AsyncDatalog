@@ -80,10 +80,10 @@ public abstract class BaseAsyncRuntime implements Runnable {
                     L.info("PRIORITY LOCAL!!!!!!!!!!!!!!");
                 try {
                     while (!stop) {
-                        if (!assigned || asyncConfig.isDynamic()) {
-                            arrangeTask();
-                            assigned = true;
-                        }
+//                        if (!assigned || asyncConfig.isDynamic()) {
+//                            arrangeTask();
+//                            assigned = true;
+//                        }
 
                         //empty thread, sleep to reduce CPU race
                         if (start == end) {
@@ -94,6 +94,7 @@ public abstract class BaseAsyncRuntime implements Runnable {
 
                         double threshold = 0;
                         if (asyncConfig.getPriorityType() != AsyncConfig.PriorityType.NONE) {
+                            deltaSample = new double[(int) ((end - start) * SAMPLE_RATE)];
                             for (int i = 0; i < deltaSample.length; i++) {
                                 int ind = randomGenerator.nextInt(start, end);
                                 double delta = asyncTable.getDelta(ind);
@@ -187,10 +188,10 @@ public abstract class BaseAsyncRuntime implements Runnable {
                 L.info("PRIORITY GLOBALLLLLLLLLLL");
                 try {
                     while (!stop) {
-                        if (!assigned || asyncConfig.isDynamic()) {
-                            arrangeTask();
-                            assigned = true;
-                        }
+//                        if (!assigned || asyncConfig.isDynamic()) {
+//                            arrangeTask();
+//                            assigned = true;
+//                        }
 
                         //empty thread, sleep to reduce CPU race
                         if (start == end) {
@@ -267,38 +268,35 @@ public abstract class BaseAsyncRuntime implements Runnable {
             }
         }
 
-        private void arrangeTask() {
-            int threadNum = AsyncConfig.get().getThreadNum();
-            int size = asyncTable.getSize();
-            int blockSize = size / threadNum;
-            if (blockSize == 0) {
-//                L.warn("too many threads asynctable size " + size);
-                blockSize = size;
-            }
-
-            for (int tid = 0; tid < threadNum; tid++) {
-                int start = tid * blockSize;
-                int end = (tid + 1) * blockSize;
-                if (tid == threadNum - 1)//last thread, assign all
-                    end = size;
-                if (start >= size) {//assign empty tasks
-                    start = 0;
-                    end = 0;
-                } else if (end > size || tid == threadNum - 1) {//block < lastThread's tasks or block > ~
-                    end = size;
-                }
-                computingThreads[tid].start = start;
-                computingThreads[tid].end = end;
-                if (asyncConfig.getPriorityType() != AsyncConfig.PriorityType.NONE) {
-                    deltaSample = new double[(int) ((end - start) * SAMPLE_RATE)];
-                }
-            }
-        }
-
 
         @Override
         public String toString() {
             return String.format("id: %d range: [%d, %d)", tid, start, end);
+        }
+    }
+
+    protected void arrangeTask() {
+        int threadNum = AsyncConfig.get().getThreadNum();
+        int size = asyncTable.getSize();
+        int blockSize = size / threadNum;
+        if (blockSize == 0) {
+//                L.warn("too many threads asynctable size " + size);
+            blockSize = size;
+        }
+
+        for (int tid = 0; tid < threadNum; tid++) {
+            int start = tid * blockSize;
+            int end = (tid + 1) * blockSize;
+            if (tid == threadNum - 1)//last thread, assign all
+                end = size;
+            if (start >= size) {//assign empty tasks
+                start = 0;
+                end = 0;
+            } else if (end > size || tid == threadNum - 1) {//block < lastThread's tasks or block > ~
+                end = size;
+            }
+            computingThreads[tid].start = start;
+            computingThreads[tid].end = end;
         }
     }
 

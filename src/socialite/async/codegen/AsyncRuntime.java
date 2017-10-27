@@ -56,6 +56,7 @@ public class AsyncRuntime extends BaseAsyncRuntime {
         L.info("RECV CMD NOTIFY_INIT CONFIG:" + AsyncConfig.get());
         loadData(initTableInstArr, edgeTableInstArr);
         super.createThreads();
+        arrangeTask();
         checkerThread = new AsyncRuntime.CheckThread();
         if (AsyncConfig.get().isSync() || AsyncConfig.get().isBarrier())
             barrier = new CyclicBarrier(asyncConfig.getThreadNum(), checkerThread);
@@ -88,8 +89,11 @@ public class AsyncRuntime extends BaseAsyncRuntime {
             super.run();
             while (true) {
                 try {
-                    if (barrier == null)
-                        waitingCheck();
+//                    if (barrier == null)
+//                        waitingCheck();
+                    Thread.sleep(asyncConfig.getCheckInterval());
+                    if(asyncConfig.isDynamic())
+                        arrangeTask();
                     double sum = 0.0d;
                     boolean skipFirst = false;
                     if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.VALUE) {

@@ -148,6 +148,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
     @Override
     protected void createThreads() {
         super.createThreads();
+        arrangeTask();
         checkerThread = new CheckThread();
         createNetworkThreads();
         if (AsyncConfig.get().isSync() || AsyncConfig.get().isBarrier())
@@ -258,6 +259,8 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
             super.run();
             boolean[] feedback = new boolean[2];
             while (true) {
+                if (asyncConfig.isDynamic())
+                    arrangeTask();
                 if (asyncConfig.isSync() || asyncConfig.isBarrier()) {//sync mode
                     Arrays.stream(receiveThreads).filter(Objects::nonNull).forEach(ReceiveThread::start);
                     Arrays.stream(sendThreads).filter(Objects::nonNull).forEach(SendThread::start);
