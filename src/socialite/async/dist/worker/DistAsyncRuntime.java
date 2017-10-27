@@ -37,8 +37,10 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
     private static final Log L = LogFactory.getLog(DistAsyncRuntime.class);
     private final int myWorkerId;
     private final int workerNum;
-    private SendThread[] sendThreads;
-    private ReceiveThread[] receiveThreads;
+    //    private SendThread[] sendThreads;
+//    private ReceiveThread[] receiveThreads;
+    private SendThreadSingle sendThreadSingle;
+    private ReceiveThreadSingle receiveThreadSingle;
     private Payload payload;
     private volatile boolean stopNetworkThread;
 
@@ -164,21 +166,26 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
     }
 
     private void createNetworkThreads() {
-        sendThreads = new SendThread[workerNum];
-        receiveThreads = new ReceiveThread[workerNum];
-        for (int wid = 0; wid < workerNum; wid++) {
-            if (wid == myWorkerId) continue; //skip me
-            sendThreads[wid] = new SendThread(wid);
-            receiveThreads[wid] = new ReceiveThread(wid);
-        }
+//        sendThreads = new SendThread[workerNum];
+//        receiveThreads = new ReceiveThread[workerNum];
+//        for (int wid = 0; wid < workerNum; wid++) {
+//            if (wid == myWorkerId) continue; //skip me
+//            sendThreads[wid] = new SendThread(wid);
+//            receiveThreads[wid] = new ReceiveThread(wid);
+//        }
+        sendThreadSingle = new SendThreadSingle();
+        receiveThreadSingle = new ReceiveThreadSingle();
+
     }
 
     private void startThreads() {
         if (AsyncConfig.get().isPriority() && !AsyncConfig.get().isPriorityLocal()) schedulerThread.start();
         Arrays.stream(computingThreads).filter(Objects::nonNull).forEach(Thread::start);
         if (!AsyncConfig.get().isSync() && !AsyncConfig.get().isBarrier()) {
-            Arrays.stream(receiveThreads).filter(Objects::nonNull).forEach(Thread::start);
-            Arrays.stream(sendThreads).filter(Objects::nonNull).forEach(Thread::start);
+//            Arrays.stream(receiveThreads).filter(Objects::nonNull).forEach(Thread::start);
+//            Arrays.stream(sendThreads).filter(Objects::nonNull).forEach(Thread::start);
+            sendThreadSingle.start();
+            receiveThreadSingle.start();
             L.info("network thread started");
             checkerThread.start();
             L.info("checker started");
@@ -197,12 +204,35 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         }
     }
 
-    private class SendThread extends Thread {
-        private final int sendToWorkerId;
+//    private class SendThread extends Thread {
+//        private final int sendToWorkerId;
+//        private SerializeTool serializeTool;
+//
+//        private SendThread(int sendToWorkerId) {
+//            this.sendToWorkerId = sendToWorkerId;
+//            serializeTool = new SerializeTool.Builder()
+//                    .setSerializeTransient(true) //!!!!!!!!!!AtomicDouble's value field is transient
+//                    .build();
+//        }
+//
+//        @Override
+//        public void run() {
+//            try {
+//                while (!stopNetworkThread) {
+//                    byte[] data = ((BaseDistAsyncTable) asyncTable).getSendableMessageTableBytes(sendToWorkerId, serializeTool);
+//                    MPI.COMM_WORLD.Send(data, 0, data.length, MPI.BYTE, sendToWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal());
+//                    if (AsyncConfig.get().isSync() || AsyncConfig.get().isBarrier()) break;
+//                }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
+
+    private class SendThreadSingle extends Thread {
         private SerializeTool serializeTool;
 
-        private SendThread(int sendToWorkerId) {
-            this.sendToWorkerId = sendToWorkerId;
+        private SendThreadSingle() {
             serializeTool = new SerializeTool.Builder()
                     .setSerializeTransient(true) //!!!!!!!!!!AtomicDouble's value field is transient
                     .build();
@@ -212,8 +242,12 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         public void run() {
             try {
                 while (!stopNetworkThread) {
-                    byte[] data = ((BaseDistAsyncTable) asyncTable).getSendableMessageTableBytes(sendToWorkerId, serializeTool);
-                    MPI.COMM_WORLD.Send(data, 0, data.length, MPI.BYTE, sendToWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal());
+                    for (int sendToWorkerId = 0; sendToWorkerId < workerNum; sendToWorkerId++) {
+                        if (sendToWorkerId == myWorkerId) continue;
+                        byte[] data = ((BaseDistAsyncTable) asyncTable).getSendableMessageTableBytes(sendToWorkerId, serializeTool);
+                        MPI.COMM_WORLD.Send(data, 0, data.length, MPI.BYTE, sendToWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal());
+                    }
+
                     if (AsyncConfig.get().isSync() || AsyncConfig.get().isBarrier()) break;
                 }
             } catch (Exception e) {
@@ -222,13 +256,43 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         }
     }
 
-    private class ReceiveThread extends Thread {
+//    private class ReceiveThread extends Thread {
+//        private SerializeTool serializeTool;
+//        private int recvFromWorkerId;
+//        private Class<?> klass;
+//
+//        private ReceiveThread(int recvFromWorkerId) {
+//            this.recvFromWorkerId = recvFromWorkerId;
+//            serializeTool = new SerializeTool.Builder()
+//                    .setSerializeTransient(true)
+//                    .build();
+//            klass = Loader.forName("socialite.async.codegen.MessageTable");
+//        }
+//
+//        @Override
+//        public void run() {
+//            try {
+//                while (!stopNetworkThread) {
+//                    Status status = MPI.COMM_WORLD.Probe(recvFromWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal());
+//                    int size = status.Get_count(MPI.BYTE);
+//                    int source = status.source;
+//                    byte[] data = new byte[size];
+//                    MPI.COMM_WORLD.Recv(data, 0, size, MPI.BYTE, source, MsgType.MESSAGE_TABLE.ordinal());
+//                    MessageTableBase messageTable = (MessageTableBase) serializeTool.fromBytesToObject(data, klass);
+//                    ((BaseDistAsyncTable) asyncTable).applyBuffer(messageTable);
+//                    if (AsyncConfig.get().isSync() || AsyncConfig.get().isBarrier()) break;
+//                }
+//            } catch (MPIException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
+
+    private class ReceiveThreadSingle extends Thread {
         private SerializeTool serializeTool;
-        private int recvFromWorkerId;
         private Class<?> klass;
 
-        private ReceiveThread(int recvFromWorkerId) {
-            this.recvFromWorkerId = recvFromWorkerId;
+        private ReceiveThreadSingle() {
             serializeTool = new SerializeTool.Builder()
                     .setSerializeTransient(true)
                     .build();
@@ -239,13 +303,17 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         public void run() {
             try {
                 while (!stopNetworkThread) {
-                    Status status = MPI.COMM_WORLD.Probe(recvFromWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal());
-                    int size = status.Get_count(MPI.BYTE);
-                    int source = status.source;
-                    byte[] data = new byte[size];
-                    MPI.COMM_WORLD.Recv(data, 0, size, MPI.BYTE, source, MsgType.MESSAGE_TABLE.ordinal());
-                    MessageTableBase messageTable = (MessageTableBase) serializeTool.fromBytesToObject(data, klass);
-                    ((BaseDistAsyncTable) asyncTable).applyBuffer(messageTable);
+                    for (int recvFromWorkerId = 0; recvFromWorkerId < workerNum; recvFromWorkerId++) {
+                        if (recvFromWorkerId == myWorkerId) continue;
+                        Status status = MPI.COMM_WORLD.Probe(recvFromWorkerId + 1, MsgType.MESSAGE_TABLE.ordinal());
+                        int size = status.Get_count(MPI.BYTE);
+                        int source = status.source;
+                        byte[] data = new byte[size];
+                        MPI.COMM_WORLD.Recv(data, 0, size, MPI.BYTE, source, MsgType.MESSAGE_TABLE.ordinal());
+                        MessageTableBase messageTable = (MessageTableBase) serializeTool.fromBytesToObject(data, klass);
+                        ((BaseDistAsyncTable) asyncTable).applyBuffer(messageTable);
+                    }
+
                     if (AsyncConfig.get().isSync() || AsyncConfig.get().isBarrier()) break;
                 }
             } catch (MPIException e) {
@@ -271,8 +339,10 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                     arrangeTask();
                 long[] rxTx = NetworkUtil.getNetwork();
                 if (asyncConfig.isSync() || asyncConfig.isBarrier()) {//sync mode
-                    Arrays.stream(receiveThreads).filter(Objects::nonNull).forEach(ReceiveThread::start);
-                    Arrays.stream(sendThreads).filter(Objects::nonNull).forEach(SendThread::start);
+//                    Arrays.stream(receiveThreads).filter(Objects::nonNull).forEach(ReceiveThread::start);
+//                    Arrays.stream(sendThreads).filter(Objects::nonNull).forEach(SendThread::start);
+                    sendThreadSingle.start();
+                    receiveThreadSingle.start();
                     waitNetworkThread();
 
                     double partialSum = update();
@@ -308,20 +378,26 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         }
 
         private void waitNetworkThread() {
-            Arrays.stream(receiveThreads).filter(Objects::nonNull).forEach(recvThread -> {
-                try {
-                    recvThread.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            });
-            Arrays.stream(sendThreads).filter(Objects::nonNull).forEach(sendThread -> {
-                try {
-                    sendThread.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            });
+//            Arrays.stream(receiveThreads).filter(Objects::nonNull).forEach(recvThread -> {
+//                try {
+//                    recvThread.join();
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//            });
+//            Arrays.stream(sendThreads).filter(Objects::nonNull).forEach(sendThread -> {
+//                try {
+//                    sendThread.join();
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//            });
+            try {
+                sendThreadSingle.join();
+                receiveThreadSingle.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         private double update() {
