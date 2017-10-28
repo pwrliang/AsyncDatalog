@@ -246,7 +246,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
 
                     if (AsyncConfig.get().isSync() || AsyncConfig.get().isBarrier()) break;
                 }
-                L.info("end send");
+//                L.info("end send");
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -288,7 +288,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
 
                     if (AsyncConfig.get().isSync() || AsyncConfig.get().isBarrier()) break;
                 }
-                L.info("end recv");
+//                L.info("end recv");
             } catch (MPIException e) {
                 e.printStackTrace();
             }
