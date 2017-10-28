@@ -52,7 +52,7 @@ public class Entry {
             }
 
             MPI.Finalize();
-            System.exit(0);
+            Thread.sleep(5000);
             L.info("process " + machineId + " exit.");
         } else {
             AsyncConfig.parse(TextUtils.readText(args[args.length - 1]));

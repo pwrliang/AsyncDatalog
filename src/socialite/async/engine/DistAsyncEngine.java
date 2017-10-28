@@ -101,6 +101,7 @@ public class DistAsyncEngine implements Runnable {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        clientEngine.shutdown();
     }
 
     private void sendCmd() {
