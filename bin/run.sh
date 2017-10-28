@@ -5,8 +5,6 @@ BIN=`cd "$BIN"; pwd`
 . ${BIN}/common.sh
 
 function run(){
-    ${BIN}/kill-all.sh ${MACHINES}
-
     mpjrun.sh -Xmx6G \
     -machinesfile ${MACHINES} -np $((MACHINES_NUM)) -dev niodev \
     -Dsocialite.output.dir=${SOCIALITE_PREFIX}/gen \
@@ -75,7 +73,8 @@ elif [ "$#" == "2" ] || [ "$#" == "3" ]; then
     else
         mpjboot ${MACHINES}
         run $2
-        mpjhalt ${MACHINES}
+        ${BIN}/kill-all.sh ${MACHINES}
+        #mpjhalt ${MACHINES}
     fi
 else
     echo "please specify [-copy-jar/-copy-classes] or [-run/-debug] [Datalog_Program]"
