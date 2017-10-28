@@ -18,16 +18,16 @@ function run(){
 }
 
 function run_with_mpi(){
-    ${BIN}/kill-all.sh ${MACHINES}
+    #${BIN}/kill-all.sh ${MACHINES}
 
-    mpirun -machinefile ${MACHINES} -np $((MACHINES_NUM+1)) \
+    /opt/openmpi-1.7.4/bin/mpirun -np $((MACHINES_NUM+1)) -machinefile ${MACHINES1} \
         --mca btl_tcp_if_include eth0 \
         -mca btl ^openib \
-        java -Djava.library.path=$MPJ_HOME/lib \
-        -Dsocialite.output.dir=${SOCIALITE_PREFIX}/gen \
+        java -Dsocialite.output.dir=${SOCIALITE_PREFIX}/gen \
         -Dsocialite.port=50100 \
         -Dsocialite.master=${MASTER_HOST} \
         -Dlog4j.configuration=file:${SOCIALITE_PREFIX}/conf/log4j.properties \
+        -Djava.library.path=/opt/mpj-v0_44/lib \
         -cp $MPJ_HOME/lib/mpj.jar:${CODE_CLASSPATH}:${JAR_PATH} \
         socialite.async.Entry \
         0 0 native $1
@@ -71,7 +71,7 @@ elif [ "$#" == "2" ] || [ "$#" == "3" ]; then
     fi
 
     if [ "$#" == "3" ] && [ "$2" == "-native" ]; then
-        run_with_mpi $2
+        run_with_mpi $3
     else
         mpjboot ${MACHINES}
         run $2

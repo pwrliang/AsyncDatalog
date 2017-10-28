@@ -35,10 +35,10 @@ public class ClientTest {
     }
 
     public static void main(String[] args) throws InterruptedException, IOException {
-        long rx = getNetwork()[0];
-        long tx = getNetwork()[1];
-        System.out.printf("RX: %d TX: %d\b", rx, tx);
-
+//        long rx = getNetwork()[0];
+//        long tx = getNetwork()[1];
+//        System.out.printf("RX: %d TX: %d\b", rx, tx);
+        System.out.println(System.getenv("MPJ_HOME"));
         //-Dsocialite.worker.num=8 -Dsocialite.port=50100 -Dsocialite.master=localhost -Dlog4j.configuration=file:-Dsocialite.port=50100 -Dsocialite.master=master -Dlog4j.configuration=file:/home/gengl/socialite-before-yarn/conf/log4j.properties
 //        MasterNode.startMasterNode();
 //        while (MasterNode.getInstance().getQueryListener().getDistEngine() == null)

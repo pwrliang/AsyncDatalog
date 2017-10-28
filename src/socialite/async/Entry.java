@@ -13,14 +13,21 @@ import socialite.dist.worker.WorkerNode;
 import socialite.engine.Config;
 import socialite.util.SociaLiteException;
 
+import java.lang.reflect.Field;
 import java.util.stream.IntStream;
 
 public class Entry {
     private static final Log L = LogFactory.getLog(Entry.class);
 
     //-Dlog4j.configuration=file:/home/gengl/AsyncDatalog/conf/log4j.properties
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, NoSuchFieldException, IllegalAccessException {
         if (args.length >= 3) {
+
+            System.setProperty("java.library.path", System.getenv("MPJ_HOME") + "/lib");
+            final Field sysPathsField = ClassLoader.class.getDeclaredField("sys_paths");
+            sysPathsField.setAccessible(true);
+            sysPathsField.set(null, null);
+
             MPI.Init(args);
             int machineNum = MPI.COMM_WORLD.Size();
             int machineId = MPI.COMM_WORLD.Rank();
