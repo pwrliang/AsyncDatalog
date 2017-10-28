@@ -246,6 +246,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
 
                     if (AsyncConfig.get().isSync() || AsyncConfig.get().isBarrier()) break;
                 }
+                L.info("end send");
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -287,6 +288,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
 
                     if (AsyncConfig.get().isSync() || AsyncConfig.get().isBarrier()) break;
                 }
+                L.info("end recv");
             } catch (MPIException e) {
                 e.printStackTrace();
             }
@@ -332,12 +334,12 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                             feedback, 0, 1, MPI.BOOLEAN, AsyncMaster.ID, MsgType.TERM_CHECK_FEEDBACK.ordinal());
                     if (feedback[0]) {
                         L.info("waiting for flush");
+                        stopNetworkThread = true;
                         try {
                             Thread.sleep(1000 + AsyncConfig.get().getMessageTableWaitingInterval());
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                        stopNetworkThread = true;
 //                        waitNetworkThread();
                         L.info("flushed");
                         done();

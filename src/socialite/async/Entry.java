@@ -52,8 +52,8 @@ public class Entry {
             }
 
             MPI.Finalize();
-            L.info("process " + machineId + " exit.");
             System.exit(0);
+            L.info("process " + machineId + " exit.");
         } else {
             AsyncConfig.parse(TextUtils.readText(args[args.length - 1]));
             AsyncConfig asyncConfig = AsyncConfig.get();
