@@ -101,18 +101,22 @@ JAR_PATH=${JAR_PATH}:${HADOOP_COMMON}/lib/hadoop-auth-2.7.2.jar
 #JAR_PATH=${JAR_PATH}:${HADOOP_COMMON}/zookeeper-3.4.6.jar
 JAR_PATH=${JAR_PATH}:${HADOOP_HDFS}/hadoop-hdfs-2.7.2.jar
 
+MACHINES=${SOCIALITE_PREFIX}/conf/machines
+MACHINES1=${SOCIALITE_PREFIX}/conf/machines1
 #generate mpj hosts
-echo "$HOSTNAME" > $SOCIALITE_PREFIX/conf/machines
+echo "$HOSTNAME" > $MACHINES
+echo "$HOSTNAME slots=1" > $MACHINES1
 
 while IFS='' read -r line || [[ -n "$line" ]]; do
     # if master as worker, start worker locally
     if [ ${line} != $HOSTNAME ]; then
-        echo "$line" >> $SOCIALITE_PREFIX/conf/machines
+        echo "$line" >> $MACHINES
+        echo "$line slots=1" >> $MACHINES1
     fi
 done < "${SOCIALITE_PREFIX}/conf/slaves"
 
 mkdir $SOCIALITE_PREFIX/logs 2> /dev/null
 
-MACHINES=${SOCIALITE_PREFIX}/conf/machines
+
 MACHINES_NUM=$(cat ${MACHINES} | sed '/^\s*$/d' | wc -l)
 MASTER_HOST=$(head -n 1 ${MACHINES})
