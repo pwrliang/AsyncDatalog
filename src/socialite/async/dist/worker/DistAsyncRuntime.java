@@ -310,7 +310,9 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
             while (true) {
                 if (asyncConfig.isDynamic())
                     arrangeTask();
-                long[] rxTx = NetworkUtil.getNetwork();
+                long[] rxTx = new long[]{0, 0};
+                if (asyncConfig.isNetworkInfo())
+                    rxTx = NetworkUtil.getNetwork();
                 if (asyncConfig.isSync() || asyncConfig.isBarrier()) {//sync mode
                     Arrays.stream(sendThreads).forEach(SendThreadSingle::start);
                     Arrays.stream(receiveThreads).forEach(ReceiveThreadSingle::start);

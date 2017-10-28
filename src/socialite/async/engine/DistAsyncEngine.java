@@ -161,7 +161,8 @@ public class DistAsyncEngine implements Runnable {
                             stopWatch.start();
                         }
                         termOrNot[0] = isTerm();
-                        L.info(String.format("RX: %f MB TX: %f MB", totalRx / 1024 / 1024, totalTx / 1024 / 1024));
+                        if (asyncConfig.isNetworkInfo())
+                            L.info(String.format("RX: %f MB TX: %f MB", totalRx / 1024 / 1024, totalTx / 1024 / 1024));
                         IntStream.rangeClosed(1, workerNum).forEach(dest ->
                                 MPI.COMM_WORLD.Send(termOrNot, 0, 1, MPI.BOOLEAN, dest, MsgType.TERM_CHECK_FEEDBACK.ordinal()));
                         if (termOrNot[0]) {
@@ -187,7 +188,8 @@ public class DistAsyncEngine implements Runnable {
                         }
 
                         termOrNot[0] = isTerm();
-                        L.info(String.format("RX: %f MB TX: %f MB", totalRx / 1024 / 1024, totalTx / 1024 / 1024));
+                        if (asyncConfig.isNetworkInfo())
+                            L.info(String.format("RX: %f MB TX: %f MB", totalRx / 1024 / 1024, totalTx / 1024 / 1024));
 
                         IntStream.rangeClosed(1, workerNum).parallel().forEach(dest -> MPI.COMM_WORLD.Send(termOrNot, 0, 1, MPI.BOOLEAN, dest, MsgType.TERM_CHECK_FEEDBACK.ordinal()));
                         if (termOrNot[0]) {

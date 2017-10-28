@@ -1,7 +1,5 @@
 package socialite.async;
 
-import socialite.async.util.SerializeTool;
-import socialite.async.util.TextUtils;
 import socialite.util.Assert;
 import socialite.util.SociaLiteException;
 
@@ -25,6 +23,7 @@ public class AsyncConfig {
     private boolean barrier;
     private boolean debugging;
     private boolean lock;
+    private boolean networkInfo;
     private int networkThreadNum = 1;
     private int threadNum;
     private int initSize;
@@ -56,6 +55,7 @@ public class AsyncConfig {
         sb.append(lock ? "LOCK" : "NON-LOCK").append(", ");
         sb.append(dynamic ? "DYNAMIC" : "STATIC").append(", ");
         sb.append(barrier ? "BARRIER" : "NON-BARRIER").append(", ");
+        sb.append(networkInfo ? "NETWORK_INFO" : "NON-NETWORK_INFO").append(", ");
         sb.append("THREAD_NUM:").append(threadNum).append(", ");
         sb.append("NETWORK_THREAD_NUM:").append(networkThreadNum).append(", ");
         sb.append("INIT_SIZE:").append(initSize).append(", ");
@@ -134,6 +134,10 @@ public class AsyncConfig {
 
     public boolean isLock() {
         return lock;
+    }
+
+    public boolean isNetworkInfo() {
+        return networkInfo;
     }
 
     public double getSampleRate() {
@@ -223,6 +227,7 @@ public class AsyncConfig {
         private boolean priority;
         private boolean priorityLocal;
         private boolean lock;
+        private boolean networkInfo;
         private double sampleRate;
         private double schedulePortion;
         private int messageTableInitSize;
@@ -289,6 +294,11 @@ public class AsyncConfig {
 
         public Builder setSync(boolean sync) {
             this.sync = sync;
+            return this;
+        }
+
+        public Builder setNetworkInfo(boolean networkInfo) {
+            this.networkInfo = networkInfo;
             return this;
         }
 
@@ -363,6 +373,7 @@ public class AsyncConfig {
             asyncConfig.dynamic = dynamic;
             asyncConfig.barrier = barrier;
             asyncConfig.sync = sync;
+            asyncConfig.networkInfo = networkInfo;
             asyncConfig.debugging = debugging;
             asyncConfig.threadNum = threadNum;
             asyncConfig.initSize = initSize;
@@ -474,6 +485,13 @@ public class AsyncConfig {
                         asyncConfig.setLock(true);
                     else if (val.equals("FALSE"))
                         asyncConfig.setLock(false);
+                    else throw new SociaLiteException("unknown val: " + val);
+                    break;
+                case "NETWORK_INFO":
+                    if (val.equals("TRUE"))
+                        asyncConfig.setNetworkInfo(true);
+                    else if (val.equals("FALSE"))
+                        asyncConfig.setNetworkInfo(false);
                     else throw new SociaLiteException("unknown val: " + val);
                     break;
                 case "BARRIER":
