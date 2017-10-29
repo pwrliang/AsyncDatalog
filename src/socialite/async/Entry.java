@@ -29,8 +29,6 @@ public class Entry {
             sysPathsField.setAccessible(true);
             sysPathsField.set(null, null);
 
-            Random random = new Random();
-            Thread.sleep(random.nextInt(1000));
             MPI.Init(args);
             int machineNum = MPI.COMM_WORLD.Size();
             int machineId = MPI.COMM_WORLD.Rank();
