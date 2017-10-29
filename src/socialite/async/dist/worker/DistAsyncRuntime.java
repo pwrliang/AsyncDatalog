@@ -342,7 +342,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-                        waitNetworkThread();
+                        //waitNetworkThread();
                         L.info("flushed");
                         done();
                         break;
