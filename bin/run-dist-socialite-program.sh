@@ -13,6 +13,36 @@ PROG+=" -Dlog4j.configuration=file:${SOCIALITE_PREFIX}/conf/log4j.properties"
 PROG+=" -cp ${CODE_CLASSPATH}:${JAR_PATH}"
 PROG+=" $1"
 
+function start-node(){
+    ${BIN}/kill-all.sh ${MACHINES}
+
+    MASTER_CMD="java -Xmx28G"
+    MASTER_CMD+=" -Dsocialite.output.dir=${SOCIALITE_PREFIX}/gen"
+    MASTER_CMD+=" -Dsocialite.port=50100"
+    MASTER_CMD+=" -Dsocialite.master=${MASTER_HOST}"
+    MASTER_CMD+=" -Dlog4j.configuration=file:${SOCIALITE_PREFIX}/conf/log4j.properties"
+    MASTER_CMD+=" -cp $1:${JAR_PATH}"
+    MASTER_CMD+=" socialite.dist.master.MasterNode"
+
+    WORKER_CMD="java -Xmx6G"
+    WORKER_CMD+=" -Dsocialite.output.dir=${SOCIALITE_PREFIX}/gen"
+    WORKER_CMD+=" -Dsocialite.port=50100"
+    WORKER_CMD+=" -Dsocialite.master=${MASTER_HOST}"
+    WORKER_CMD+=" -Dlog4j.configuration=file:${SOCIALITE_PREFIX}/conf/log4j.properties"
+    WORKER_CMD+=" -cp $1:${JAR_PATH} socialite.dist.worker.WorkerNode"
+    # start master
+    nohup ${MASTER_CMD} >> ${SOCIALITE_PREFIX}/logs/master.log 2>&1 &
+
+    while IFS='' read -r line || [[ -n "$line" ]]; do
+        # if master as worker, start worker locally
+        if [ ${line} == ${MASTER_HOST} ]; then
+            nohup ${WORKER_CMD} >> ${SOCIALITE_PREFIX}/logs/master.log 2>&1 &
+        else
+            ssh -n $USER@${line} "sh -c 'cd $SOCIALITE_PREFIX; nohup $WORKER_CMD > /dev/null 2>&1 &'"
+        fi
+    done < "${SOCIALITE_PREFIX}/conf/slaves"
+}
+
 # NOTE!!! for dist log ----> logs/master.log
 
 # PageRank
@@ -20,9 +50,9 @@ PROG+=" $1"
 #$PROG socialite.test.PageRank single 32 19991625 /clueweb/PageRank/clueweb_20M/edge_pair.txt 42
 
 #dist   node-count   edge-path iter-num
-#${BIN}/start-nodes.sh -copy-classes
+#start-node ${CODE_CLASSPATH}
 #sleep 10
-#$PROG socialite.test.PageRank dist 4 hdfs://master:9000/examples/prog2_edge.txt 10
+#$PROG socialite.test.PageRank dist 875712 hdfs://master:9000/Datasets/PageRank/Google/edge.txt 42
 #${BIN}/kill-all.sh "${SOCIALITE_PREFIX}/conf/machines"
 
 
@@ -32,14 +62,14 @@ PROG+=" $1"
 #$PROG socialite.test.SSSP single 32 12150976 /vol/Datasets/SSSP/Wikipedia_link_en/edge_pair.txt
 
 # dist         node-num         edge-path
-#${BIN}/start-nodes.sh -copy-classes
-#sleep 10
-#$PROG socialite.test.SSSP dist 685230 hdfs://master:9000/Datasets/SSSP/BerkStan/edge.txt
-#${BIN}/kill-all.sh "${SOCIALITE_PREFIX}/conf/machines"
+start-node ${CODE_CLASSPATH}
+sleep 10
+$PROG socialite.test.SSSP dist 685230 hdfs://master:9000/Datasets/SSSP/BerkStan/edge.txt
+${BIN}/kill-all.sh "${SOCIALITE_PREFIX}/conf/machines"
 
 # CC
 # single threadnum      node-count   node-path   edge-path
-$PROG socialite.test.CC single 64 19991625 /clueweb/CC/clueweb_20M/node.txt /clueweb/CC/clueweb_20M/edge_pair.txt
+#$PROG socialite.test.CC single 64 19991625 /clueweb/CC/clueweb_20M/node.txt /clueweb/CC/clueweb_20M/edge_pair.txt
 
 # dist node-count      node-path     edge-path
 #${BIN}/start-nodes.sh -copy-classes
