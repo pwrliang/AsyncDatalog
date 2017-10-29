@@ -1,12 +1,12 @@
 import os
 import sys
 
-if len(sys.argv)!=2:
-    print 'usage: [host list file]'
+if len(sys.argv) != 3:
+    print 'usage: [host list file] [myria output file]'
 me = os.uname()[1]
 workers_list = []
 counter = 1
-with open(sys.argv[1]) as fi:
+with open(sys.argv[1], 'r') as fi:
     for line in fi:
         line = line.strip('\n').strip()
         if len(line) == 0:
@@ -58,4 +58,5 @@ container.worker.memory.size.gb = 3
 [persist]
 persist_uri = hdfs://vega.cs.washington.edu:8020
 ''' % (me, workers)
-print result
+with open(sys.argv[2], 'w') as fo:
+    fo.write(result)
