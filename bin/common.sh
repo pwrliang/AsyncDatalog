@@ -104,6 +104,7 @@ JAR_PATH=${JAR_PATH}:${HADOOP_HDFS}/hadoop-hdfs-2.7.2.jar
 MACHINES=${SOCIALITE_PREFIX}/conf/machines
 MACHINES1=${SOCIALITE_PREFIX}/conf/machines1
 #generate mpj hosts
+#echo "localhost" > $MACHINES
 echo "$HOSTNAME" > $MACHINES
 echo "$HOSTNAME slots=1" > $MACHINES1
 

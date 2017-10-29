@@ -72,9 +72,10 @@ elif [ "$#" == "2" ] || [ "$#" == "3" ]; then
         run_with_mpi $3
     else
         mpjboot ${MACHINES}
+	sleep 5
         run $2
         ${BIN}/kill-all.sh ${MACHINES}
-        #mpjhalt ${MACHINES}
+        mpjhalt ${MACHINES}
     fi
 else
     echo "please specify [-copy-jar/-copy-classes] or [-run/-debug] [Datalog_Program]"
