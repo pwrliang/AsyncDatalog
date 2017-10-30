@@ -286,6 +286,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                         MPI.COMM_WORLD.Recv(data, 0, size, MPI.BYTE, source, MsgType.MESSAGE_TABLE.ordinal());
                         MessageTableBase messageTable = (MessageTableBase) serializeTool.fromBytesToObject(data, klass);
                         ((BaseDistAsyncTable) asyncTable).applyBuffer(messageTable);
+                        L.info("msg size: " + messageTable.size());
                     }
 
                     if (AsyncConfig.get().isSync() || AsyncConfig.get().isBarrier()) break;
