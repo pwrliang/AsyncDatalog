@@ -180,7 +180,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
         NETWORK_THREADS = asyncConfig.getNetworkThreadNum();
         if (NETWORK_THREADS == 0)
             NETWORK_THREADS = 1;
-        if (NETWORK_THREADS > workerNum)
+        if (NETWORK_THREADS >= workerNum)
             throw new SociaLiteException("error network thread num");
         sendThreads = new SendThreadSingle[NETWORK_THREADS];
         receiveThreads = new ReceiveThreadSingle[NETWORK_THREADS];
