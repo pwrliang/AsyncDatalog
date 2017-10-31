@@ -5,6 +5,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
+import socialite.dist.master.MasterNode;
 import socialite.engine.ClientEngine;
 import socialite.engine.Config;
 import socialite.engine.LocalEngine;
@@ -25,7 +26,7 @@ public class SSSP {
     //0            1                2              3
     //single      thread-num      node-num        edge-path
     //dist         node-num         edge-path
-    public static void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args) throws FileNotFoundException, InterruptedException {
         STGroup stg = new MySTGroupFile(SSSP.class.getResource("SSSP.stg"),
                 "UTF-8", '<', '>');
         stg.load();
@@ -46,6 +47,9 @@ public class SSSP {
             L.info("elapsed " + stopWatch.getTime());
             en.shutdown();
         } else if (args[0].equals("dist")) {
+            MasterNode.startMasterNode();
+            while (MasterNode.getInstance().getQueryListener().getEngine() == null)//waiting workers online
+                Thread.sleep(100);
             ClientEngine en = new ClientEngine();
             int nodeCount = Integer.parseInt(args[1]);
             ST st = stg.getInstanceOf("Init");

@@ -6,6 +6,7 @@ import org.apache.commons.logging.LogFactory;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import socialite.async.util.TextUtils;
+import socialite.dist.master.MasterNode;
 import socialite.engine.ClientEngine;
 import socialite.engine.Config;
 import socialite.engine.LocalEngine;
@@ -26,7 +27,7 @@ public class COST {
     //dist         node-num           basic        assb            iter
 
     //single 8 5000000 hdfs://master:9000/Datasets/COST/5000000/basic_5000000.txt hdfs://master:9000/Datasets/COST/5000000/assb_5000000.txt 50
-    public static void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args) throws FileNotFoundException, InterruptedException {
         STGroup stg = new MySTGroupFile(COST.class.getResource("COST.stg"),
                 "UTF-8", '<', '>');
         stg.load();
@@ -55,6 +56,9 @@ public class COST {
             System.out.println("elapsed " + stopWatch.getTime());
             en.shutdown();
         } else if (args[0].equals("dist")) {
+            MasterNode.startMasterNode();
+            while (MasterNode.getInstance().getQueryListener().getEngine() == null)//waiting workers online
+                Thread.sleep(100);
             ClientEngine en = new ClientEngine();
             int nodeCount = Integer.parseInt(args[1]);
             ST st = stg.getInstanceOf("Init");

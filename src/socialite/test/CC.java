@@ -5,6 +5,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
+import socialite.dist.master.MasterNode;
 import socialite.engine.ClientEngine;
 import socialite.engine.Config;
 import socialite.engine.LocalEngine;
@@ -22,7 +23,7 @@ public class CC {
     //0      1              2             3          4
     //single threadnum      node-count   node-path   edge-path
     //dist node-count      node-path     edge-path
-    public static void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args) throws FileNotFoundException, InterruptedException {
         STGroup stg = new MySTGroupFile(CC.class.getResource("CC.stg"),
                 "UTF-8", '<', '>');
         stg.load();
@@ -52,6 +53,9 @@ public class CC {
             st.add("SPLITTER", "\t");
             String init = st.render();
             System.out.println(init);
+            MasterNode.startMasterNode();
+            while (MasterNode.getInstance().getQueryListener().getEngine() == null)//waiting workers online
+                Thread.sleep(100);
             ClientEngine en = new ClientEngine();
             en.run(init);
             st = stg.getInstanceOf("Iter");
