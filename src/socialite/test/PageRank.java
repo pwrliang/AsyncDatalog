@@ -1,16 +1,13 @@
 package socialite.test;
 
-import gnu.trove.map.TIntFloatMap;
-import gnu.trove.map.hash.TIntFloatHashMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
+import socialite.dist.master.MasterNode;
 import socialite.engine.ClientEngine;
 import socialite.engine.Config;
 import socialite.engine.LocalEngine;
-import socialite.tables.QueryVisitor;
-import socialite.tables.Tuple;
 import socialite.util.MySTGroupFile;
 
 import java.io.FileNotFoundException;
@@ -26,7 +23,7 @@ public class PageRank {
     //single threadnum  node-count edge-path   iter-num
     //dist   node-count   edge-path iter-num
     //-Xmx28G -Dsocialite.output.dir=gen -Dsocialite.worker.num=32 -Dsocialite.port=50100 -Dsocialite.master=master -Dlog4j.configuration=file:/home/gengl/socialite-before-yarn/conf/log4j.properties
-    public static void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args) throws FileNotFoundException, InterruptedException {
         STGroup stg = new MySTGroupFile(PageRank.class.getResource("PageRank.stg"),
                 "UTF-8", '<', '>');
         stg.load();
@@ -72,7 +69,9 @@ public class PageRank {
             st.add("PATH", args[2]);
             String init = st.render();
             System.out.println(init);
-
+            MasterNode.startMasterNode();
+            while (MasterNode.getInstance().getQueryListener().getEngine() == null)//waiting workers online
+                Thread.sleep(100);
             ClientEngine en = new ClientEngine();
             en.run(init);
             st = stg.getInstanceOf("Iter");
