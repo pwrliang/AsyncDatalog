@@ -4,6 +4,8 @@ import socialite.async.analysis.MyVisitorImpl;
 import socialite.tables.QueryVisitor;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public abstract class BaseAsyncTable {
 
 
@@ -21,7 +23,7 @@ public abstract class BaseAsyncTable {
         throw new NotImplementedException();
     }
 
-
+    public AtomicInteger swtichTimes = new AtomicInteger();
     public abstract double getPriority(int localInd);
 
     public abstract double accumulateValue();

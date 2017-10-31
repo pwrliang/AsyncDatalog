@@ -11,6 +11,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 public abstract class BaseDistAsyncTable extends BaseAsyncTable {
@@ -64,6 +65,7 @@ public abstract class BaseDistAsyncTable extends BaseAsyncTable {
         return messageTableList[workerId][messageTableSelector.get(workerId)];
     }
 
+
     public byte[] getSendableMessageTableBytes(int sendToWorkerId, SerializeTool serializeTool) throws InterruptedException {
         int writingTableInd;
         writingTableInd = messageTableSelector.get(sendToWorkerId);//获取计算线程正在写入的表序号
@@ -76,10 +78,11 @@ public abstract class BaseDistAsyncTable extends BaseAsyncTable {
             if ((System.currentTimeMillis() - startTime) >= AsyncConfig.get().getMessageTableWaitingInterval())
                 break;
         }
+        swtichTimes.addAndGet(1);
         messageTableSelector.set(sendToWorkerId, writingTableInd == 0 ? 1 : 0);
         // sleep to ensure switched, this is important
         // even though selector is atomic type, but computing thread cannot see the switched result immediately, i don't know why :(
-//        Thread.sleep(10);
+        Thread.sleep(1);
         byte[] data = serializeTool.toBytes(sendableMessageTable.size() * (4 + 8), sendableMessageTable);
         sendableMessageTable.resetDelta();
         return data;

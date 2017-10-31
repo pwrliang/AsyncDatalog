@@ -57,7 +57,6 @@ public abstract class BaseAsyncRuntime implements Runnable {
         private volatile int end;
         private int tid;
         double[] deltaSample;
-        final double SAMPLE_RATE;
         final double SCHEDULE_PORTION;
         boolean assigned;
         private AsyncConfig asyncConfig;
@@ -67,8 +66,8 @@ public abstract class BaseAsyncRuntime implements Runnable {
             this.tid = tid;
             asyncConfig = AsyncConfig.get();
             randomGenerator = ThreadLocalRandom.current();
-            SAMPLE_RATE = asyncConfig.getSampleRate();
             SCHEDULE_PORTION = asyncConfig.getSchedulePortion();
+            deltaSample = new double[1000];
         }
 
 
@@ -93,23 +92,21 @@ public abstract class BaseAsyncRuntime implements Runnable {
                         }
 
                         double threshold = 0;
-                        if (asyncConfig.getPriorityType() != AsyncConfig.PriorityType.NONE) {
-                            deltaSample = new double[(int) ((end - start) * SAMPLE_RATE)];
-                            for (int i = 0; i < deltaSample.length; i++) {
-                                int ind = randomGenerator.nextInt(start, end);
-                                deltaSample[i] = asyncTable.getPriority(ind);
+                        for (int i = 0; i < deltaSample.length; i++) {
+                            int ind = randomGenerator.nextInt(start, end);
+                            deltaSample[i] = asyncTable.getPriority(ind);
+                        }
+
+                        boolean update = false;
+                        for (double delta : deltaSample)
+                            if (delta != 0) {
+                                update = true;
+                                break;
                             }
-                            if (deltaSample.length == 0) {//no sample, schedule all
-                                threshold = -Double.MAX_VALUE;
-//                                L.warn("SCHEDULE ALL");
-                            } else {
-                                Arrays.sort(deltaSample);
-                                int cutIndex = (int) (deltaSample.length * (1 - SCHEDULE_PORTION));
-                                if (cutIndex == 0)
-                                    threshold = -Double.MAX_VALUE;
-                                else
-                                    threshold = deltaSample[cutIndex];
-                            }
+                        if (!update) {
+                            L.info("got it");
+                            Thread.sleep(1);
+                            continue;
                         }
 
                         if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.NONE) {
@@ -121,6 +118,12 @@ public abstract class BaseAsyncRuntime implements Runnable {
                                 }
                             }
                         } else {
+                            Arrays.sort(deltaSample);
+                            int cutIndex = (int) (deltaSample.length * (1 - SCHEDULE_PORTION));
+                            if (cutIndex == 0)
+                                threshold = -Double.MAX_VALUE;
+                            else
+                                threshold = deltaSample[cutIndex];
                             for (int k = start; k < end; k++) {
                                 double delta = asyncTable.getPriority(k);
                                 if (delta >= threshold) {
@@ -354,14 +357,13 @@ public abstract class BaseAsyncRuntime implements Runnable {
         AsyncConfig asyncConfig;
         private ThreadLocalRandom randomGenerator;
         double[] deltaSample;
-        final double SAMPLE_RATE;
         final double SCHEDULE_PORTION;
 
         SchedulerThread() {
             asyncConfig = AsyncConfig.get();
             randomGenerator = ThreadLocalRandom.current();
-            SAMPLE_RATE = asyncConfig.getSampleRate();
             SCHEDULE_PORTION = asyncConfig.getSchedulePortion();
+            deltaSample = new double[1000];
         }
 
         @Override
@@ -375,12 +377,24 @@ public abstract class BaseAsyncRuntime implements Runnable {
                 }
                 int size = asyncTable.getSize();
 
-                deltaSample = new double[(int) (size * SAMPLE_RATE)];
 
                 for (int i = 0; i < deltaSample.length; i++) {
                     int ind = randomGenerator.nextInt(0, size);
                     deltaSample[i] = asyncTable.getPriority(ind);
                 }
+
+
+//                boolean update = false;
+//                for (double delta : deltaSample)
+//                    if (delta != 0) {
+//                        update = true;
+//                        break;
+//                    }
+//                if (!update) {
+//                    L.info("got it");
+//                    priorityThreshold = Double.MAX_VALUE;
+//                    continue;
+//                }
 
                 if (deltaSample.length == 0) {//no sample, schedule all
                     priorityThreshold = -Double.MAX_VALUE;

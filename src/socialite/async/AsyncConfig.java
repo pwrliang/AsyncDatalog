@@ -17,7 +17,6 @@ public class AsyncConfig {
     private boolean priority;
     private boolean priorityLocal;
     private PriorityType priorityType = PriorityType.NONE;
-    private double sampleRate;
     private double schedulePortion;
     private boolean sync;
     private boolean barrier;
@@ -47,7 +46,6 @@ public class AsyncConfig {
                 sb.append("PRIORITY_TYPE:VALUE -  MIN(VALUE, DELTA)").append(", ");
             else if (priorityType == PriorityType.MAX)
                 sb.append("PRIORITY_TYPE:VALUE -  MAX(VALUE, DELTA)").append(", ");
-            sb.append("SAMPLE_RATE:").append(sampleRate).append(", ");
             sb.append("SCHEDULE_PORTION:").append(schedulePortion).append(", ");
         }
         sb.append(priorityLocal ? "PRIORITY_LOCAL" : "PRIORITY_GLOBAL").append(", ");
@@ -138,10 +136,6 @@ public class AsyncConfig {
 
     public boolean isNetworkInfo() {
         return networkInfo;
-    }
-
-    public double getSampleRate() {
-        return sampleRate;
     }
 
     public double getSchedulePortion() {
@@ -368,7 +362,6 @@ public class AsyncConfig {
             asyncConfig.priority = priority;
             asyncConfig.priorityLocal = priorityLocal;
             asyncConfig.lock = lock;
-            asyncConfig.sampleRate = sampleRate;
             asyncConfig.schedulePortion = schedulePortion;
             asyncConfig.dynamic = dynamic;
             asyncConfig.barrier = barrier;

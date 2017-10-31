@@ -332,6 +332,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
                     }
                     break;//exit function, run will be called next round
                 } else {
+                    L.info("switch times: " + asyncTable.swtichTimes.get());
                     double partialSum = update();
                     MPI.COMM_WORLD.Recv(new byte[1], 0, 1, MPI.BYTE, AsyncMaster.ID, MsgType.REQUIRE_TERM_CHECK.ordinal());
 
