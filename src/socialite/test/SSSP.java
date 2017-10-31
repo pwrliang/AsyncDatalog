@@ -25,12 +25,12 @@ public class SSSP {
     //berkstan       685230       356
     //0            1                2              3
     //single      thread-num      node-num        edge-path
-    //dist         node-num         edge-path
+    //dist         node-num         edge-path     iter
     public static void main(String[] args) throws FileNotFoundException, InterruptedException {
-        STGroup stg = new MySTGroupFile(SSSP.class.getResource("SSSP.stg"),
-                "UTF-8", '<', '>');
-        stg.load();
         if (args[0].equals("single")) {
+            STGroup stg = new MySTGroupFile(SSSP.class.getResource("SSSP.stg"),
+                    "UTF-8", '<', '>');
+            stg.load();
             LocalEngine en = new LocalEngine(Config.par(Integer.parseInt(args[1])));
             int nodeCount = Integer.parseInt(args[2]);
             ST st = stg.getInstanceOf("Init");
@@ -47,22 +47,33 @@ public class SSSP {
             L.info("elapsed " + stopWatch.getTime());
             en.shutdown();
         } else if (args[0].equals("dist")) {
+            STGroup stg = new MySTGroupFile(SSSP.class.getResource("SSSP1.stg"),
+                    "UTF-8", '<', '>');
+            stg.load();
             MasterNode.startMasterNode();
             while (MasterNode.getInstance().getQueryListener().getEngine() == null)//waiting workers online
                 Thread.sleep(100);
             ClientEngine en = new ClientEngine();
             int nodeCount = Integer.parseInt(args[1]);
+            int iter = Integer.parseInt(args[3]);
             ST st = stg.getInstanceOf("Init");
             st.add("N", nodeCount);
             st.add("PATH", args[2]);
             st.add("SPLITTER", "\t");
             String init = st.render();
             System.out.println(init);
-            StopWatch stopWatch = new StopWatch();
-            stopWatch.start();
             en.run(init);
-            stopWatch.stop();
-            L.info("elapsed " + stopWatch.getTime());
+            st = stg.getInstanceOf("Iter");
+            st.add("N", nodeCount);
+            st.add("SRC", SRC_NODE + "");
+            long start = System.currentTimeMillis();
+            for (int i = 0; i < iter; i++) {
+                st.add("i", i);
+                String iterCode = st.render();
+                st.remove("i");
+                en.run(iterCode);
+            }
+            System.out.println("recursive statement:" + (System.currentTimeMillis() - start));
             en.shutdown();
         }
     }
