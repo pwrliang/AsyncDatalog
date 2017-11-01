@@ -87,6 +87,7 @@ public class ByteBufferPool {
             }
             return bb;
         } catch (InterruptedException e) {
+        	e.printStackTrace();
             return null;
         }
     }
