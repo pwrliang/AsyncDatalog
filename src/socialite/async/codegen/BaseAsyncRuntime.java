@@ -104,7 +104,7 @@ public abstract class BaseAsyncRuntime implements Runnable {
                                     break;
                                 }
                             if (!update) {
-                                L.info("got it");
+//                                L.info("got it");
                                 Thread.sleep(1);
                                 continue;
                             }
