@@ -44,7 +44,8 @@ public class MessageTable extends MessageTableBase {
 
     @Override
     public void resetDelta() {
-        keyDeltaMap.values().forEach(delta -> delta.set(IDENTITY_ELEMENT));
+        //keyDeltaMap.values().forEach(delta -> delta.set(IDENTITY_ELEMENT));
+        keyDeltaMap.clear();
         updateCounter.set(0);
     }
 
