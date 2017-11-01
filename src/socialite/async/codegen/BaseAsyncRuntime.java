@@ -97,17 +97,17 @@ public abstract class BaseAsyncRuntime implements Runnable {
                                 deltaSample[i] = asyncTable.getPriority(ind);
                             }
 
-                            boolean update = false;
-                            for (double delta : deltaSample)
-                                if (delta != 0) {
-                                    update = true;
-                                    break;
-                                }
-                            if (!update) {
-//                                L.info("got it");
-                                Thread.sleep(1);
-                                continue;
-                            }
+//                            boolean update = false;
+//                            for (double delta : deltaSample)
+//                                if (delta != 0) {
+//                                    update = true;
+//                                    break;
+//                                }
+//                            if (!update) {
+////                                L.info("got it");
+//                                Thread.sleep(1);
+//                                continue;
+//                            }
                         }
                         if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.NONE) {
                             for (int k = start; k < end; k++) {

@@ -397,6 +397,7 @@ public class DistAsyncRuntime extends BaseAsyncRuntime {
             if (asyncTable != null) {//null indicate this worker is idle
                 if (asyncConfig.getCheckType() == AsyncConfig.CheckerType.DELTA || asyncConfig.getCheckType() == AsyncConfig.CheckerType.DIFF_DELTA) {
                     partialSum = asyncTable.accumulateDelta();
+//                    System.out.println(partialSum);
                     BaseDistAsyncTable baseDistAsyncTable = (BaseDistAsyncTable) asyncTable;
                     for (int workerId = 0; workerId < workerNum; workerId++) {
                         MessageTableBase messageTable1 = baseDistAsyncTable.getMessageTableList()[workerId][0];
