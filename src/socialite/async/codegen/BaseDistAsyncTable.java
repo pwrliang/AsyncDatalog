@@ -82,7 +82,7 @@ public abstract class BaseDistAsyncTable extends BaseAsyncTable {
         messageTableSelector.set(sendToWorkerId, writingTableInd == 0 ? 1 : 0);
         // sleep to ensure switched, this is important
         // even though selector is atomic type, but computing thread cannot see the switched result immediately, i don't know why :(
-        Thread.sleep(1);
+        Thread.sleep(10);
         byte[] data = serializeTool.toBytes(sendableMessageTable.size() * (4 + 8), sendableMessageTable);
         sendableMessageTable.resetDelta();
         return data;
