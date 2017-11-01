@@ -90,25 +90,25 @@ public abstract class BaseAsyncRuntime implements Runnable {
                             if (barrier != null) barrier.await();
                             continue;
                         }
-
-                        double threshold = 0;
-                        for (int i = 0; i < deltaSample.length; i++) {
-                            int ind = randomGenerator.nextInt(start, end);
-                            deltaSample[i] = asyncTable.getPriority(ind);
-                        }
-
-                        boolean update = false;
-                        for (double delta : deltaSample)
-                            if (delta != 0) {
-                                update = true;
-                                break;
+                        double threshold;
+                        if(!asyncConfig.isSync() && ! asyncConfig.isBarrier()) {
+                            for (int i = 0; i < deltaSample.length; i++) {
+                                int ind = randomGenerator.nextInt(start, end);
+                                deltaSample[i] = asyncTable.getPriority(ind);
                             }
-                        if (!update) {
-                            L.info("got it");
-                            Thread.sleep(1);
-                            continue;
-                        }
 
+                            boolean update = false;
+                            for (double delta : deltaSample)
+                                if (delta != 0) {
+                                    update = true;
+                                    break;
+                                }
+                            if (!update) {
+                                L.info("got it");
+                                Thread.sleep(1);
+                                continue;
+                            }
+                        }
                         if (asyncConfig.getPriorityType() == AsyncConfig.PriorityType.NONE) {
                             for (int k = start; k < end; k++) {
                                 if (asyncConfig.isSync()) {
