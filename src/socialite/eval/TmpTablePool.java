@@ -263,6 +263,7 @@ public class TmpTablePool {
 			allocKB.addAndGet((t.totalAllocSize()+1023)/1024);
 			return t;
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new SociaLiteException(e);
 		}
 	}	
