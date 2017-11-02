@@ -412,10 +412,10 @@ public class CmdListener implements WorkerCmd {
     @Override
     public void runGc() {
         L.info("Running System.gc()");
-        TmpTablePool.clear();
+//        TmpTablePool.clear();
         System.gc();
         System.gc();
-        TmpTablePool.clear();
+//        TmpTablePool.clear();
         printMemInfo("After System.gc():");
     }
 

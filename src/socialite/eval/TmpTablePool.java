@@ -1,6 +1,5 @@
 package socialite.eval;
 
-import java.lang.management.MemoryUsage;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
@@ -11,7 +10,6 @@ import java.util.Map.Entry;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -22,7 +20,6 @@ import socialite.util.SociaLiteException;
 import socialite.util.SoftRefArrayQueue;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import socialite.util.WeakArrayQueue;
-import java.lang.management.ManagementFactory;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class TmpTablePool {
@@ -32,42 +29,28 @@ public class TmpTablePool {
 			Collections.synchronizedMap(new WeakHashMap<Class, WeakArrayQueue<TmpTableInst>>());
 	static Map<Class, WeakArrayQueue<TmpTableInst>> freeSmallTableList =
 			Collections.synchronizedMap(new WeakHashMap<Class, WeakArrayQueue<TmpTableInst>>());
-	//static ReferenceQueue<TmpTableInst> refQueue = new ReferenceQueue<TmpTableInst>();
+	static ReferenceQueue<TmpTableInst> refQueue = new ReferenceQueue<TmpTableInst>();
 
 	static Map<Class, Method> tableAlloc = Collections.synchronizedMap(new WeakHashMap<Class, Method>());
 	static Map<Class, Method> tableAllocSmall = Collections.synchronizedMap(new WeakHashMap<Class, Method>());
-	static final int globalListSize=128+64+32;
-	static final int smallListSize=1024+1024+256;
+	static final int globalListSize=512;
+	static final int smallListSize=1024;
 	static AtomicInteger allocKB=new AtomicInteger(0);
-	static AtomicInteger urgencyWait=new AtomicInteger(0);
-	static AtomicInteger urgencyWaitSmall=new AtomicInteger(0);
 	static int maxAllocKB = -1;
 	static int maxUrgentAllocKB = -1;
 	static int maxRecvAllocKB = -1;
 
-    /*static class TableCleanupRef extends WeakReference<TmpTableInst> {
-        //final int myAllocSizeKB;
-        public TableCleanupRef(TmpTableInst inst) {
-            super(inst, refQueue);
-            //myAllocSizeKB = (inst.totalAllocSize()+1023)/1024;
-        }
-        public void cleanup() {
-            allocKB.addAndGet(-myAllocSizeKB);
-        }
-    }*/
-
-	public static void clear() {
-		//XXX: used by runGc(). Need to be called before and after System.gc()
-		//     because allocKB is updated by gc (weak-ref-queue)
-		globalFreeTableList.clear();
-		freeSmallTableList.clear();
-		tableAlloc.clear();
-		tableAllocSmall.clear();
-
-		allocKB.set(0);
-		urgencyWait.set(0);
-		urgencyWaitSmall.set(0);
+	static class TableCleanupRef extends WeakReference<TmpTableInst> {
+		final int myAllocSizeKB;
+		public TableCleanupRef(TmpTableInst inst) {
+			super(inst, refQueue);
+			myAllocSizeKB = (inst.totalAllocSize()+1023)/1024;
+		}
+		public void cleanup() {
+			allocKB.addAndGet(-myAllocSizeKB);
+		}
 	}
+
 	public static void clear(Class klass) {
 		L.info("Clearing "+klass);
 		WeakArrayQueue<TmpTableInst> queue;
@@ -84,20 +67,20 @@ public class TmpTablePool {
 	}
 
 	public static void init(int workerNum) {
-        /*Thread weakRefMonitor = new Thread() {
-            public void run() {
-                while (true) {
-                    try {
-                        TableCleanupRef ref = (TableCleanupRef)refQueue.remove();
-                        ref.cleanup();
-                    } catch (InterruptedException e) {
-                        break;
-                    }
-                }
-            }
-        };
-        weakRefMonitor.setDaemon(true);
-        weakRefMonitor.start();*/
+		Thread weakRefMonitor = new Thread() {
+			public void run() {
+				while (true) {
+					try {
+						TableCleanupRef ref = (TableCleanupRef)refQueue.remove();
+						ref.cleanup();
+					} catch (InterruptedException e) {
+						break;
+					}
+				}
+			}
+		};
+		weakRefMonitor.setDaemon(true);
+		weakRefMonitor.start();
 	}
 
 	static int tableid(Class tableCls) {
@@ -157,7 +140,7 @@ public class TmpTablePool {
 	}
 	static int maxAllocKB() {
 		if (maxAllocKB==-1) {
-			maxAllocKB = (int)(maxRecvAllocKB()*0.7f);
+			maxAllocKB = (int)(maxRecvAllocKB()*0.5f);
 			L.info(" NOTICE maxAlloc:"+maxAllocKB/1024+"MB");
 		}
 		return maxAllocKB;
@@ -193,71 +176,29 @@ public class TmpTablePool {
 	public static TmpTableInst get(Class tableCls, Object... args) {
 		return get_global(0, tableCls, args);
 	}
-
-	static MemoryUsage heapMemUsage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
-	static long freeMemory() {
-		long free = heapMemUsage.getMax() - heapMemUsage.getUsed() - 256*1024*1024;
-		if (free < 0) free = 0;
-		return free;
-        /*if (heapMemUsage.getMax() > heapMemUsage.getCommitted()*3/2) {
-            return heapMemUsage.getMax() - heapMemUsage.getUsed();
-        }
-        return heapMemUsage.getCommitted() - heapMemUsage.getUsed();*/
-	}
 	static TmpTableInst get_global(int urgency, Class tableCls, Object... args) {
 		WeakArrayQueue<TmpTableInst> q = getQueueFromGlobal(tableCls);
+		int maxAlloc=maxAllocKB();
+		if (urgency==1) maxAlloc = maxRecvAllocKB();
+		if (urgency==2) maxAlloc = maxUrgentAllocKB();
+
 		TmpTableInst t;
-		int waitTime=2, maxTry=1000000;
-		if (urgency==1) maxTry=50;
-		if (urgency==2) maxTry=40;
-
-		long waitStart = 0;
-		int tryCnt = 0;
-		boolean urgencyWaitIncremented = false;
-		try {
-			do {
-				t = null;
-				synchronized (q) {
-					if (tryCnt == 0) {
-						t = q.dequeue();
-					} else if (urgency >= 1) {
-						t = q.dequeue();
-					} else if (urgencyWait.get() < 3) {
-						t = q.dequeue();
-					}
-					if (t == null && q.size() > 3) {
-						t = q.dequeue();
-					}
-				}
-				if (t != null) {
-					assert t.isEmpty();
-					return t;
-				}
-
-				long freeMem = freeMemory();
-				if (freeMem > 1024 * 1024 * (1024+1024+512)) { break;}
-				if (urgency >= 1 && freeMem > 1024 * 1024 * (1024+512+256)) { break; }
-				if (urgency >= 2 && freeMem > 1024 * 1024 * (1024+512)) { break; }
-				if (tryCnt > maxTry) { break;}
-				synchronized (q) {
-					if (urgency >= 1 && !urgencyWaitIncremented) {
-						urgencyWait.incrementAndGet();
-						urgencyWaitIncremented = true;
-					}
-					try { q.wait(waitTime); }
-					catch (InterruptedException e) { throw new SociaLiteException(e); }
-				}
-				long now = System.currentTimeMillis();
-				if (now - waitStart >= 1) {
-					tryCnt++;
-					waitStart = now;
-				}
-			} while (true);
-		} finally {
-			if (urgencyWaitIncremented) {
-				urgencyWait.decrementAndGet();
+		final int waitTime=2, maxTry = 5;
+		int trycnt = 0;
+		do {
+			synchronized(q) { t = q.dequeue(); }
+			if (t!=null) {
+				assert t.isEmpty();
+				return t;
 			}
-		}
+			if (allocKB.get() < maxAlloc) { break; }
+			if (trycnt > maxTry) { break; }
+			synchronized(q) {
+				try { q.wait(waitTime); }
+				catch (InterruptedException e) {throw new SociaLiteException(e);}
+			}
+			trycnt++;
+		} while (true);
 
 		t = alloc(tableCls, args);
 		return t;
@@ -289,7 +230,7 @@ public class TmpTablePool {
 		synchronized(q) {
 			if (q.size() < globalListSize) {
 				inst.clear();
-				q.add(new WeakReference<TmpTableInst>(inst));
+				q.add(new TableCleanupRef(inst));
 			} else {
 				forget(inst);
 			}
@@ -342,58 +283,27 @@ public class TmpTablePool {
 	}
 	public static TmpTableInst getSmall(int urgency, Class tableCls) {
 		WeakArrayQueue<TmpTableInst> q = getSmallQueueFromGlobal(tableCls);
+		int maxAlloc = maxAllocKB();
+		if (urgency==1) maxAlloc = maxRecvAllocKB();
+		if (urgency==2) maxAlloc = maxUrgentAllocKB();
+
 		TmpTableInst t;
-		int waitTime=2, maxTry=1000000;
-		if (urgency==1) maxTry=50;
-		if (urgency==2) maxTry=40;
-
-		long waitStart = 0;
-		int tryCnt = 0;
-		boolean urgencyWaitIncremented = false;
-		try {
-			do {
-				t = null;
-				synchronized (q) {
-					if (tryCnt == 0) {
-						t = q.dequeue();
-					} else if (urgency >= 1) {
-						t = q.dequeue();
-					} else if (urgencyWaitSmall.get() < 3) {
-						t = q.dequeue();
-					}
-					if (t == null && q.size() > 3) {
-						t = q.dequeue();
-					}
-				}
-				if (t != null) {
-					assert t.isEmpty() : "Table[" + t.id() + "] is not empty.";
-					return t;
-				}
-
-				long freeMem = freeMemory();
-				if (freeMem > 1024 * 1024 * (1024+1024+512)) { break;}
-				if (urgency >= 1 && freeMem > 1024 * 1024 * (1024+512+256)) { break; }
-				if (urgency >= 2 && freeMem > 1024 * 1024 * (1024+512)) { break; }
-				if (tryCnt > maxTry) { break; }
-				synchronized (q) {
-					if (urgency >= 1 && !urgencyWaitIncremented) {
-						urgencyWaitSmall.incrementAndGet();
-						urgencyWaitIncremented = true;
-					}
-					try { q.wait(waitTime); }
-					catch (InterruptedException e) { throw new SociaLiteException(e); }
-				}
-				long now = System.currentTimeMillis();
-				if (now - waitStart >= 1) {
-					tryCnt++;
-					waitStart = now;
-				}
-			} while (true);
-		} finally {
-			if (urgencyWaitIncremented) {
-				urgencyWaitSmall.decrementAndGet();
+		final int waitTime=2, maxTry = 5;
+		int trycnt = 0;
+		do {
+			synchronized(q) { t = q.dequeue(); }
+			if (t!=null) {
+				assert t.isEmpty():"Table["+t.id()+"] is not empty.";
+				return t;
 			}
-		}
+			if (allocKB.get() < maxAlloc) { break; }
+			if (trycnt > maxTry) { break; }
+			synchronized(q) {
+				try { q.wait(waitTime); }
+				catch (InterruptedException e) { throw new SociaLiteException(e); }
+			}
+			trycnt++;
+		} while (true);
 
 		t = allocSmall(tableCls);
 		return t;
@@ -411,7 +321,7 @@ public class TmpTablePool {
 		synchronized(q) {
 			if (q.size() < smallListSize) {
 				inst.clear();
-				q.add(new WeakReference<TmpTableInst>(inst));
+				q.add(new TableCleanupRef(inst));
 			} else {
 				forget(inst);
 			}
