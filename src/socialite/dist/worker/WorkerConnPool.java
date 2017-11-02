@@ -5,42 +5,26 @@ package socialite.dist.worker;
 //import java.nio.channels.*;
 //import java.io.*;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import socialite.dist.EvalRefCount;
+import socialite.dist.PortMap;
+import socialite.dist.msg.WorkerMessage;
+import socialite.util.*;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ClosedChannelException;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import socialite.dist.EvalRefCount;
-import socialite.dist.PortMap;
-import socialite.dist.msg.*;
-import socialite.util.ByteBufferInputStream;
-import socialite.util.ByteBufferPool;
-import socialite.util.FastInputStream;
-import socialite.util.SociaLiteException;
-import socialite.util.SocialiteFinishEval;
+import java.nio.channels.*;
+import java.util.*;
 
 
 class ConnDesc {
-	public static final Log L=LogFactory.getLog(WorkerConnPool.class);
+	public static final Log L= LogFactory.getLog(WorkerConnPool.class);
 	
 	static final int SOCK_BUFSIZE=(512)*1024;
 	
@@ -54,7 +38,7 @@ class ConnDesc {
 	
 	void setChannelOption(SocketChannel ch, boolean send) {
 		try {
-			ch.socket().setTcpNoDelay(WorkerConnPool.tcpNoDelay);			
+			ch.socket().setTcpNoDelay(WorkerConnPool.tcpNoDelay);
 			if (send) ch.socket().setSendBufferSize(SOCK_BUFSIZE); // send
 			else ch.socket().setReceiveBufferSize(SOCK_BUFSIZE*2); // recv			
 		} catch (SocketException e) {
@@ -87,11 +71,11 @@ class ConnDesc {
 }
 
 public class WorkerConnPool {
-	public static final Log L=LogFactory.getLog(WorkerConnPool.class);
+	public static final Log L= LogFactory.getLog(WorkerConnPool.class);
 
 	final static boolean tcpNoDelay=true; // true turns off Nagle's algorithm
 	
-	Map<InetAddress, ConnDesc> connMap;	
+	Map<InetAddress, ConnDesc> connMap;
 	Selector connSelector;
 	ServerSocketChannel workerAcceptChannel;
 
@@ -156,7 +140,7 @@ public class WorkerConnPool {
 		
 		for (InetAddress workerAddr:workers) {
 			ConnDesc connDesc = new ConnDesc();
-			for (int i=0; i<ChannelMux.channelNum; i++) {
+			for (int i = 0; i< ChannelMux.channelNum; i++) {
 				try {		
 					SocketChannel sendChannel = SocketChannel.open();
 					int workerListen=portMap.workerToWorkerListen();
@@ -219,7 +203,7 @@ public class WorkerConnPool {
 		for (ConnDesc cd : connDescs) {
 			ChannelMux recvChannels = cd.recvChannels;
 			assert recvChannels.size() == ChannelMux.channelNum;
-			for (int i=0; i<ChannelMux.channelNum; i++) {
+			for (int i = 0; i< ChannelMux.channelNum; i++) {
 				SocketChannel recvChannel = recvChannels.next(); 
 				try {
 					recvChannel.configureBlocking(false);
@@ -337,7 +321,7 @@ public class WorkerConnPool {
 			tmp.flip();
 			int size = tmp.getInt();
 
-			buffer=ByteBufferPool.get().alloc(size);
+			buffer= ByteBufferPool.get().alloc(size);
 			do { 
 				int r =recvChannel.read(buffer);
 				assert r!=-1;
@@ -356,7 +340,7 @@ public class WorkerConnPool {
 			ObjectInputStream ois=new FastInputStream(bbis);
 			workerMsg = (WorkerMessage)ois.readObject();
 			ois.close();				
-		} catch (SocialiteFinishEval e1) { 
+		} catch (SocialiteFinishEval e1) {
 			workerMsg = null;
 		} catch (Exception e) {
 			L.fatal("Error while creating WorkerMessage object:"+e);

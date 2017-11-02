@@ -1,19 +1,18 @@
 package socialite.dist.worker;
 
 import java.nio.channels.SocketChannel;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class ChannelMux {
-	public static final int channelNum=4;
-
+	public static final int channelNum=8;
+	
 	int _pos;
 	SocketChannel[] channels;
-	AtomicInteger selected;
+	int selected;
 	public ChannelMux() {
 		channels = new SocketChannel[channelNum];
-		_pos = 0;
-		selected = new AtomicInteger(0);
+		_pos=0;
+		selected=0;
 	}
 	public synchronized void add(SocketChannel ch) {
 		assert _pos < channelNum;
@@ -21,8 +20,8 @@ public class ChannelMux {
 		_pos++;
 	}
 	public synchronized SocketChannel next() {
-		int s = selected.incrementAndGet();
-		return channels[s%channelNum];
+		selected++;		
+		return channels[selected%channelNum];
 	}
 	public synchronized boolean isFull() {
 		if (_pos==channelNum) return true;

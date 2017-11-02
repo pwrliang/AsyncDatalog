@@ -1,16 +1,9 @@
 package socialite.dist.worker;
 
 
-import org.apache.hadoop.io.ArrayWritable;
-import org.apache.hadoop.io.BooleanWritable;
-import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.*;
 import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.ipc.VersionedProtocol;
-
 import socialite.codegen.EpochW;
 import socialite.resource.WorkerAddrMapW;
 import socialite.tables.ConstsWritable;
@@ -36,9 +29,9 @@ public interface WorkerCmd extends VersionedProtocol {
 	public BooleanWritable addToClassPath(Text _path);
 	public void run(EpochW ew);
 	public BooleanWritable runQuery(IntWritable queryTid,
-						   			Text queryClass,
-						   			LongWritable iterId,
-						   			ConstsWritable args);
+                                    Text queryClass,
+                                    LongWritable iterId,
+                                    ConstsWritable args);
 	public void cleanupTableIter(LongWritable id);
 
 	public Writable status();
