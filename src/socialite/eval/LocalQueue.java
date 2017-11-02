@@ -1,13 +1,6 @@
 package socialite.eval;
 
 
-import java.util.ArrayList;
-import java.util.List;
-
-import socialite.dist.EvalRefCount;
-import socialite.tables.TableInst;
-import socialite.util.ArrayQueue;
-
 /*
 @Deprecated
 public class LocalQueue {

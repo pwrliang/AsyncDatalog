@@ -29,9 +29,9 @@ public class FastInputStream extends ObjectInputStream {
 		in=_in;
 		lookup=new FastClassLookup();
 	}
-	
+
 	@Override
-	public void close() throws IOException {		
+	public void close() throws IOException {
 		in.close();
 	}
 	@Override
@@ -62,7 +62,7 @@ public class FastInputStream extends ObjectInputStream {
 			char[] s = new char[readInt()];
 			for (int i=0; i<s.length; i++) s[i] = readChar();
 			return new String(s);
-		} 
+		}
 		Object obj=null;
 		try {
 			if (TmpTableInst.class.isAssignableFrom(cls)) {
@@ -77,19 +77,20 @@ public class FastInputStream extends ObjectInputStream {
 			Externalizable ext=(Externalizable)obj;
 			ext.readExternal(this);
 			return obj;
-		} catch (Exception e) {			
+		} catch (Exception e) {
 			L.fatal("Exception while creating table instance:"+e);
+			e.printStackTrace();
 			L.fatal(ExceptionUtils.getStackTrace(e));
 			throw new SociaLiteException(e);
-		} 
-	}	
+		}
+	}
 	static TmpTableInst newInstance(Class<?> tableCls) throws Exception {
 		Constructor<?> c = tableCls.getDeclaredConstructor((Class[])null);
 		c.setAccessible(true);
 		TmpTableInst i= (TmpTableInst)c.newInstance((Object[])null);
 		return i;
 	}
-	
+
 	private Class<?> getClass(String className) {
 		if (className.charAt(0)=='#') {
 			int fastIdx=Integer.parseInt(className.substring(1));
@@ -100,7 +101,7 @@ public class FastInputStream extends ObjectInputStream {
 			return cls;
 		}
 	}
-	
+
 	Object readArray(String className) throws IOException, ClassNotFoundException {
 		className = className.substring(1, className.length());
 		Class<?> cls = getClass(className);
@@ -166,14 +167,14 @@ public class FastInputStream extends ObjectInputStream {
 		}
 		return ret;
 	}
-	
-	Object readObjectArray(Class<?> cls) throws IOException, ClassNotFoundException {		
+
+	Object readObjectArray(Class<?> cls) throws IOException, ClassNotFoundException {
 		int arrayLen = readInt();
 		Object[] array=(Object[])Array.newInstance(cls, arrayLen);
-		
+
 		for (int i=0; i<array.length; i++) {
 			if (readBoolean()) {
-				try { 
+				try {
 					if (cls.equals(String.class)) {
 						int slen = readInt();
 						final char[] chars = new char[slen];
@@ -183,19 +184,19 @@ public class FastInputStream extends ObjectInputStream {
 						array[i] = s;
 						continue;
 					}
-					
+
 					if (TmpTableInst.class.isAssignableFrom(cls)) {
 						char size = readChar();
 						if (size==2) array[i] = TmpTablePool._get(cls);
 						else if (size==1) array[i] = TmpTablePool._getSmall(cls);
 						else new AssertionError("Unexpected size for "+cls.getName());
-						
+
 						((Externalizable)array[i]).readExternal(this);
 					} else {
 						array[i] = cls.newInstance();
 						((Externalizable)array[i]).readExternal(this);
 					}
-					
+
 				} catch (Exception e) {
 					L.fatal("Exception while creating table instance:"+e);
 					L.fatal(ExceptionUtils.getStackTrace(e));
@@ -207,7 +208,7 @@ public class FastInputStream extends ObjectInputStream {
 		}
 		return array;
 	}
-	
+
 	@Override
 	public boolean readBoolean() throws IOException {
 		if (in.read()==1) return true;
@@ -240,7 +241,7 @@ public class FastInputStream extends ObjectInputStream {
 		int c=(int)readByte();
 		int d=(int)readByte();
 		return (((a & 0xff) << 24) | ((b & 0xff) << 16) |
-				  ((c & 0xff) << 8) | (d & 0xff));
+				((c & 0xff) << 8) | (d & 0xff));
 	}
 	@Override
 	public long readLong() throws IOException {
@@ -253,14 +254,14 @@ public class FastInputStream extends ObjectInputStream {
 		long g=(long)readByte();
 		long h=(long)readByte();
 		return (((long)(a & 0xff) << 56) |
-				  ((long)(b & 0xff) << 48) |
-				  ((long)(c & 0xff) << 40) |
-				  ((long)(d & 0xff) << 32) |
-				  ((long)(e & 0xff) << 24) |
-				  ((long)(f & 0xff) << 16) |
-				  ((long)(g & 0xff) <<  8) |
-				  ((long)(h & 0xff)));
-	}	
+				((long)(b & 0xff) << 48) |
+				((long)(c & 0xff) << 40) |
+				((long)(d & 0xff) << 32) |
+				((long)(e & 0xff) << 24) |
+				((long)(f & 0xff) << 16) |
+				((long)(g & 0xff) <<  8) |
+				((long)(h & 0xff)));
+	}
 	@Override
 	public short readShort() throws IOException {
 		short a=(short)readByte();

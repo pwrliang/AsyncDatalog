@@ -1,17 +1,9 @@
 package socialite.eval;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
-
+import gnu.trove.list.array.TIntArrayList;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import socialite.dist.worker.Receiver;
 import socialite.resource.RuleMap;
 import socialite.resource.SRuntime;
@@ -20,10 +12,17 @@ import socialite.resource.VisitorBuilder;
 import socialite.tables.TableInst;
 import socialite.tables.TmpTableInst;
 import socialite.util.SocialiteFinishEval;
-import gnu.trove.list.array.TIntArrayList;
+
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 
 public class Worker implements Runnable {
-	public static final Log L=LogFactory.getLog(Worker.class);
+	public static final Log L= LogFactory.getLog(Worker.class);
 	static final ThreadLocal<Integer> currentRuleId = new ThreadLocal<Integer>();
 	public static int getCurrentRuleId() { return currentRuleId.get(); }
 	
@@ -48,9 +47,9 @@ public class Worker implements Runnable {
 	public static void haltEpoch() {
 		setHalted(true);
 		Worker.emptyQueues();
-		if (Sender.sendQ()!=null) 
+		if (Sender.sendQ()!=null)
 		    Sender.sendQ().empty();
-		if (Receiver.recvQ()!=null) 
+		if (Receiver.recvQ()!=null)
 		    Receiver.recvQ().empty();
 	}
 	static void emptyQueues() {
@@ -167,7 +166,7 @@ public class Worker implements Runnable {
 			int deltarule = depRules.get(i);
 			
 			 _builder = builder(deltarule);
-			Task[] tasks=factory.makeDelta(deltarule, deltaT, _builder);			
+			Task[] tasks=factory.makeDelta(deltarule, deltaT, _builder);
 			if (tasks==null) continue;
 			taskQ.addAll(priority, tasks);
 		}
@@ -186,8 +185,8 @@ public class Worker implements Runnable {
 				long start=0, end=0;
 				if (verbose) start=System.currentTimeMillis();
 				currentRuleId.set(task.getRuleId());
-				try {
-					task.run(this);
+				try { 
+					task.run(this); 
 				} catch (SocialiteFinishEval e) {
 					//haltEpoch();					
 					//WorkerNode.haltOthers();
@@ -204,7 +203,7 @@ public class Worker implements Runnable {
 				if (isHalted()) continue;
                 if (task instanceof EvalTask) {
                     EvalTask t = (EvalTask) task;
-                    TableInst[] deltaT = t.getResultDeltaTable();   
+                    TableInst[] deltaT = t.getResultDeltaTable();
                     addTasksForDelta(t.getRuleId(), deltaT);
                 }
 			} catch (InterruptedException e) {

@@ -12,33 +12,33 @@ import socialite.tables.TmpTableInst;
 
 public class FastOutputStream extends ObjectOutputStream {
 	OutputStream out;
-    FastClassLookup lookup;
-   
+	FastClassLookup lookup;
+
 	public FastOutputStream(OutputStream _out) throws IOException {
 		super();
 		out=_out;
 		lookup= new FastClassLookup();
 	}
-	
+
 	@Override
 	public void close() throws IOException {
 		out.close();
-	}	
-	@Override
-	public void flush() throws IOException {		
-		out.flush();	
 	}
-	
+	@Override
+	public void flush() throws IOException {
+		out.flush();
+	}
+
 	@Override
 	public void write(int b) throws IOException {
 		out.write(b);
 	}
-	
+
 	@Override
-	public void write(byte[] b) throws IOException {	
+	public void write(byte[] b) throws IOException {
 		out.write(b);
 	}
-	@Override 
+	@Override
 	public void write(byte[] b, int off, int len) throws IOException {
 		out.write(b, off, len);
 	}
@@ -53,7 +53,7 @@ public class FastOutputStream extends ObjectOutputStream {
 	private String getShortClassDescr(int idx) {
 		if (idx < classDescr.length)
 			return classDescr[idx];
-		return "#"+idx;			                  
+		return "#"+idx;
 	}
 	private String getClassDescr(Class cls) {
 		int fastIdx=lookup.getIdx(cls);
@@ -62,20 +62,20 @@ public class FastOutputStream extends ObjectOutputStream {
 		else className=cls.getName();
 		return className;
 	}
-	@Override 
+	@Override
 	protected void writeObjectOverride(Object obj) throws IOException {
 		if (obj instanceof Object[]) {
 			writeObjectArray(obj);
-		} else if (obj.getClass().isArray()) { 
+		} else if (obj.getClass().isArray()) {
 			writePrimArray(obj);
 		} else {
 			String className = getClassDescr(obj.getClass());
 			writeInt(className.length());
 			writeClassName(className, obj.getClass());
-						
-			if (TmpTableInst.class.isAssignableFrom(obj.getClass())) {				
+
+			if (TmpTableInst.class.isAssignableFrom(obj.getClass())) {
 				TmpTableInst inst = (TmpTableInst)obj;
-				writeTableInstSize(inst);	
+				writeTableInstSize(inst);
 			}
 
 			if (obj instanceof String) {
@@ -87,35 +87,35 @@ public class FastOutputStream extends ObjectOutputStream {
 				e.writeExternal(this);
 			} else {
 				String msg="Only Externalizable object can be written in fast mode";
-				throw new UnsupportedOperationException(msg);	
+				throw new UnsupportedOperationException(msg);
 			}
-		} 
-			
+		}
+
 	}
-	
+
 	void writeTableInstSize(TmpTableInst inst) throws IOException {
 		char size;
 		if (inst.isSmall()) size=1;
-		else size=2;		
+		else size=2;
 
-		writeChar(size);	
+		writeChar(size);
 	}
-	
+
 	void writeClassName(String className, Class cls) throws IOException {
 		writeChars(className);
 		/*if (className.charAt(0)=='#') 
 			lookup.addClass(cls);*/
 	}
-	
+
 	void writePrimArray(Object a) throws IOException {
 		Class itemType = a.getClass().getComponentType();
 		assert itemType.isPrimitive();
-		
+
 		String className=getClassDescr(itemType);
-		
+
 		writeInt(1+className.length());
 		writeChar('[');
-		writeClassName(className, itemType);		
+		writeClassName(className, itemType);
 		if (itemType.equals(int.class)) {
 			int[] array=(int[])a;
 			writeInt(array.length);
@@ -165,12 +165,12 @@ public class FastOutputStream extends ObjectOutputStream {
 				writeChar(array[i]);
 			}
 		} else {
-			throw new UnsupportedOperationException("Unsupported primitive array type:"+itemType+"[");	
+			throw new UnsupportedOperationException("Unsupported primitive array type:"+itemType+"[");
 		}
 	}
 	void writeObjectArray(Object a) throws IOException {
 		Object[] array=(Object[])a;
-		Class itemType = array.getClass().getComponentType();		
+		Class itemType = array.getClass().getComponentType();
 		String className=getClassDescr(itemType);
 		for (int i=0; i<array.length; i++) {
 			if (array[i]!=null) {
@@ -186,7 +186,7 @@ public class FastOutputStream extends ObjectOutputStream {
 		writeInt(1+className.length());
 		writeChar('[');
 		writeClassName(className, itemType);
-		writeInt(array.length);		
+		writeInt(array.length);
 		for (int i=0; i<array.length; i++) {
 			if (array[i]==null) {
 				writeBoolean(false);
@@ -197,8 +197,8 @@ public class FastOutputStream extends ObjectOutputStream {
 				if (tableArray) {
 					TmpTableInst inst = (TmpTableInst)array[i];
 					writeTableInstSize(inst);
-				}				
-				
+				}
+
 				if (itemType.equals(String.class)) {
 					String s=(String)array[i];
 					writeInt(s.length());
@@ -210,17 +210,17 @@ public class FastOutputStream extends ObjectOutputStream {
 			}
 		}
 	}
-	
-	@Override 
+
+	@Override
 	public void writeBoolean(boolean f) throws IOException {
 		if (f) out.write(1);
-		else out.write(0);		
+		else out.write(0);
 	}
 	@Override
 	public void writeByte(int b) throws IOException {
 		out.write(b);
 	}
-	
+
 	@Override
 	public void writeBytes(String s) throws IOException {
 		for (int i=0; i<s.length(); i++) {
@@ -228,7 +228,7 @@ public class FastOutputStream extends ObjectOutputStream {
 			out.write(c);
 		}
 	}
-	
+
 	@Override
 	public void writeChar(int v) throws IOException {
 		writeByte((byte)(0xff & (v >> 8)));
@@ -236,25 +236,25 @@ public class FastOutputStream extends ObjectOutputStream {
 	}
 
 	@Override
-	public void writeChars(String s) throws IOException {		
+	public void writeChars(String s) throws IOException {
 		for (int i=0; i<s.length(); i++) {
 			char c=s.charAt(i);
 			writeChar(c);
 		}
 	}
-	
+
 	@Override
 	public void writeDouble(double v) throws IOException {
 		long l = Double.doubleToRawLongBits(v);
 		writeLong(l);
 	}
-	
+
 	@Override
 	public void writeFloat(float v) throws IOException {
 		int i = Float.floatToRawIntBits(v);
-		writeInt(i);		
+		writeInt(i);
 	}
-	
+
 	@Override
 	public void writeInt(int i) throws IOException {
 		out.write((byte)(0xff & (i >> 24)));
@@ -262,7 +262,7 @@ public class FastOutputStream extends ObjectOutputStream {
 		out.write((byte)(0xff & (i >>  8)));
 		out.write((byte)(0xff & i));
 	}
-	
+
 	@Override
 	public void writeLong(long l) throws IOException {
 		out.write((byte)(0xff & (l >> 56)));
@@ -274,12 +274,12 @@ public class FastOutputStream extends ObjectOutputStream {
 		out.write((byte)(0xff & (l >>  8)));
 		out.write((byte)(0xff & l));
 	}
-		
+
 	public void writeShort(short s) throws IOException {
 		out.write((byte)(0xff & (s >> 8)));
 		out.write((byte)(0xff & s));
 	}
-	
+
 	@Override
 	public void writeUTF(String s) throws IOException {
 		throw new UnsupportedOperationException("writeUTF is not supported for fast mode");

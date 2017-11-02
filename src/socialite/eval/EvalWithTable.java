@@ -1,22 +1,21 @@
 package socialite.eval;
 
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import socialite.resource.VisitorBuilder;
+import socialite.tables.TableInst;
+import socialite.tables.TmpTableInst;
+import socialite.visitors.IVisitor;
+
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import socialite.resource.VisitorBuilder;
-import socialite.tables.TmpTableInst;
-import socialite.tables.TableInst;
-import socialite.visitors.IVisitor;
-
 public class EvalWithTable extends EvalCommand implements Externalizable {
 	static final long serialVersionUID = 1;
-	public static final Log L=LogFactory.getLog(EvalWithTable.class);
+	public static final Log L= LogFactory.getLog(EvalWithTable.class);
 	
 	TmpTableInst table;
 	//int sliceIdx;
@@ -45,7 +44,7 @@ public class EvalWithTable extends EvalCommand implements Externalizable {
 		super.readExternal(in);
 	
 		//sliceIdx = in.readInt();
-		table = (TmpTableInst)in.readObject();		
+		table = (TmpTableInst)in.readObject();
 		assert table!=null;
 	}
 	

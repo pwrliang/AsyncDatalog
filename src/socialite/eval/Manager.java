@@ -1,28 +1,20 @@
 package socialite.eval;
 
-import java.lang.management.GarbageCollectorMXBean;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
-import java.lang.management.MemoryNotificationInfo;
-import java.lang.management.MemoryPoolMXBean;
-import java.lang.management.MemoryType;
-import java.util.List;
-import java.util.Random;
-
-import javax.management.Notification;
-import javax.management.NotificationEmitter;
-import javax.management.NotificationListener;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import socialite.dist.EvalRefCount;
 import socialite.dist.worker.WorkerNode;
 import socialite.engine.Config;
 import socialite.resource.SRuntime;
 import socialite.resource.VisitorBuilder;
 import socialite.util.Assert;
-import socialite.util.ByteBufferPool;
+
+import java.lang.management.GarbageCollectorMXBean;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryPoolMXBean;
+import java.lang.management.MemoryType;
+import java.util.List;
+import java.util.Random;
 
 class LowMemoryDetector {
 	static MemoryPoolMXBean findTenuredGenPool() {
@@ -52,8 +44,9 @@ class LowMemoryDetector {
 				*/
 	}
 }
+
 public class Manager extends Thread {
-	public static final Log L=LogFactory.getLog(Manager.class);
+	public static final Log L= LogFactory.getLog(Manager.class);
 	
 	static Manager theInstance = null;
 	
@@ -97,7 +90,7 @@ public class Manager extends Thread {
 	public int getWorkerNum() { return workers.length; }
 
 	public void cleanup() {
-		Manager.cleanupEpoch();		
+		Manager.cleanupEpoch();
 	}
 	
 	public void setRuntime(SRuntime _runtime) {
@@ -108,11 +101,7 @@ public class Manager extends Thread {
 	}
 	VisitorBuilder builder(int rule) {
 		assert runtime!=null:"runtime is null";
-		VisitorBuilder builder = runtime.getVisitorBuilder(rule);
-        if (builder == null) {
-            L.error("Builder for rule["+rule+"] is null");
-        }
-        return builder;
+		return runtime.getVisitorBuilder(rule);
 	}
 	
 	void initWorkers(int _workerNum) {
@@ -120,7 +109,7 @@ public class Manager extends Thread {
 		if (workers == null) {
 			if (_workerNum==1) urgentWorkers=0;
 			else {
-                urgentWorkers = _workerNum/3;
+                urgentWorkers = _workerNum/4;
                 if (urgentWorkers<2) urgentWorkers=2;
                 if (urgentWorkers>12) urgentWorkers=12;
             }
@@ -171,7 +160,7 @@ public class Manager extends Thread {
 		TaskQueue[] workerQueues = Worker.getWorkerQueues();
 
         int maxWorkerIdx;
-        if (priority==Priority.Top) {
+        if (priority== Priority.Top) {
             maxWorkerIdx = workers.length;
         } else {
             maxWorkerIdx = workers.length-urgentWorkers;
@@ -191,15 +180,7 @@ public class Manager extends Thread {
         SRuntime _runtime = runtime;
         EvalRefCount.getInst().waitUntilReady(evalCmd.getEpochId());
         Task[] tasks=null;
-        VisitorBuilder builder = builder(evalCmd.getRuleId());
-        if (builder == null) {
-            do {
-                L.error("Builder for rule["+evalCmd.getRuleId()+"] is null, epochId:"+evalCmd.getEpochId()+", try waiting once more");
-                EvalRefCount.getInst().waitUntilReady(evalCmd.getEpochId());
-                builder = builder(evalCmd.getRuleId());
-            } while (builder == null);
-        }
-        tasks = taskFactory.make(evalCmd, builder, _runtime);
+        tasks = taskFactory.make(evalCmd, builder(evalCmd.getRuleId()), _runtime);
         int taskCount=0;
         for (Task t:tasks) {
             if (t==null) continue;

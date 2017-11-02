@@ -1,21 +1,18 @@
 package socialite.eval;
 
-import gnu.trove.list.array.TIntArrayList;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-
 import socialite.util.AtomicDouble;
 import socialite.util.AtomicFloat;
+
+import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 // This keeps track of the maximum and minimum value so far.
 public class DeltaStepWindow {
 	static AtomicInteger sharedIntMin = new AtomicInteger(), sharedIntMax = new AtomicInteger();
 	static AtomicLong sharedLongMin = new AtomicLong(), sharedLongMax = new AtomicLong();
 	static AtomicFloat sharedFloatMin = new AtomicFloat(), sharedFloatMax = new AtomicFloat();
-	static AtomicDouble sharedDoubleMin = new AtomicDouble(), sharedDoubleMax = new AtomicDouble();	
+	static AtomicDouble sharedDoubleMin = new AtomicDouble(), sharedDoubleMax = new AtomicDouble();
 	static final int maxLevel = TaskQueue.MAX_LEVEL;
 	static ArrayList<DeltaStepWindow> allWindows = new ArrayList<DeltaStepWindow>();
 	
@@ -31,7 +28,7 @@ public class DeltaStepWindow {
 		sharedLongMax.set(Long.MIN_VALUE);
 		sharedFloatMax.set(Float.NEGATIVE_INFINITY);
 		sharedDoubleMax.set(Double.NEGATIVE_INFINITY);
-		for (DeltaStepWindow w:allWindows) 
+		for (DeltaStepWindow w:allWindows)
 			w._reset();
 	}
 	
@@ -152,10 +149,10 @@ class IntWindow {
 	}
 	
 	void updateBoundaries() {				
-		int delta = (myMax-myMin)/DeltaStepWindow.maxLevel;
+		int delta = (myMax-myMin)/ DeltaStepWindow.maxLevel;
 		if (delta<1) delta=1;
 
-		for (int i=0; i<DeltaStepWindow.maxLevel; i++)
+		for (int i = 0; i< DeltaStepWindow.maxLevel; i++)
 			boundaries[i] = myMin + delta*(i+1);
 	}
 	public void syncShared() {
@@ -164,7 +161,7 @@ class IntWindow {
 			myMin = sharedMin;
 		} else {		
 			while (myMin < sharedMin) {
-				boolean success=DeltaStepWindow.sharedIntMin.compareAndSet(sharedMin, myMin);
+				boolean success= DeltaStepWindow.sharedIntMin.compareAndSet(sharedMin, myMin);
 				if (success) break;
 				sharedMin = DeltaStepWindow.sharedIntMin.get();
 			}
@@ -174,7 +171,7 @@ class IntWindow {
 			myMax = sharedMax;
 		} else {		
 			while (myMax > sharedMax) {
-				boolean success=DeltaStepWindow.sharedIntMax.compareAndSet(sharedMax, myMax);
+				boolean success= DeltaStepWindow.sharedIntMax.compareAndSet(sharedMax, myMax);
 				if (success) break;
 				sharedMax = DeltaStepWindow.sharedIntMax.get();
 			}
@@ -191,6 +188,7 @@ class IntWindow {
 		updateBoundaries();
 	}
 }
+
 class LongWindow {
 	boolean isMin;	
 	long[] boundaries=new long[DeltaStepWindow.maxLevel];
@@ -238,10 +236,10 @@ class LongWindow {
 	}
 	
 	void updateBoundaries() {				
-		long delta = (myMax-myMin)/DeltaStepWindow.maxLevel;
+		long delta = (myMax-myMin)/ DeltaStepWindow.maxLevel;
 		if (delta<1) delta=1;
 
-		for (int i=0; i<DeltaStepWindow.maxLevel; i++)
+		for (int i = 0; i< DeltaStepWindow.maxLevel; i++)
 			boundaries[i] = myMin + delta*(i+1);
 	}
 	public void syncShared() {
@@ -250,7 +248,7 @@ class LongWindow {
 			myMin = sharedMin;
 		} else {		
 			while (myMin < sharedMin) {
-				boolean success=DeltaStepWindow.sharedLongMin.compareAndSet(sharedMin, myMin);
+				boolean success= DeltaStepWindow.sharedLongMin.compareAndSet(sharedMin, myMin);
 				if (success) break;
 				sharedMin = DeltaStepWindow.sharedLongMin.get();
 			}
@@ -260,7 +258,7 @@ class LongWindow {
 			myMax = sharedMax;
 		} else {		
 			while (myMax > sharedMax) {
-				boolean success=DeltaStepWindow.sharedLongMax.compareAndSet(sharedMax, myMax);
+				boolean success= DeltaStepWindow.sharedLongMax.compareAndSet(sharedMax, myMax);
 				if (success) break;
 				sharedMax = DeltaStepWindow.sharedLongMax.get();
 			}
@@ -326,10 +324,10 @@ class FloatWindow {
 	}
 	
 	void updateBoundaries() {				
-		float delta = (myMax-myMin)/DeltaStepWindow.maxLevel;
+		float delta = (myMax-myMin)/ DeltaStepWindow.maxLevel;
 		if (delta < Float.MIN_VALUE*2) delta = Float.MIN_VALUE*2;
 
-		for (int i=0; i<DeltaStepWindow.maxLevel; i++)
+		for (int i = 0; i< DeltaStepWindow.maxLevel; i++)
 			boundaries[i] = myMin + delta*(i+1);
 	}
 	public void syncShared() {
@@ -338,7 +336,7 @@ class FloatWindow {
 			myMin = sharedMin;
 		} else {		
 			while (myMin < sharedMin) {
-				boolean success=DeltaStepWindow.sharedFloatMin.compareAndSet(sharedMin, myMin);
+				boolean success= DeltaStepWindow.sharedFloatMin.compareAndSet(sharedMin, myMin);
 				if (success) break;
 				sharedMin = DeltaStepWindow.sharedFloatMin.get();
 			}
@@ -348,7 +346,7 @@ class FloatWindow {
 			myMax = sharedMax;
 		} else {		
 			while (myMax > sharedMax) {
-				boolean success=DeltaStepWindow.sharedFloatMax.compareAndSet(sharedMax, myMax);
+				boolean success= DeltaStepWindow.sharedFloatMax.compareAndSet(sharedMax, myMax);
 				if (success) break;
 				sharedMax = DeltaStepWindow.sharedFloatMax.get();
 			}
@@ -414,10 +412,10 @@ class DoubleWindow {
 	}
 	
 	void updateBoundaries() {				
-		double delta = (myMax-myMin)/DeltaStepWindow.maxLevel;
+		double delta = (myMax-myMin)/ DeltaStepWindow.maxLevel;
 		if (delta < Double.MIN_VALUE*2) delta = Double.MIN_VALUE*2;
 
-		for (int i=0; i<DeltaStepWindow.maxLevel; i++)
+		for (int i = 0; i< DeltaStepWindow.maxLevel; i++)
 			boundaries[i] = myMin + delta*(i+1);
 	}
 	public void syncShared() {
@@ -426,7 +424,7 @@ class DoubleWindow {
 			myMin = sharedMin;
 		} else {		
 			while (myMin < sharedMin) {
-				boolean success=DeltaStepWindow.sharedDoubleMin.compareAndSet(sharedMin, myMin);
+				boolean success= DeltaStepWindow.sharedDoubleMin.compareAndSet(sharedMin, myMin);
 				if (success) break;
 				sharedMin = DeltaStepWindow.sharedDoubleMin.get();
 			}
@@ -436,7 +434,7 @@ class DoubleWindow {
 			myMax = sharedMax;
 		} else {		
 			while (myMax > sharedMax) {
-				boolean success=DeltaStepWindow.sharedDoubleMax.compareAndSet(sharedMax, myMax);
+				boolean success= DeltaStepWindow.sharedDoubleMax.compareAndSet(sharedMax, myMax);
 				if (success) break;
 				sharedMax = DeltaStepWindow.sharedDoubleMax.get();
 			}

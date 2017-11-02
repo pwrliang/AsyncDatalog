@@ -1,23 +1,13 @@
 package socialite.eval;
 
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Iterator;
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import socialite.codegen.Epoch;
 import socialite.codegen.RuleComp;
 import socialite.dist.EvalRefCount;
 import socialite.engine.Config;
 import socialite.parser.Const;
-import socialite.parser.GeneratedT;
 import socialite.parser.Rule;
-import socialite.parser.Table;
 import socialite.parser.antlr.ClearTable;
 import socialite.parser.antlr.DropTable;
 import socialite.parser.antlr.TableStmt;
@@ -25,9 +15,14 @@ import socialite.resource.SRuntime;
 import socialite.resource.TableInstRegistry;
 import socialite.resource.TableSliceMap;
 import socialite.tables.TableInst;
-import socialite.tables.TableUtil;
-import socialite.util.Loader;
 import socialite.util.SociaLiteException;
+
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
 
 class InitThread extends Thread {
 	public static final Log L = LogFactory.getLog(EvalParallel.class);
@@ -77,7 +72,7 @@ public class EvalParallel extends Eval {
 	protected CyclicBarrier barrier;
 	Manager manager;
 
-	public EvalParallel(SRuntime _runtime, Epoch _epoch, Config _conf) {		
+	public EvalParallel(SRuntime _runtime, Epoch _epoch, Config _conf) {
 		runtime = _runtime;
 		epoch = _epoch;
 		conf = _conf;
@@ -186,7 +181,7 @@ public class EvalParallel extends Eval {
 		}
 		int idx=0;
 		for (Class<?> init:epoch.getInitClasses()) {
-			List<Const> _consts=epoch.getInitConsts().get(idx);			
+			List<Const> _consts=epoch.getInitConsts().get(idx);
 			List<Object> consts = new ArrayList<Object>(_consts.size());
 			for (int i=0; i<_consts.size(); i++) {
 				Const c=_consts.get(i);
@@ -195,7 +190,7 @@ public class EvalParallel extends Eval {
 			initTable(init, consts);
 			idx++;
 		}
-        L.info(" NOTICE set epoch ready (epoch.id="+epoch.id()+")");
+
         EvalRefCount.getInst().setReady(epoch.id());
         shutdownInitThreads();
 	}

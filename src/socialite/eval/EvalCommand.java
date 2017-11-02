@@ -1,15 +1,12 @@
 package socialite.eval;
 
+import socialite.resource.VisitorBuilder;
+import socialite.visitors.IVisitor;
+
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.io.Serializable;
-
-import socialite.resource.VisitorBuilder;
-import socialite.tables.TableInst;
-import socialite.util.Assert;
-import socialite.visitors.IVisitor;
 
 
 public class EvalCommand implements Command, Externalizable {
@@ -29,7 +26,7 @@ public class EvalCommand implements Command, Externalizable {
 	public int getRuleId() {return ruleId;}
 	public String toString() { return "Eval rule["+ruleId+"]";}
 	
-	public IVisitor[] newInst(VisitorBuilder builder) {		
+	public IVisitor[] newInst(VisitorBuilder builder) {
 		return builder.getNewVisitorInst(ruleId);
 	}
 

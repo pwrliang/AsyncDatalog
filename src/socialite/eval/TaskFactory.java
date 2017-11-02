@@ -1,27 +1,25 @@
 package socialite.eval;
 
-import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import socialite.resource.SRuntime;
 import socialite.resource.TableInstRegistry;
 import socialite.resource.TableSliceMap;
 import socialite.resource.VisitorBuilder;
 import socialite.tables.ConcurrentTableInst;
-import socialite.tables.TmpTableInst;
 import socialite.tables.TableInst;
+import socialite.tables.TmpTableInst;
 import socialite.tables.Tuple;
-import socialite.util.SociaLiteException;
 import socialite.util.SocialiteFinishEval;
 import socialite.visitors.IVisitor;
 import socialite.visitors.VisitorImpl;
 
+import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicInteger;
+
 
 abstract class VisitorWrapper extends VisitorImpl {
-	IVisitor v;	
+	IVisitor v;
 	AtomicInteger counter;
 	int limit;
 	public VisitorWrapper(IVisitor _v, AtomicInteger _counter, int _limit) {
@@ -201,7 +199,7 @@ public class TaskFactory {
 				wrappers[i] = null;
 				initCounter++;					
 			} else {
-				wrappers[i] = new TmpTableVisitor(visitors[i], tableArray, counter, limit);				
+				wrappers[i] = new TmpTableVisitor(visitors[i], tableArray, counter, limit);
 			}
 		}
 		counter.set(initCounter);
@@ -220,7 +218,7 @@ public class TaskFactory {
 				initCounter++;					
 			} else {
 				wrappers[i] = 
-					new VisitorReportingProgress(evalReport, v[i], counter, limit);				
+					new VisitorReportingProgress(evalReport, v[i], counter, limit);
 			}
 		}
 		counter.set(initCounter);		

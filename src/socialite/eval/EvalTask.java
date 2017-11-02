@@ -1,7 +1,6 @@
 package socialite.eval;
 
 import socialite.tables.TableInst;
-import socialite.util.SocialiteFinishEval;
 import socialite.visitors.IVisitor;
 
 public class EvalTask implements Task {

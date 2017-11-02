@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 enum Priority {
@@ -23,8 +22,9 @@ enum Priority {
 	private Priority(int val) { value = val; }
 	public int value() { return value; }
 }
+
 public class TaskQueue {
-    static final int MAX_LEVEL=Priority.numLevels();
+    static final int MAX_LEVEL= Priority.numLevels();
     static final int DEFAULT_CAPACITY=256;
 
     final ReentrantLock lock = new ReentrantLock();
@@ -37,7 +37,7 @@ public class TaskQueue {
 
     public TaskQueue() {
         queues = new ArrayList<ArrayQueue<Task>>(Priority.numLevels());
-        for (int i=0; i<Priority.numLevels(); i++) {
+        for (int i = 0; i< Priority.numLevels(); i++) {
             queues.add(new ArrayQueue<Task>(DEFAULT_CAPACITY));
         }
         reservedTasks = Collections.synchronizedList(new ArrayList<Task>());
@@ -70,7 +70,7 @@ public class TaskQueue {
         }
         if (taskCount>0) evalRefCount.incBy(epochId, taskCount);
 
-        if (priority.value() >= Priority.numLevels()) 
+        if (priority.value() >= Priority.numLevels())
         	priority = Priority.Normal;
         ArrayQueue<Task> q = queues.get(priority.value());
 

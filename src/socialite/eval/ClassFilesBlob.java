@@ -1,23 +1,13 @@
 package socialite.eval;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.hadoop.io.ByteWritable;
 import org.apache.hadoop.io.BytesWritable;
-
-import socialite.util.Assert;
 import socialite.util.SociaLiteException;
 import socialite.util.SocialiteInputStream;
 import socialite.util.SocialiteOutputStream;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ClassFilesBlob implements Externalizable {
 	static final long serialVersionUID = 1;

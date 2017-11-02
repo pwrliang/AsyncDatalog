@@ -1,9 +1,5 @@
 package socialite.eval;
 
-import java.util.Arrays;
-import java.util.concurrent.ConcurrentHashMap;
-
-import socialite.resource.SRuntime;
 import gnu.trove.iterator.TIntFloatIterator;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntFloatHashMap;
@@ -15,7 +11,7 @@ public class EvalProgress {
 	public static EvalProgress getInst() { return inst; }
 	
 	SynchIntFloatHashMap ruleProgress;
-	SynchIntHistory finished;	
+	SynchIntHistory finished;
 	SynchIntHistory halted;
 	public EvalProgress() {
 		ruleProgress = new SynchIntFloatHashMap(127);
@@ -79,7 +75,7 @@ public class EvalProgress {
 }
 
 class SynchIntFloatHashMap {
-	TIntFloatHashMap map;	
+	TIntFloatHashMap map;
 	
 	SynchIntFloatHashMap(int capacity) {
 		map = new TIntFloatHashMap(capacity, 0.8f, -1, -1);
@@ -93,7 +89,7 @@ class SynchIntFloatHashMap {
 	public synchronized float remove(int i) {
 		return map.remove(i);
 	}
-	public synchronized void foreach(TIntFloatProcedure f) {		
+	public synchronized void foreach(TIntFloatProcedure f) {
 		map.forEachEntry(f);
 	}
 	public synchronized void clear() {
@@ -105,11 +101,11 @@ class SynchIntFloatHashMap {
 }
 
 class SynchIntHistory {
-	TIntArrayList list;	
+	TIntArrayList list;
 	int limit;
 	SynchIntHistory(int _limit) {
 		limit = _limit;
-		list = new TIntArrayList(limit);		
+		list = new TIntArrayList(limit);
 	}
 	public synchronized boolean add(int i) {
 		if (list.size()>=limit) {
